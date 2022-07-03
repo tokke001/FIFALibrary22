@@ -1,9 +1,13 @@
-﻿Imports FIFALibrary22.Rw.D3D
+﻿Imports System.Drawing
+Imports BCnEncoder.Shared
+Imports FIFALibrary22.Dds
+Imports FIFALibrary22.Ktx
+Imports FIFALibrary22.Rw.D3D
 
 Namespace Rw.Graphics
     Public Class Raster
         'rw::graphics::Raster
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_RASTER
         Public Const ALIGNMENT As Integer = 16
 
@@ -25,11 +29,19 @@ Namespace Rw.Graphics
             Me.NumMipLevels = r.ReadByte
             Me.Locked = r.ReadByte          'always 0
 
+            If MyBase.RwArena.UseRwBuffers AndAlso Me.PBuffer IsNot Nothing Then
+                Me.CreateRawImageData()
+            End If
         End Sub
 
         Public Overrides Sub Save(ByVal w As FileWriter)
-            'Me.TextureFormat =   'Set in RX3 section
-            'Me.NumMipLevels =     'Set in RX3 section
+            If MyBase.RwArena.UseRwBuffers Then   'only do this for rx2 (when rw buffer is used), 
+                'Me.SetValues()
+                If Me.NeedToSaveRawData Then
+                    Me.CreateRawData()
+                    Me.NeedToSaveRawData = False
+                End If
+            End If
 
             Me.D3d.Save(w)
 
@@ -40,7 +52,313 @@ Namespace Rw.Graphics
 
         End Sub
 
-        Public Property TextureData As Rw.Core.Arena.Buffer ' pointer to index of buffer
+        'Private Sub SetValues()
+        '    If Me.RawImageData IsNot Nothing Then
+        '        Me.SetValues(,,,,)
+        '    End If
+        'End Sub
+
+        Friend Sub SetValues(ByVal NumFaces As Byte, ByVal NumMipLevels As Byte, ByVal width As Integer, ByVal height As Integer, ByVal TextureFormat As SurfaceFormat) ', ByVal Pitch As UInteger)
+            Me.D3d.Format.Depth = NumFaces
+            Me.NumMipLevels = NumMipLevels
+            Me.D3d.Format.Width = width
+            Me.D3d.Format.Height = height
+            Me.D3d.Format.TextureFormat = TextureFormat
+            Me.D3d.Format.MaxMipLevel = NumMipLevels - 1    'Math.Max(1, NumMipLevels - 1)
+            'Me.RW4Section.Sections.Raster(i).D3d.Format.Pitch = Pitch '-->need formula ?
+            'Me.RW4Section.Sections.Raster(i).D3d.Format.Endian = 
+            'Me.RW4Section.Sections.Raster(i).D3d.Format.Tiled = 
+        End Sub
+
+        Public Function GetRawImageData() As List(Of List(Of RawImage))
+            If (Me.RawImageData Is Nothing) Then
+                Me.CreateRawImageData()
+            End If
+
+            Return Me.RawImageData
+        End Function
+
+        Public Sub SetRawImageData(ByVal RawImages As List(Of List(Of RawImage)))
+            'Me.TextureFormat =   
+            'Me.NumMipLevels =     
+
+            Me.RawImageData = RawImages
+
+            Me.NeedToSaveRawData = True
+        End Sub
+
+        Public Function GetBitmap() As Bitmap
+            Return Me.GetRawImageData(0)(0).Bitmap
+        End Function
+
+        Public Function GetBitmap(ByVal TextureFace As Integer, ByVal TextureLevel As Integer) As Bitmap
+            Return If((TextureLevel < Me.GetRawImageData(TextureFace).Count), Me.GetRawImageData(TextureFace)(TextureLevel).Bitmap, Nothing)
+        End Function
+
+        Public Function GetDds() As DdsFile
+            Dim l_RawImages As List(Of List(Of RawImage)) = Me.GetRawImageData()
+            '-- convert lists to array
+            Dim m_RawImages As RawImage()() = New RawImage(l_RawImages.Count - 1)() {}
+            For f = 0 To m_RawImages.Count - 1
+                m_RawImages(f) = l_RawImages(f).ToArray
+            Next
+            '--
+            Return DdsUtil.GetDds(m_RawImages) ', Me.D3d.Format.Dimension, GraphicUtil.GetEFromRWTextureFormat(Me.D3d.Format.TextureFormat), Me.D3d.Format.Width, Me.D3d.Format.Height)
+        End Function
+
+        Public Function GetKtx() As KtxFile
+            Dim l_RawImages As List(Of List(Of RawImage)) = Me.GetRawImageData()
+            '-- convert lists to array
+            Dim m_RawImages As RawImage()() = New RawImage(l_RawImages.Count - 1)() {}
+            For f = 0 To m_RawImages.Count - 1
+                m_RawImages(f) = l_RawImages(f).ToArray
+            Next
+            '--
+            Return KtxUtil.GetKtx(m_RawImages) ', Me.D3d.Format.Dimension, GraphicUtil.GetEFromRWTextureFormat(Me.D3d.Format.TextureFormat), Me.D3d.Format.Width, Me.D3d.Format.Height)
+        End Function
+
+        Public Function SetBitmap(ByVal bitmap As Bitmap) As Boolean
+            Dim TextureFormat As ETextureFormat = Me.D3d.Format.TextureFormat.ToETextureFormat
+            Dim NumLevels As UShort = Me.NumMipLevels
+
+            Me.SetBitmap(bitmap, TextureFormat, NumLevels)
+
+            Return True
+        End Function
+
+        Public Function SetBitmap(ByVal bitmap As Bitmap, ByVal TextureFormat As Rw.SurfaceFormat, ByVal NumLevels As UShort) As Boolean
+
+            If Me.D3d.Format.Dimension <> GPUDimension.DIMENSION_2D Then
+                Return False
+            End If
+
+            If (bitmap Is Nothing) Then
+                Return False
+            End If
+
+            '1 - Generate Texture-Header    'not needed at RW4, RWraster is external section !
+            Me.D3d.Format.Height = bitmap.Height
+            Me.D3d.Format.Width = bitmap.Width
+            Me.D3d.Format.TextureFormat = TextureFormat
+            Me.NumMipLevels = NumLevels
+
+            '2 - Set main Bitmap (level 0)
+            Dim m_RawImages As New List(Of List(Of RawImage))
+
+            Dim FaceIndex As Integer = 0
+            Dim SwapEndian_DxtBlock As Boolean = True
+            Dim Tiled360 As Boolean = True
+            Dim ETextureFormat As ETextureFormat = TextureFormat.ToETextureFormat
+            Dim Size As UInteger = GraphicUtil.GetTextureSize(bitmap.Width, bitmap.Height, ETextureFormat)
+            m_RawImages(FaceIndex)(0) = New RawImage(bitmap.Width, bitmap.Height, ETextureFormat, Size, SwapEndian_DxtBlock, Tiled360) 'RawImage(bitmap.Width, bitmap.Height, TextureFormat, SwapEndian_DxtBlock)
+            m_RawImages(FaceIndex)(0).Bitmap = bitmap
+            '3 - Generate Mipmaps (from main)
+            m_RawImages = Me.GenerateMipmaps(m_RawImages, NumLevels, TextureFormat)
+
+            Me.SetRawImageData(m_RawImages)
+            Return True
+        End Function
+
+        Public Function SetDds(ByVal DdsFile As DdsFile, Optional KeepRx3TextureFormat As Boolean = False) As Boolean
+            Dim m_RawImages As RawImage()() = DdsUtil.GetRawImages(DdsFile)
+            Return SetRawImages(KeepRx3TextureFormat, m_RawImages)
+        End Function
+
+        Public Function SetKtx(ByVal KtxFile As KtxFile, Optional KeepRx3TextureFormat As Boolean = False) As Boolean
+            Dim m_RawImages As RawImage()() = KtxUtil.GetRawImages(KtxFile)
+            Return SetRawImages(KeepRx3TextureFormat, m_RawImages)
+        End Function
+
+        Private Function SetRawImages(KeepRx3TextureFormat As Boolean, m_RawImages As RawImage()()) As Boolean
+            'Me.Rx3TextureHeader.Flags_1_TextureEndian = Rx3.TextureHeader.ETextureEndian.TEXTURE_ENDIAN_LITTLE     '1
+            Me.D3d.Format.Width = m_RawImages(0)(0).Width
+            Me.D3d.Format.Height = m_RawImages(0)(0).Height
+            If KeepRx3TextureFormat = False Then
+                Me.D3d.Format.TextureFormat = m_RawImages(0)(0).TextureFormat.ToRwSurfaceFormat
+            End If
+
+            Me.D3d.Format.Depth = m_RawImages.Length
+            Select Case Me.D3d.Format.Depth
+                Case 6
+                    Me.D3d.Format.Dimension = GPUDimension.DIMENSION_CUBEMAP
+                Case Else
+                    Me.D3d.Format.Dimension = GPUDimension.DIMENSION_2D
+            End Select
+            Me.NumMipLevels = m_RawImages(0).Length
+
+            Dim RawImages_Out As New List(Of List(Of RawImage))
+
+            For f = 0 To Me.D3d.Format.Depth - 1
+                Dim m_RawTextureLevels As New List(Of RawImage)
+                'Me.TextureFaces(f) = New Rx3TextureFace()
+                Dim width As Integer = Me.D3d.Format.Width
+                Dim height As Integer = Me.D3d.Format.Height
+                Dim ETextureFormat As ETextureFormat = Me.D3d.Format.TextureFormat.ToETextureFormat
+                Dim Size As UInteger = GraphicUtil.GetTextureSize(width, height, ETextureFormat)
+                Dim SwapEndian_DxtBlock As Boolean = True
+                Dim Tiled360 As Boolean = True
+                'Dim srcBitmap As Bitmap = Me.TextureFaces(f).TextureLevels(0).Bitmap
+
+                'Me.TextureFaces(f).TextureLevels = New TextureLevel(Me.Rx3TextureHeader.NumMipLevels - 1) {}
+                For i = 0 To Me.NumMipLevels - 1
+
+                    Dim m_RawImage As New RawImage(width, height, ETextureFormat, Size, SwapEndian_DxtBlock, Tiled360) '                    Me.TextureFaces(f).TextureLevels(i) = New TextureLevel(width, height, Me.Rx3TextureHeader.TextureFormat, SwapEndian_DxtBlock)
+
+                    If Me.D3d.Format.TextureFormat = m_RawImages(0)(0).TextureFormat.ToRwSurfaceFormat Then
+                        RawImages_Out(f)(i).RawData(SwapEndian_DxtBlock) = m_RawImages(f)(i).RawData(SwapEndian_DxtBlock)
+                    Else
+                        Dim m_Bitmap As Bitmap = m_RawImages(f)(0).Bitmap
+                        Me.SetBitmap(m_Bitmap)  '---->  this will give problems !!
+                    End If
+
+                    m_RawTextureLevels.Add(m_RawImage)
+
+                    width = (width \ 2)
+                    height = (height \ 2)
+                Next i
+
+                RawImages_Out.Add(m_RawTextureLevels)
+            Next f
+
+            Return True
+        End Function
+
+        Public Sub SetTextureEndian(SwapEndian_DxtBlock As Boolean)
+            'm_SwapEndian_DxtBlock = SwapEndian_DxtBlock
+            Dim l_RawImages As List(Of List(Of RawImage)) = Me.GetRawImageData()
+
+            For f = 0 To l_RawImages.Count - 1
+                For i = 0 To l_RawImages(f).Count - 1
+                    l_RawImages(f)(i).SetEndianFormat(SwapEndian_DxtBlock)
+                    'Me.TextureFaces(f).TextureLevels(i) = New Rx3TextureLevelHeader(Me.Rx3TextureHeader.Width, Me.Rx3TextureHeader.Height, Me.Rx3TextureHeader.TextureFormat, Me.m_SwapEndian, SwapEndian_DxtBlock)
+                Next
+            Next
+
+            Me.SetRawImageData(l_RawImages)
+        End Sub
+
+        Public Sub SetTextureTiling(Tiled360 As Boolean)
+            'm_Tiled360 = Tiled360
+            Dim l_RawImages As List(Of List(Of RawImage)) = Me.GetRawImageData()
+
+            For f = 0 To l_RawImages.Count - 1
+                For i = 0 To l_RawImages(f).Count - 1
+                    l_RawImages(f)(i).SetTiling360Format(Tiled360)
+                    'Me.TextureFaces(f).TextureLevels(i) = New Rx3TextureLevelHeader(Me.Rx3TextureHeader.Width, Me.Rx3TextureHeader.Height, Me.Rx3TextureHeader.TextureFormat, Me.m_SwapEndian, SwapEndian_DxtBlock)
+                Next
+            Next
+
+            Me.SetRawImageData(l_RawImages)
+        End Sub
+        'Public Function GenerateMipmaps(ByVal NumLevels As UShort) As Boolean  'generate mipmaps
+
+        'End Function
+        Public Sub GenerateMipmaps(ByVal NumLevels As UShort, ByVal TextureFormat As Rw.SurfaceFormat) 'As Boolean  'generate mipmaps
+            Me.SetRawImageData(Me.GenerateMipmaps(Me.GetRawImageData(), NumLevels, TextureFormat))
+        End Sub
+
+        Private Function GenerateMipmaps(ByVal RawImages As List(Of List(Of RawImage)), ByVal NumLevels As UShort, ByVal TextureFormat As Rw.SurfaceFormat) As List(Of List(Of RawImage))  'generate mipmaps
+            'Me.Rx3TextureHeader.NumLevels = NumLevels
+            Dim ETextureFormat As ETextureFormat = TextureFormat.ToETextureFormat
+
+            For f = 0 To RawImages.Count - 1
+                'Me.TextureFaces(f) = New Rx3TextureFace()
+                Dim srcBitmap As Bitmap = RawImages(f)(0).Bitmap
+                Dim width As Integer = srcBitmap.Width
+                Dim height As Integer = srcBitmap.Height
+                Dim SwapEndian_DxtBlock As Boolean = True
+                Dim Tiled360 As Boolean = True
+                Dim Size As UInteger = GraphicUtil.GetTextureSize(width, height, ETextureFormat)
+
+                'ReDim Preserve Me.TextureFaces(f).TextureLevels(NumLevels - 1)
+                RawImages.RemoveRange(1, RawImages(f).Count - 1)
+                For i = 0 To NumLevels - 1
+
+                    If i <> 0 Then
+                        RawImages(f)(i) = New RawImage(width, height, ETextureFormat, Size, SwapEndian_DxtBlock, Tiled360)
+                        'RawImages(f)(i).CalcPitchLinesSize()
+
+                        srcBitmap = GraphicUtil.ReduceBitmap(srcBitmap)
+                        RawImages(f)(i).Bitmap = srcBitmap
+                    End If
+
+                    width = (width \ 2)
+                    height = (height \ 2)
+                Next i
+            Next f
+
+            Return RawImages
+        End Function
+
+        Private Sub CreateRawImageData()      'Read: bytes -> RawImages
+            'Dim m_RawImages As New List(Of List(Of RawImage)) '(NumFaces - 1) {}
+            Dim m As New MemoryStream(Me.PBuffer.Data)
+            Dim r As New FileReader(m, Endian.Big)
+
+            Dim Fix_CreateMipmaps As Boolean = False     'fix: errors at function "ConvertToLinearTexture" with out of array
+
+            Me.RawImageData = New List(Of List(Of RawImage))
+            For f = 0 To Me.D3d.Format.Depth - 1
+                Dim m_RawTextureLevels As New List(Of RawImage)
+
+                'Me.TextureFaces(f) = New TextureFace()
+                Dim width As Integer = Me.D3d.Format.Width    'each face same height/width from header -> so put here
+                Dim height As Integer = Me.D3d.Format.Height  'each face same height/width from header -> so put here
+                Dim TextureFormat As ETextureFormat = Me.D3d.Format.TextureFormat.ToETextureFormat
+                Dim Size As UInteger = GraphicUtil.GetTextureSize(width, height, TextureFormat)
+                Dim SwapEndian_DxtBlock As Boolean = True
+                Dim Tiled360 As Boolean = True
+
+                For i = 0 To Me.NumMipLevels - 1
+                    Dim m_RawImage As New RawImage(width, height, TextureFormat, Size, SwapEndian_DxtBlock, Tiled360)   'Me.TextureFaces(f).TextureLevels(i) = New TextureLevel(width, height, Me.m_RWRaster.D3d.Format.TextureFormat, SwapEndian_DxtBlock)
+                    If i = 0 Or Fix_CreateMipmaps = False Then
+                        m_RawImage.Load(r) 'Me.TextureFaces(f).TextureLevels(i).Load(r)
+                    End If
+
+                    m_RawTextureLevels.Add(m_RawImage)
+
+                    width = (width \ 2)
+                    height = (height \ 2)
+                Next i
+
+                If Fix_CreateMipmaps Then
+                    Me.GenerateMipmaps(Me.NumMipLevels, Me.D3d.Format.TextureFormat)
+                End If
+
+                Me.RawImageData.Add(m_RawTextureLevels)
+            Next f
+
+        End Sub
+
+        Private Sub CreateRawData()     'Write: RawImages -> bytes
+            Dim Tmp_Size As UInteger '= (Me.NumIndices * Me.IndexStride)
+            For f = 0 To Me.D3d.Format.Depth - 1
+                Dim width As Integer = Me.D3d.Format.Width
+                Dim height As Integer = Me.D3d.Format.Height
+                For i = 0 To Me.NumMipLevels - 1
+                    Tmp_Size += GraphicUtil.GetTextureSize(width, height, Me.D3d.Format.TextureFormat.ToETextureFormat)
+                    width \= 2
+                    height \= 2
+                Next i
+            Next f
+            Do While Tmp_Size Mod 65536 <> 0   'calculate padding: always allignment 16 !
+                Tmp_Size += 1
+            Loop
+
+            Dim SwapEndian_DxtBlock As Boolean = True
+            Me.PBuffer.Data = New Byte(Tmp_Size - 1) {}
+            Dim output As New MemoryStream(Me.PBuffer.Data) ', 0, 0)
+            Dim w As New FileWriter(output, Endian.Big)
+
+            For f = 0 To Me.RawImageData.Count - 1
+                For i = 0 To Me.RawImageData(f).Count - 1
+                    Me.RawImageData(f)(i).Save(SwapEndian_DxtBlock, w)
+                Next i
+            Next f
+
+        End Sub
+
+        Public Property PBuffer As Rw.Core.Arena.Buffer ' pointer to index of buffer
             Get
                 Return CType(Me.RwArena.Sections.GetObject(Me.D3d.Format.BaseAddress), Rw.Core.Arena.Buffer)
             End Get
@@ -54,6 +372,9 @@ Namespace Rw.Graphics
         Public Property Face As Byte
         Public Property NumMipLevels As Byte
         Public Property Locked As Byte
+
+        Private NeedToSaveRawData As Boolean = False
+        Private RawImageData As List(Of List(Of RawImage)) = Nothing
 
         Public Enum Addressing As Integer   'rw::graphics::Raster::Addressing
             ADDRESSING_NA = -1

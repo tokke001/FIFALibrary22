@@ -48,10 +48,34 @@
         End Sub
 
 
+        Private _Offset As UInteger
+        Private _Size As UInteger
         ' Properties
+        ''' <summary>
+        ''' Signature of the Section. </summary>
         Public Property Signature As SectionHash
+        ''' <summary>
+        ''' File-offset to the section. (ReadOnly). </summary>
         Public Property Offset As UInteger
+            Get
+                Return _Offset
+            End Get
+            Friend Set
+                _Offset = Value
+            End Set
+        End Property
+        ''' <summary>
+        ''' Size of of the section. (ReadOnly). </summary>
         Public Property Size As UInteger
+            Get
+                Return _Size
+            End Get
+            Friend Set
+                _Size = Value
+            End Set
+        End Property
+        ''' <summary>
+        ''' Empty 0-value. </summary>
         Public Property Unknown As UInteger = 0
 
     End Class

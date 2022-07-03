@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Graphics
     Public Class VertexDescriptor
         'rw::graphics::VertexDescriptor     
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_VERTEXDESCRIPTOR
         Public Const ALIGNMENT As Integer = 4
 
@@ -16,114 +16,154 @@
 
         Public Overrides Sub Load(ByVal r As FileReader)
 
-            Me.D3dVertexDeclaration = r.ReadUInt32 'always 0, i think pointer to "D3DResource" (maybe unused at FIFA ?)
-            Me.TypesFlags = r.ReadUInt32            'flags of elementtypes used
-            Me.NumElements = r.ReadByte
-            Me.VertexStride = r.ReadByte
-            Me.NumTextureCoordinates = r.ReadByte   'number of texture-coordinaes
+            Me.D3dVertexDeclaration = r.ReadUInt32  'always 0, i think pointer to "D3DResource" (maybe unused at FIFA ?)
+            r.ReadUInt32()                          'Me.TypesFlags = flags of elementtypes used
+            Dim m_NumElements As Byte = r.ReadByte
+            r.ReadByte()                            'Me.VertexStride
+            r.ReadByte()                            'Me.NumTextureCoordinates = number of texture-coordinaes
             Me.Pad = r.ReadByte                     'value 0 - padding ?
-            Me.ElementHash = r.ReadUInt32           'hash of elementtypes used
+            r.ReadUInt32()                          'Me.ElementHash = hash of elementtypes used
 
-            Me.Elements = New Element(Me.NumElements - 1) {}
-            For i = 0 To Me.NumElements - 1
+            Me.Elements = New Element(m_NumElements - 1) {}
+            For i = 0 To m_NumElements - 1
                 Me.Elements(i) = New Element(r)
             Next i
 
         End Sub
 
-        Public Sub CalcFlagsAndHash()   'Calulate Me.TypesFlags and Me.ElementHash from Me.Elements array
-            Me.TypesFlags = 0
-            Me.ElementHash = 0
+        Public Function GetTypesFlags(ByVal m_Elements As Element()) As ETypeFlags  'Calulate TypesFlags from Elements array
+            Dim m_TypesFlags As ETypeFlags = 0
 
-            For i = 0 To Me.Elements.Length - 1
-                Select Case Me.Elements(i).TypeCode
+            For i = 0 To m_Elements.Length - 1
+                Select Case m_Elements(i).TypeCode
                     Case ElementType.ELEMENTTYPE_XBOX2_XYZ
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_XYZ
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_XYZ
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_XYZ
                     Case ElementType.ELEMENTTYPE_XBOX2_XYZRHW
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_XYZRHW
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_XYZRHW
                     Case ElementType.ELEMENTTYPE_XBOX2_NORMAL
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_NORMAL
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_NORMAL
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_NORMAL
                     Case ElementType.ELEMENTTYPE_XBOX2_VERTEXCOLOR
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_VERTEXCOLOR
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_VERTEXCOLOR
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_VERTEXCOLOR
                     Case ElementType.ELEMENTTYPE_XBOX2_PRELIT
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_PRELIT
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_PRELIT
                     Case ElementType.ELEMENTTYPE_XBOX2_TEX0
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TEX0
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TEX0
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TEX0
                     Case ElementType.ELEMENTTYPE_XBOX2_TEX1
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TEX1
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TEX1
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TEX1
                     Case ElementType.ELEMENTTYPE_XBOX2_TEX2
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TEX2
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TEX2
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TEX2
                     Case ElementType.ELEMENTTYPE_XBOX2_TEX3
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TEX3
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TEX3
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TEX3
                     Case ElementType.ELEMENTTYPE_XBOX2_TEX4
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TEX4
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TEX4
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TEX4
                     Case ElementType.ELEMENTTYPE_XBOX2_TEX5
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TEX5
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TEX5
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TEX5
                     Case ElementType.ELEMENTTYPE_XBOX2_TEX6
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TEX6
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TEX6
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TEX6
                     Case ElementType.ELEMENTTYPE_XBOX2_TEX7
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TEX7
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TEX7
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TEX7
                     Case ElementType.ELEMENTTYPE_XBOX2_INDICES
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_INDICES
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_INDICES
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_INDICES
                     Case ElementType.ELEMENTTYPE_XBOX2_WEIGHTS
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_WEIGHTS
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_WEIGHTS
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_WEIGHTS
                     Case ElementType.ELEMENTTYPE_XBOX2_XYZ2
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_XYZ2
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_XYZ2
                     Case ElementType.ELEMENTTYPE_XBOX2_NORMAL2
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_NORMAL2
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_NORMAL2
                     Case ElementType.ELEMENTTYPE_XBOX2_XZ
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_XZ
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_XZ
                     Case ElementType.ELEMENTTYPE_XBOX2_Y
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_Y
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_Y
                     Case ElementType.ELEMENTTYPE_XBOX2_Y2
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_Y2
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_Y2
                     Case ElementType.ELEMENTTYPE_XBOX2_TANGENT
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_TANGENT
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_TANGENT
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_TANGENT
                     Case ElementType.ELEMENTTYPE_XBOX2_BINORMAL
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_BINORMAL
-                        Me.ElementHash = Me.ElementHash Or EElementHash.ELEMENTHASH_BINORMAL
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_BINORMAL
                     Case ElementType.ELEMENTTYPE_XBOX2_SPECULAR
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_SPECULAR
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_SPECULAR
                     Case ElementType.ELEMENTTYPE_XBOX2_FOG
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_FOG
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_FOG
                     Case ElementType.ELEMENTTYPE_XBOX2_PSIZE
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_PSIZE
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_PSIZE
                     Case ElementType.ELEMENTTYPE_XBOX2_INDICES2
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_INDICES2
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_INDICES2
                     Case ElementType.ELEMENTTYPE_XBOX2_WEIGHTS2
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_WEIGHTS2
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_WEIGHTS2
                     Case ElementType.ELEMENTTYPE_XBOX2_MAX
-                        Me.TypesFlags = Me.TypesFlags Or ETypeFlags.TYPEFLAG_MAX
-                        'Me.ElementHash = Me.ElementHash or EElementHash.
+                        m_TypesFlags = m_TypesFlags Or ETypeFlags.TYPEFLAG_MAX
                 End Select
             Next
 
-        End Sub
+            Return m_TypesFlags
+        End Function
+
+        Public Function GetElementHash(ByVal m_Elements As Element()) As EElementHash  'Calulate m_ElementHash from Elements array
+            Dim m_ElementHash As EElementHash = 0
+
+            For i = 0 To m_Elements.Length - 1
+                Select Case m_Elements(i).TypeCode
+                    Case ElementType.ELEMENTTYPE_XBOX2_XYZ
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_XYZ
+                    'Case ElementType.ELEMENTTYPE_XBOX2_XYZRHW
+
+                    Case ElementType.ELEMENTTYPE_XBOX2_NORMAL
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_NORMAL
+                    Case ElementType.ELEMENTTYPE_XBOX2_VERTEXCOLOR
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_VERTEXCOLOR
+                    'Case ElementType.ELEMENTTYPE_XBOX2_PRELIT
+                        'm_ElementHash = m_ElementHash or EElementHash.
+                    Case ElementType.ELEMENTTYPE_XBOX2_TEX0
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TEX0
+                    Case ElementType.ELEMENTTYPE_XBOX2_TEX1
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TEX1
+                    Case ElementType.ELEMENTTYPE_XBOX2_TEX2
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TEX2
+                    Case ElementType.ELEMENTTYPE_XBOX2_TEX3
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TEX3
+                    Case ElementType.ELEMENTTYPE_XBOX2_TEX4
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TEX4
+                    Case ElementType.ELEMENTTYPE_XBOX2_TEX5
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TEX5
+                    Case ElementType.ELEMENTTYPE_XBOX2_TEX6
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TEX6
+                    Case ElementType.ELEMENTTYPE_XBOX2_TEX7
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TEX7
+                    Case ElementType.ELEMENTTYPE_XBOX2_INDICES
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_INDICES
+                    Case ElementType.ELEMENTTYPE_XBOX2_WEIGHTS
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_WEIGHTS
+                    'Case ElementType.ELEMENTTYPE_XBOX2_XYZ2
+                    '    'm_ElementHash = m_ElementHash or EElementHash.
+                    'Case ElementType.ELEMENTTYPE_XBOX2_NORMAL2
+                    '    'm_ElementHash = m_ElementHash or EElementHash.
+                    'Case ElementType.ELEMENTTYPE_XBOX2_XZ
+                    '    'm_ElementHash = m_ElementHash or EElementHash.
+                    'Case ElementType.ELEMENTTYPE_XBOX2_Y
+                    '    'm_ElementHash = m_ElementHash or EElementHash.
+                    'Case ElementType.ELEMENTTYPE_XBOX2_Y2
+                    '    'm_ElementHash = m_ElementHash or EElementHash.
+                    Case ElementType.ELEMENTTYPE_XBOX2_TANGENT
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_TANGENT
+                    Case ElementType.ELEMENTTYPE_XBOX2_BINORMAL
+                        m_ElementHash = m_ElementHash Or EElementHash.ELEMENTHASH_BINORMAL
+                        'Case ElementType.ELEMENTTYPE_XBOX2_SPECULAR
+                        '    'm_ElementHash = m_ElementHash or EElementHash.
+                        'Case ElementType.ELEMENTTYPE_XBOX2_FOG
+                        '    'm_ElementHash = m_ElementHash or EElementHash.
+                        'Case ElementType.ELEMENTTYPE_XBOX2_PSIZE
+                        '    'm_ElementHash = m_ElementHash or EElementHash.
+                        'Case ElementType.ELEMENTTYPE_XBOX2_INDICES2
+                        '    'm_ElementHash = m_ElementHash or EElementHash.
+                        'Case ElementType.ELEMENTTYPE_XBOX2_WEIGHTS2
+                        '    'm_ElementHash = m_ElementHash or EElementHash.
+                        'Case ElementType.ELEMENTTYPE_XBOX2_MAX
+                        '    'm_ElementHash = m_ElementHash or EElementHash.
+                End Select
+            Next
+
+            Return m_ElementHash
+        End Function
 
         'Private Sub debug()
         '    Select Case ElementHash
@@ -147,8 +187,20 @@
         '    End Select
         'End Sub
 
+        Public Shared Function GetNumTextCoos(ByVal ListVertexElements As FIFALibrary22.VertexElement()) As Integer
+            Dim ReturnValue As Integer = 0
+
+            For i = 0 To ListVertexElements.Length - 1
+                If ListVertexElements(i).Usage = Microsoft.DirectX.Direct3D.DeclarationUsage.TextureCoordinate Then
+                    ReturnValue += 1
+                End If
+            Next i
+
+            Return ReturnValue
+        End Function
+
         Public Overrides Sub Save(ByVal w As FileWriter)
-            Me.NumElements = CUInt(Me.Elements.Length)
+            'Me.NumElements = CUInt(Me.Elements.Length)
             'Me.CalcFlagsAndHash()  --> left out to save time at writing 
 
             w.Write(Me.D3dVertexDeclaration)
@@ -166,20 +218,65 @@
 
         End Sub
 
-        Public Property D3dVertexDeclaration As UInteger
-        Public Property TypesFlags As ETypeFlags
-        Public Property NumElements As Byte
-        Public Property VertexStride As Byte  'm_stride
-        Public Property NumTextureCoordinates As Byte
+        Public Property D3dVertexDeclaration As UInteger = 0
+        ''' <summary>
+        ''' Returns the flags of ElementTypes used (ReadOnly) . </summary>
+        Public ReadOnly Property TypesFlags As ETypeFlags
+            Get
+                Return GetTypesFlags(Me.Elements)
+            End Get
+        End Property
+        ''' <summary>
+        ''' Returns the number of Vertex-Format Elements (ReadOnly) . </summary>
+        Public ReadOnly Property NumElements As Byte
+            Get
+                Return If(Elements?.Count, 0)
+            End Get
+        End Property
+        ''' <summary>
+        ''' Size of 1 Vertex (ReadOnly). </summary>
+        Public ReadOnly Property VertexStride As Byte  'm_stride
+            Get
+                Return FifaUtil.GetVertexStride(Me.Elements)
+            End Get
+        End Property
+
+        ''' <summary>
+        ''' Returns the number of Texture-Coordinates in the VertexFormat (ReadOnly) . </summary>
+        Public ReadOnly Property NumTextureCoordinates As Byte
+            Get
+                Return GetNumTextCoos(Me.Elements)
+            End Get
+        End Property
+        ''' <summary>
+        ''' Empty 0-value. </summary>
         Public Property Pad As Byte = 0 'padding maybe??
-        Public Property ElementHash As EElementHash
+        ''' <summary>
+        ''' Returns the Hash of ElementTypes used (ReadOnly) . </summary>
+        Public ReadOnly Property ElementHash As EElementHash
+            Get
+                Return GetElementHash(Me.Elements)
+            End Get
+        End Property
+        ''' <summary>
+        ''' Gets/Sets the VertexFormat Elements. </summary>
         Public Property Elements As Element()
 
         Public Class Element
             Inherits VertexElement
+
             'rw::graphics::VertexDescriptor::Element
             Public Sub New()
 
+            End Sub
+
+            Public Sub New(ByVal m_VertexElement As VertexElement, Optional Stream As UShort = 0, Optional Method As Microsoft.DirectX.Direct3D.DeclarationMethod = Microsoft.DirectX.Direct3D.DeclarationMethod.Default)
+                MyBase.Offset = m_VertexElement.Offset
+                MyBase.DataType = m_VertexElement.DataType
+                MyBase.Usage = m_VertexElement.Usage
+                MyBase.UsageIndex = m_VertexElement.UsageIndex
+                Me.Stream = Stream
+                Me.Method = Method
             End Sub
 
             Public Sub New(ByVal r As FileReader)
@@ -195,14 +292,80 @@
                 Me.Method = r.ReadByte
                 MyBase.Usage = r.ReadByte
                 MyBase.UsageIndex = r.ReadByte
-                Me.TypeCode = r.ReadByte   'RW DataTypeCode
+                r.ReadByte()                      'Me.TypeCode = RW DataTypeCode
 
             End Sub
+
+            Private Function GetTypeCode(ByVal m_Usage As Microsoft.DirectX.Direct3D.DeclarationUsage, ByVal UsageIndex As Byte) As ElementType
+                Select Case m_Usage
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.Position
+                        If UsageIndex = 1 Then
+                            Return ElementType.ELEMENTTYPE_XBOX2_XYZ2
+                        Else
+                            Return ElementType.ELEMENTTYPE_XBOX2_XYZ
+                        End If
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.Sample
+                        Return 0
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.Depth
+                        Return 0
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.Fog
+                        Return ElementType.ELEMENTTYPE_XBOX2_FOG
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.Color
+                        Return ElementType.ELEMENTTYPE_XBOX2_VERTEXCOLOR
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.PositionTransformed
+                        Return 0
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.TessellateFactor
+                        Return 0
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.BiNormal
+                        Return ElementType.ELEMENTTYPE_XBOX2_BINORMAL
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.Tangent
+                        Return ElementType.ELEMENTTYPE_XBOX2_TANGENT
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.TextureCoordinate
+                        Select Case UsageIndex
+                            Case 0
+                                Return ElementType.ELEMENTTYPE_XBOX2_TEX0
+                            Case 1
+                                Return ElementType.ELEMENTTYPE_XBOX2_TEX1
+                            Case 2
+                                Return ElementType.ELEMENTTYPE_XBOX2_TEX2
+                            Case 3
+                                Return ElementType.ELEMENTTYPE_XBOX2_TEX3
+                            Case 4
+                                Return ElementType.ELEMENTTYPE_XBOX2_TEX4
+                            Case 5
+                                Return ElementType.ELEMENTTYPE_XBOX2_TEX5
+                            Case 6
+                                Return ElementType.ELEMENTTYPE_XBOX2_TEX6
+                            Case 7
+                                Return ElementType.ELEMENTTYPE_XBOX2_TEX7
+                        End Select
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.BlendIndices
+                        If UsageIndex = 1 Then
+                            Return ElementType.ELEMENTTYPE_XBOX2_INDICES2
+                        Else
+                            Return ElementType.ELEMENTTYPE_XBOX2_INDICES
+                        End If
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.BlendWeight
+                        If UsageIndex = 1 Then
+                            Return ElementType.ELEMENTTYPE_XBOX2_WEIGHTS2
+                        Else
+                            Return ElementType.ELEMENTTYPE_XBOX2_WEIGHTS
+                        End If
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.PointSize
+                        Return ElementType.ELEMENTTYPE_XBOX2_PSIZE
+                    Case Microsoft.DirectX.Direct3D.DeclarationUsage.Normal
+                        If UsageIndex = 1 Then
+                            Return ElementType.ELEMENTTYPE_XBOX2_NORMAL2
+                        Else
+                            Return ElementType.ELEMENTTYPE_XBOX2_NORMAL
+                        End If
+                End Select
+            End Function
 
             Public Sub Save(ByVal w As FileWriter)
 
                 w.Write(Me.Stream)
-                w.Write(MyBase.Offset)
+                w.Write(CUShort(MyBase.Offset))
                 w.Write(CUInt(MyBase.DataType))
 
                 w.Write(CByte(Me.Method))
@@ -212,14 +375,23 @@
 
             End Sub
 
-            Public Property Stream As UShort
+            ''' <summary>
+            ''' Retrieves or sets the stream number (or index) to use. </summary>
+            Public Property Stream As UShort    'Stream number (or index) to use --> https://docs.microsoft.com/en-us/previous-versions/ms847453(v=msdn.10)
             'Public Property Offset As UShort
             'Public Property DataType As Rw.D3D.D3DDECLTYPE
+            ''' <summary>
+            ''' Retrieves or sets the tessellator processing method. </summary>
             Public Property Method As Microsoft.DirectX.Direct3D.DeclarationMethod
             'Public Property Usage As Microsoft.DirectX.Direct3D.DeclarationUsage
             'Public Property UsageIndex As Byte
-            Public Property TypeCode As ElementType
-
+            ''' <summary>
+            ''' Retrieves or sets the Rw Typecode that define the intended use of the vertex data. </summary>
+            Public ReadOnly Property TypeCode As ElementType
+                Get
+                    Return GetTypeCode(MyBase.Usage, MyBase.UsageIndex)
+                End Get
+            End Property
         End Class
 
         <Flags>

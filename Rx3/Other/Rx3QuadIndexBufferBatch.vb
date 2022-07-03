@@ -4,41 +4,39 @@
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.QUAD_INDEX_BUFFER_BATCH
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
         Public Sub Load(ByVal r As FileReader)
 
-            Me.NumQIndexBuffers = r.ReadUInt32
+            Dim m_NumQIndexBuffers = r.ReadUInt32
             Me.Unknown(0) = r.ReadUInt32
             Me.Unknown(1) = r.ReadUInt32
             Me.Unknown(2) = r.ReadUInt32
 
-            Me.Rx3QIndexBufferHeaders = New QuadIndexBufferHeader(Me.NumQIndexBuffers - 1) {}
-            For i = 0 To Me.NumQIndexBuffers - 1
-                Me.Rx3QIndexBufferHeaders(i) = New QuadIndexBufferHeader(r)
+            Me.QIndexBufferHeaders = New QuadIndexBufferHeader(m_NumQIndexBuffers - 1) {}
+            For i = 0 To m_NumQIndexBuffers - 1
+                Me.QIndexBufferHeaders(i) = New QuadIndexBufferHeader(r, Nothing)
             Next i
 
         End Sub
 
         Public Sub Save(ByVal Rx3QIndexBuffers As List(Of QuadIndexBuffer), ByVal w As FileWriter)
-            Me.NumQIndexBuffers = Rx3QIndexBuffers.Count
-
-            w.Write(Me.NumQIndexBuffers)
+            w.Write(If(Rx3QIndexBuffers?.Count, 0))
             w.Write(Me.Unknown(0))
             w.Write(Me.Unknown(1))
             w.Write(Me.Unknown(2))
 
-            Me.Rx3QIndexBufferHeaders = New QuadIndexBufferHeader(Me.NumQIndexBuffers - 1) {}
-            For i = 0 To Me.NumQIndexBuffers - 1
-                Me.Rx3QIndexBufferHeaders(i) = New QuadIndexBufferHeader
-                Me.Rx3QIndexBufferHeaders(i).Save(Rx3QIndexBuffers(i).Rx3QIndexBufferHeader, w)
+            Me.QIndexBufferHeaders = New QuadIndexBufferHeader(Rx3QIndexBuffers.Count - 1) {}
+            For i = 0 To Rx3QIndexBuffers.Count - 1
+                Me.QIndexBufferHeaders(i) = Rx3QIndexBuffers(i).Header
+                Me.QIndexBufferHeaders(i).Save(w)
             Next i
 
             FifaUtil.WriteAlignment(w, ALIGNMENT)
@@ -46,8 +44,16 @@
 
 
         ' Properties
-        Public Property NumQIndexBuffers As UInteger
-        Public Property Rx3QIndexBufferHeaders As QuadIndexBufferHeader()
+        ''' <summary>
+        ''' Number of QuadIndexBuffer-Headers (ReadOnly). </summary>
+        Public ReadOnly Property NumQIndexBuffers As UInteger
+            Get
+                Return If(QIndexBufferHeaders?.Count, 0)
+            End Get
+        End Property
+        Public Property QIndexBufferHeaders As QuadIndexBufferHeader()
+        ''' <summary>
+        ''' Empty 0-values. </summary>
         Public Property Unknown As UInteger() = New UInteger(3 - 1) {}
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash

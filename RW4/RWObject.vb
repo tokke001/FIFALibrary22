@@ -1,6 +1,6 @@
 ﻿Imports FIFALibrary22.Rw.Core.Arena
 Namespace Rw
-    Public MustInherit Class RWObject
+    Public MustInherit Class RwObject
         'rw::graphics::RwgObjectType
 
         ''' <summary>
@@ -18,36 +18,30 @@ Namespace Rw
         '    Me.Load(r)
         'End Sub
 
+        ''' <summary>
+        ''' Returns the Object metadata used when generating the file. Not all objects require this. </summary>
         Public Overridable Function GetSectionInfo() As ArenaDictEntry
             Return SectionInfo
         End Function
 
         ''' <summary>
         ''' Reads the data of the object from the given stream. The stream file pointer is at the start offset of the object. </summary>
-        ''' <param name="stream"> </param>
-        ''' <exception cref="IOException"> </exception>
-        'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-        'ORIGINAL LINE: public abstract void read(StreamReader stream) throws IOException;
+        ''' <param name="r"> </param>
         Public MustOverride Sub Load(ByVal r As FileReader)
 
         ''' <summary>
         ''' Writes the data of the object to the given stream. The stream file pointer is at the start offset of the object. </summary>
-        ''' <param name="stream"> </param>
-        ''' <exception cref="IOException"> </exception>
-        'JAVA TO VB CONVERTER WARNING: Method 'throws' clauses are not available in VB:
-        'ORIGINAL LINE: public abstract void write(StreamWriter stream) throws IOException;
+        ''' <param name="w"> </param>
         Public MustOverride Sub Save(ByVal w As FileWriter)
 
         ''' <summary>
         ''' Returns the 32-bit code used to uniquely identify the type of object.
-        ''' @return
         ''' </summary>
         Public MustOverride Function GetTypeCode() As Rw.SectionTypeCode
 
         ''' <summary>
         ''' Returns the alignment used by the section data, if any. Padding bytes will be added before the object data so that
         ''' the start offset can be divided by the alignment.
-        ''' @return
         ''' </summary>
         Public Overridable Function GetAlignment() As Integer
             Return 0
@@ -55,7 +49,6 @@ Namespace Rw
 
         ''' <summary>
         ''' Returns the owner Arena object.
-        ''' @return
         ''' </summary>
         Public Function GetRwArena() As Rw.Core.Arena.Arena
             Return RwArena

@@ -4,12 +4,12 @@
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.SIMPLE_MESH
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
@@ -38,11 +38,20 @@
             FifaUtil.WriteAlignment(w, ALIGNMENT)
         End Sub
 
-
-        Public Property PrimitiveType As Microsoft.DirectX.Direct3D.PrimitiveType
+        ''' <summary>
+        ''' PrimitiveType of the Mesh. </summary>
+        Public Property PrimitiveType As Microsoft.DirectX.Direct3D.PrimitiveType   'https://docs.microsoft.com/en-us/previous-versions/windows/desktop/bb322830(v=vs.85)
+        ''' <summary>
+        ''' Empty 0-values. </summary>
         Public Property Unknown_1 As UShort
+        ''' <summary>
+        ''' Empty 0-values. </summary>
         Public Property Unknown_2 As UShort
+        ''' <summary>
+        ''' Empty 0-values. </summary>
         Public Property Unknown_3 As UShort
+        ''' <summary>
+        ''' Empty 0-values. </summary>
         Public Property Padding As UInteger() = New UInteger(2 - 1) {}
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash

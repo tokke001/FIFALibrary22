@@ -115,93 +115,6 @@
 
     End Enum
 
-    'Public Enum RWSectionCode_oldSorted As UInt32   'can be deleted
-
-    '    '--Arena Sections
-    '    ARENA_SECTION_MANIFEST = &H10004        'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSectionManifest.java
-    '    ARENA_SECTION_TYPES = &H10005           'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSectionTypes.java
-    '    ARENA_SECTION_EXTERNAL_ARENAS = &H10006 'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSectionExternalArenas.java
-    '    ARENA_SECTION_SUBREFERENCES = &H10007   'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSectionSubReferences.java
-    '    ARENA_SECTION_ATOMS = &H10008           'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSectionAtoms.java
-
-    '    '--General
-    '    BUFFER = &H10031    'texture / vertex / index buffer
-    '    NAME_SECTION = &HEC0010
-    '    '--Textures
-    '    RASTER = &H20003    'or TEXTURE?        'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWRaster.java
-    '    '--FIFA 11 Kits
-    '    HOTSPOT = &HEC0003  'Kits hotspots
-    '    '--Models: ball, head, ...
-    '    VERTEX_DESCRIPTOR = &H20004             'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWVertexDescription.java
-    '    VERTEX_BUFFER = &H20005                 'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWVertexBuffer.java
-    '    INDEX_BUFFER = &H20007                  'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWIndexBuffer.java
-    '    MESH = &H20009                          'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWMesh.java
-    '    SKELETON = &H70002                      'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSkeleton.java
-    '    ANIMATION_SKIN = &H70003 'BONE_MATRICES 'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWAnimationSkin.java
-    '    SKIN_MATRIX_BUFFER = &H7000F            'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSkinMatrixBuffer.java
-    '    SHADER_0XEF0004 = &HEF0004
-
-    '    '--Stadiums
-    '    MATERIAL_DESCRIPTOR = &HEF0000
-    '    MATERIAL_DESCRIPTOR_DATA = &HEF0001
-    '    MATERIAL_INDEX = &HEF0005
-    '    UNKNOWN_0X80001 = &H80001
-    '    UNKNOWN_0X80002 = &H80002
-    '    UNKNOWN_0XEB0000 = &HEB0000
-    '    UNKNOWN_0XEB0001 = &HEB0001
-    '    UNKNOWN_0XEB0002 = &HEB0002
-    '    GROUP = &HEB0003
-    '    UNKNOWN_0XEB0004 = &HEB0004
-    '    UNKNOWN_0XEB0007 = &HEB0007
-    '    UNKNOWN_0XEB0008 = &HEB0008
-    '    UNKNOWN_0XEB0009 = &HEB0009
-    '    UNKNOWN_0XEB000E = &HEB000E
-
-    '    '--Unfound/unused sections
-    '    STATIC_ATOM_TABLE = &H10010
-    '    BASE_RESOURCE = &H10030                 'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWBaseResource.java
-    '    UNKNOWN_0X10032 = &H10032
-    '    PALETTE = &H20002
-    '    INDEX_DESCRIPTOR = &H20006
-    '    LIGHT = &H20008
-    '    SHADER_0X2000A = &H2000A
-    '    COMPILED_STATE = &H2000B                'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWCompiledState.java
-    '    RENDER_OBJECT = &H2000C
-    '    VERTEX_SHADER = &H2000E
-    '    PIXEL_SHADER = &H20013
-    '    RENDER_OBJECT_CONTAINER = &H20019
-    '    MESH_COMPILED_STATE_LINK = &H2001A      'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWMeshCompiledStateLink.java
-    '    SHADER_CODE = &H2001B
-    '    MORPH_HANDLE = &HFF0000                 'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWMorphHandle.java
-    '    ANIMATIONS = &HFF0001                   'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWAnimations.java
-    '    KEY_FRAME_ANIM = &H70001                'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWKeyframeAnim.java
-    '    SKELETONS_IN_K = &H7000B                'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSkeletonsInK.java
-    '    SKINS_IN_K = &H7000C                    'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWSkinsInK.java
-    '    TRIANGLE_KD_TREE_PROCEDURAL = &H80003   'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWTriangleKDTreeProcedural.java
-    '    BBOX = &H80005                          'https://github.com/emd4600/SporeModder-FX/blob/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4/RWBBox.java
-
-    'End Enum
-
-    'Public Enum RWTextureFormat 'RWTextureFormat As Byte
-    ' Fields
-    'DXT1 = 82
-    'DXT3 = 83
-    'DXT5 = 84
-    'A8R8G8B8 = 134            'ARGB
-    'GREY8 = 2              'Luminence Map
-    'GREY8ALFA8 = 74
-    'RGBA =                 'New added: width = width \ 2
-    'ATI2 = 113                'D3DFMT_DXN, DC_XY_NORMAL_MAP, NVTT, also known As BC5 compression
-    'ATI1 =                'also known as BC4 compression
-    'A4R4G4B4 = 79
-    'R5G6B5 = 68
-    'X1R5G5B5 = 67
-    'BIT8 = 
-    'R8G8B8 = 
-    'DXT1NORMAL = 124    'D3DFMT_CTX1    --->, same as ATI1 maybe?
-    'A32B32G32R32F = 166 '128 size, float values ?? -> Found at game "UEFA Champions League 2006-2007" > file "stadium_159_6_container_0.rx2"
-    'End Enum
-
     Public Enum SurfaceFormat As Integer     '0x5679
         FMT_1_REVERSE = 0
         FMT_1 = 1
@@ -641,4 +554,97 @@
         RightAnkleEffectorAux = &H98C77BC4UI
 
     End Enum
+
+
+    Public Module TextureFormatHelpers
+        <System.Runtime.CompilerServices.Extension>
+        Public Function ToETextureFormat(ByVal Format As Rw.SurfaceFormat) As ETextureFormat ', ByVal DefaultRx3Format As ETextureFormat) 
+
+            Select Case Format
+            ' rx3 + RW4
+                Case Rw.SurfaceFormat.FMT_DXT1
+                    Return ETextureFormat.BC1
+                Case Rw.SurfaceFormat.FMT_DXT2_3
+                    Return ETextureFormat.BC2
+                Case Rw.SurfaceFormat.FMT_DXT4_5
+                    Return ETextureFormat.BC3
+                Case Rw.SurfaceFormat.FMT_8_8_8_8
+                    Return ETextureFormat.B8G8R8A8
+                Case Rw.SurfaceFormat.FMT_8
+                    Return ETextureFormat.L8
+                Case Rw.SurfaceFormat.FMT_8_8
+                    Return ETextureFormat.L8A8
+                Case Rw.SurfaceFormat.FMT_DXN
+                    Return ETextureFormat.BC5
+                Case Rw.SurfaceFormat.FMT_4_4_4_4
+                    Return ETextureFormat.B4G4R4A4
+                Case Rw.SurfaceFormat.FMT_5_6_5
+                    Return ETextureFormat.B5G6R5
+                Case Rw.SurfaceFormat.FMT_1_5_5_5
+                    Return ETextureFormat.B5G5R5A1
+
+            'RX3 only
+                'RGBA
+                'ATI1
+                'BIT8
+                'R8G8B8
+                'BC6H_UF16
+
+            'RW4 only
+                Case Rw.SurfaceFormat.FMT_CTX1
+                    Return ETextureFormat.CTX1
+                Case Rw.SurfaceFormat.FMT_32_32_32_32_FLOAT
+                    Return ETextureFormat.R32G32B32A32Float
+
+                Case Else
+                    MsgBox("Unknown RWTextureFormat found at function ""GetEFromRWTextureFormat"": " & Format.ToString)
+                    Return ETextureFormat.BC1
+            End Select
+
+        End Function
+
+        <System.Runtime.CompilerServices.Extension>
+        Public Function ToRx3TextureFormat(ByVal Format As Rw.SurfaceFormat) As Rx3.TextureFormat ', ByVal DefaultRx3Format As Rx3.TextureFormat) 
+
+            Select Case Format
+            ' rx3 + RW4
+                Case Rw.SurfaceFormat.FMT_DXT1
+                    Return Rx3.TextureFormat.DXT1
+                Case Rw.SurfaceFormat.FMT_DXT2_3
+                    Return Rx3.TextureFormat.DXT3
+                Case Rw.SurfaceFormat.FMT_DXT4_5
+                    Return Rx3.TextureFormat.DXT5
+                Case Rw.SurfaceFormat.FMT_8_8_8_8
+                    Return Rx3.TextureFormat.B8G8R8A8
+                Case Rw.SurfaceFormat.FMT_8
+                    Return Rx3.TextureFormat.L8
+                Case Rw.SurfaceFormat.FMT_8_8
+                    Return Rx3.TextureFormat.L8A8
+                Case Rw.SurfaceFormat.FMT_DXN
+                    Return Rx3.TextureFormat.ATI2
+                Case Rw.SurfaceFormat.FMT_4_4_4_4
+                    Return Rx3.TextureFormat.B4G4R4A4
+                Case Rw.SurfaceFormat.FMT_5_6_5
+                    Return Rx3.TextureFormat.B5G6R5
+                Case Rw.SurfaceFormat.FMT_1_5_5_5
+                    Return Rx3.TextureFormat.B5G5R5A1
+
+                    'RX3 only
+                    'RGBA
+                    'ATI1
+                    'BIT8
+                    'R8G8B8
+                    'BC6H_UF16
+
+                    'RW4 only
+                    'Case RWTextureFormat.DXT1NORMAL
+                    'Case RWTextureFormat.A32B32G32R32F
+
+                Case Else
+                    MsgBox("Unknown RWTextureFormat found at function ""GetRx3FromRWTextureFormat"": " & Format.ToString)
+                    Return Rx3.TextureFormat.DXT1
+            End Select
+
+        End Function
+    End Module
 End Namespace

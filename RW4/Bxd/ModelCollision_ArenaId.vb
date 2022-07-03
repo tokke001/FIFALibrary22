@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Bxd
     Public Class CollisionModel
         'bxd::tCollisionModel
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.MODELCOLLISION_ARENAID
         Public Const ALIGNMENT As Integer = 16
 
@@ -144,7 +144,7 @@
         Private RwArena As Rw.Core.Arena.Arena
 
         Public Property eType As ECollisionShape  'always 3 (Volume)
-        Public Property PShape As RWObject      'if type 3 : section index of RWCOBJECTTYPE_VOLUME (&H80001)
+        Public Property PShape As RwObject      'if type 3 : section index of RWCOBJECTTYPE_VOLUME (&H80001)
 
         Public Enum ECollisionShape As Integer
             eCS_Undefined = -1

@@ -3,7 +3,7 @@
 Namespace Rw.Graphics
     Public Class VertexBuffer
         'rw::graphics::VertexBuffer
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_VERTEXBUFFER
         Public Const ALIGNMENT As Integer = 16
 
@@ -26,14 +26,20 @@ Namespace Rw.Graphics
             Me.NumVertices = r.ReadUInt32    'vertexcount
             Me.PVertexDescriptor = CType(Me.RwArena.Sections.GetObject(r.ReadInt32), VertexDescriptor)    'reference to sectionindex &H20004 (VERTEX_DESCRIPTOR)
 
+            If MyBase.RwArena.UseRwBuffers AndAlso Me.PBuffer IsNot Nothing Then
+                Me.CreateVertexData()
+            End If
+
         End Sub
 
         Public Overrides Sub Save(ByVal w As FileWriter)
-
-            'Me.D3dVertexBuffer.SizeVertexBuffer = 'set in Rx3File section
-            'Me.VertexStride = 'set in Rx3File section
-            'Me.NumVertices = 'set in Rx3File section
-            'Me.PtrVertexDescriptor = RW4Section.GetRWSectionIndex(Rw.SectionTypeCode.VERTEX_BUFFER)    'need tweaking
+            If MyBase.RwArena.UseRwBuffers Then   'only do this for rx2 (when rw buffer is used), 
+                Me.SetValues()
+                If Me.NeedToSaveRawData Then
+                    Me.CreateRawData()
+                    Me.NeedToSaveRawData = False
+                End If
+            End If
 
             Me.D3dVertexBuffer.Save(w)
 
@@ -45,11 +51,83 @@ Namespace Rw.Graphics
 
         End Sub
 
-        'Public Function GetBuffer() As Rw.Core.Arena.Buffer
-        '    Return CType(Me.RwArena.Sections.GetObject(Me.D3dVertexBuffer.Format.BaseAddress), Rw.Core.Arena.Buffer)
-        'End Function
+        Private Sub SetValues()
+            If Me.VertexData IsNot Nothing Then
+                Me.SetValues(Me.VertexData.Count, Me.PVertexDescriptor.VertexStride)
+            End If
+        End Sub
 
-        Public Property VertexData As Rw.Core.Arena.Buffer ' pointer to index of buffer
+        Friend Sub SetValues(ByVal NumVertices As UInteger, ByVal VertexStride As UShort)
+            Me.NumVertices = NumVertices
+            Me.VertexStride = VertexStride
+
+            Dim Tmp_VertexSize As UInteger = (VertexStride * NumVertices)   'always vertex buffer size + 2  ???
+            Do While Tmp_VertexSize Mod 32 <> 0   'calculate padding: always allignment 32 !
+                Tmp_VertexSize += 1
+            Loop
+            Me.D3dVertexBuffer.Format.SizeVertexBuffer = Tmp_VertexSize
+
+        End Sub
+
+        Public Function GetVertexData() As List(Of Vertex)
+            If (Me.VertexData Is Nothing) Then
+                Me.CreateVertexData()
+            End If
+
+            Return Me.VertexData
+        End Function
+
+        Public Sub SetVertexData(ByVal VertexData As List(Of Vertex))
+            Me.SetVertexData(VertexData, Me.PVertexDescriptor)
+        End Sub
+
+        Public Sub SetVertexData(ByVal VertexData As List(Of Vertex), ByVal VertexDescriptor As Rw.Graphics.VertexDescriptor)
+            Me.NumVertices = VertexData.Count
+            Me.VertexStride = VertexDescriptor.VertexStride
+
+            Dim Tmp_VertexSize As UInteger = (Me.VertexStride * Me.NumVertices)   'always vertex buffer size + 2  ???
+            Do While Tmp_VertexSize Mod 32 <> 0   'calculate padding: always allignment 32 !
+                Tmp_VertexSize += 1
+            Loop
+            Me.D3dVertexBuffer.Format.SizeVertexBuffer = Tmp_VertexSize
+
+            Me.VertexData = VertexData
+            Me.PVertexDescriptor = VertexDescriptor
+
+            Me.NeedToSaveRawData = True
+        End Sub
+
+        Private Sub CreateVertexData()      'Read: bytes -> Vertices
+            If Me.PBuffer.Data.Length >= Me.NumVertices * Me.VertexStride Then
+                Dim f As New MemoryStream(Me.PBuffer.Data)
+                Dim r As New FileReader(f, Endian.Big)
+
+                Me.VertexData = New List(Of Vertex)
+                For i = 0 To Me.NumVertices - 1
+                    Me.VertexData.Add(New Vertex(Me.PVertexDescriptor.Elements, r))
+                Next i
+            End If
+        End Sub
+
+        Private Sub CreateRawData()     'Write: Vertices -> bytes
+            Dim Tmp_VertexSize As UInteger = (Me.VertexStride * Me.NumVertices)
+            Do While Tmp_VertexSize Mod 32 <> 0   'calculate padding: always allignment 32 !
+                Tmp_VertexSize += 1
+            Loop
+
+            Me.PBuffer.Data = New Byte(Tmp_VertexSize - 1) {}
+            Dim output As New MemoryStream(Me.PBuffer.Data) ', 0, 0)
+            Dim w As New FileWriter(output, Endian.Big)
+
+            Dim m_VertexElements As VertexElement() = Me.PVertexDescriptor.Elements
+
+            For i = 0 To Me.NumVertices - 1
+                Me.VertexData(i).Save(m_VertexElements, w)
+            Next i
+
+        End Sub
+
+        Public Property PBuffer As Rw.Core.Arena.Buffer ' pointer to index of buffer
             Get
                 Return CType(Me.RwArena.Sections.GetObject(Me.D3dVertexBuffer.Format.BaseAddress), Rw.Core.Arena.Buffer)
             End Get
@@ -64,6 +142,9 @@ Namespace Rw.Graphics
         Public Property LockedFlags As Byte
         Public Property NumVertices As UInteger
         Public Property PVertexDescriptor As VertexDescriptor
+
+        Private NeedToSaveRawData As Boolean = False
+        Private VertexData As List(Of Vertex) = Nothing
 
         'Public Enum Life As Integer 'rw::graphics::VertexBuffer::Life
         '    LIFE_NA = -1

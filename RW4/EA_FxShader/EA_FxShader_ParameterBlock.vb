@@ -1,7 +1,9 @@
-﻿Namespace Rw.EA.FxShader
+﻿Imports Microsoft.DirectX
+
+Namespace Rw.EA.FxShader
     Public Class ParameterBlock
         'EA::FxShader::ParameterBlock
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_FxShader_ParameterBlock
         Public Const ALIGNMENT As Integer = 16
 
@@ -85,19 +87,19 @@
                     Return New String(chArray, 0, 2)
 
                 Case EParameterType.float4
-                    Return New Float4(r)
+                    Return r.ReadVector4
 
                 Case EParameterType.float4x4
-                    Dim m_Float4 As Float4() = New Float4(4 - 1) {}
+                    Dim m_Float4 As Vector4() = New Vector4(4 - 1) {}
                     For i = 0 To m_Float4.Length - 1
-                        m_Float4(i) = New Float4(r)
+                        m_Float4(i) = r.ReadVector4
                     Next
                     Return m_Float4
 
                 Case EParameterType.float4_180
-                    Dim m_Float4 As Float4() = New Float4(180 - 1) {}
+                    Dim m_Float4 As Vector4() = New Vector4(180 - 1) {}
                     For i = 0 To m_Float4.Length - 1
-                        m_Float4(i) = New Float4(r)
+                        m_Float4(i) = r.ReadVector4
                     Next
                     Return m_Float4
 
@@ -165,7 +167,7 @@
                     Next
 
                 Case EParameterType.sampler2D   'contains section index of the texture (RWGOBJECTTYPE_RASTER = &H20003)
-                    w.Write(Me.RwArena.Sections.IndexOf(CType(Value, Sampler2D).PRaster))
+                    w.Write(Me.RwArena.Sections.IndexOf(CType(Value, Sampler2D).PRaster, 1 << 22))
                     w.Write(CType(Value, Sampler2D).Value_2)
                     w.Write(CType(Value, Sampler2D).Value_3)
                     w.Write(CType(Value, Sampler2D).Value_4)
@@ -179,25 +181,16 @@
                     FifaUtil.WriteNullTerminatedString(w, CStr(Value))
 
                 Case EParameterType.float4
-                    w.Write(CType(Value, Float4).Value_1)
-                    w.Write(CType(Value, Float4).Value_2)
-                    w.Write(CType(Value, Float4).Value_3)
-                    w.Write(CType(Value, Float4).Value_4)
+                    w.Write(CType(Value, Vector4))
 
                 Case EParameterType.float4x4
-                    For i = 0 To CType(Value, Float4()).Length - 1
-                        w.Write(CType(Value(i), Float4).Value_1)
-                        w.Write(CType(Value(i), Float4).Value_2)
-                        w.Write(CType(Value(i), Float4).Value_3)
-                        w.Write(CType(Value(i), Float4).Value_4)
+                    For i = 0 To CType(Value, Vector4()).Length - 1
+                        w.Write(CType(Value(i), Vector4))
                     Next
 
                 Case EParameterType.float4_180
-                    For i = 0 To CType(Value, Float4()).Length - 1
-                        w.Write(CType(Value(i), Float4).Value_1)
-                        w.Write(CType(Value(i), Float4).Value_2)
-                        w.Write(CType(Value(i), Float4).Value_3)
-                        w.Write(CType(Value(i), Float4).Value_4)
+                    For i = 0 To CType(Value, Vector4()).Length - 1
+                        w.Write(CType(Value(i), Vector4))
                     Next
 
                 Case Else
@@ -226,7 +219,7 @@
 End Namespace
 
 Public Class Sampler2D
-    Public Property PRaster As Rw.Graphics.Raster   'contains section index of the texture (RWGOBJECTTYPE_RASTER = &H20003)
+    Public Property PRaster As Rw.Graphics.Raster   'contains section index of the texture (RWGOBJECTTYPE_RASTER = &H20003), can be "00 40 00 00" : INDEX_NO_OBJECT
     Public Property Value_2 As UInteger
     Public Property Value_3 As UInteger
     Public Property Value_4 As UInteger

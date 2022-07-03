@@ -1,7 +1,7 @@
 ﻿Namespace Rw.EA
     Public Class ArenaDictionary 'old name : RW4NameSection
         'EA::ArenaDictionary
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_ArenaDictionary
         Public Const ALIGNMENT As Integer = 16
 
@@ -81,6 +81,33 @@
 
             Return ReturnTable
         End Function
+
+        Public Function GetNameByType(ByVal m_Type As SectionTypeCode, ByVal IndexOfType As UInteger) As String
+            Dim NumFound As UInteger = 0
+            For i = 0 To Me.Header.NumEntries - 1
+                If Me.Entries(i).m_Type = m_Type Then
+                    If NumFound = IndexOfType Then
+                        Return Me.Entries(i).m_Name
+                    End If
+                    NumFound += 1
+                End If
+            Next
+
+            Return ""
+        End Function
+
+        Public Sub SetNameByType(ByVal Value As String, ByVal m_Type As SectionTypeCode, ByVal IndexOfType As UInteger)
+            Dim NumFound As UInteger = 0
+            For i = 0 To Me.Header.NumEntries - 1
+                If Me.Entries(i).m_Type = m_Type Then
+                    If NumFound = IndexOfType Then
+                        Me.Entries(i).m_Name = Value
+                        Exit Sub
+                    End If
+                    NumFound += 1
+                End If
+            Next
+        End Sub
 
         Public Property Header As ArenaDictionaryHeader
         Public Property Entries As ArenaDictionaryEntry()
@@ -169,7 +196,7 @@
         Private RwArena As Rw.Core.Arena.Arena
         Public Property OffsetName As UInteger
         Public Property m_Type As SectionTypeCode
-        Public Property m_PObject As RWObject   'refers to indexes at sections
+        Public Property m_PObject As RwObject   'refers to indexes at sections
         Public Property m_Name As String
 
     End Class

@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Bxd
     Public Class Spline
         'bxd::tSpline
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.SPLINE_ARENAID
         Public Const ALIGNMENT As Integer = 16
 
@@ -106,7 +106,7 @@
 
             Me.BBox = New BBox(r)
             Me.Distance = r.ReadSingle
-            Me.Padding_2 = r.ReadUIntegers(2)
+            Me.Padding_2 = r.ReadUIntegers(3)
 
         End Sub
 

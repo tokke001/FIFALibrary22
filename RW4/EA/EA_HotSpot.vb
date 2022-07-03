@@ -1,7 +1,7 @@
 ﻿Namespace Rw.EA
     Public Class HotSpot
         'EA::?? --> not found at dump
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_HOTSPOT
         Public Const ALIGNMENT As Integer = 16
 
@@ -22,12 +22,13 @@
             Me.Unknown_2(1) = r.ReadByte
 
             ReDim Me.AreaData(Me.NumAreas - 1)
+            Dim m_NumHotSpots As Byte() = New Byte(Me.NumAreas - 1) {}
             For i = 0 To Me.NumAreas - 1
                 Me.AreaData(i) = New HotSpotAreaData
 
                 Me.AreaData(i).PointerOffsetAreaName = r.ReadUInt32
 
-                Me.AreaData(i).NumHotSpots = r.ReadByte
+                m_NumHotSpots(i) = r.ReadByte
                 Me.AreaData(i).Unknown = r.ReadBytes(3)
 
                 Me.AreaData(i).PointerOffsetHotSpotNames = r.ReadUInt32
@@ -41,23 +42,23 @@
                 r.BaseStream.Position = Me.AreaData(i).OffsetAreaName
                 Me.AreaData(i).AreaName = FifaUtil.ReadNullTerminatedString(r)
 
-                ReDim Me.AreaData(i).HotSpots(Me.AreaData(i).NumHotSpots - 1)
+                ReDim Me.AreaData(i).HotSpots(m_NumHotSpots(i) - 1)
                 'create list & get ofssets HotSpot names
                 r.BaseStream.Position = Me.AreaData(i).PointerOffsetHotSpotNames
-                For h = 0 To Me.AreaData(i).NumHotSpots - 1
+                For h = 0 To Me.AreaData(i).HotSpots.Length - 1
                     Me.AreaData(i).HotSpots(h) = New HotSpotData
                     Me.AreaData(i).HotSpots(h).OffsetHotSpotName = r.ReadUInt32
                 Next h
 
                 'get HotSpot names
-                For h = 0 To Me.AreaData(i).NumHotSpots - 1
+                For h = 0 To Me.AreaData(i).HotSpots.Length - 1
                     r.BaseStream.Position = Me.AreaData(i).HotSpots(h).OffsetHotSpotName
                     Me.AreaData(i).HotSpots(h).HotSpotName = FifaUtil.ReadNullTerminatedString(r)
                 Next h
 
                 'get Hotspot Rectangles
                 r.BaseStream.Position = Me.AreaData(i).PointerHotspotRectangles
-                For h = 0 To Me.AreaData(i).NumHotSpots - 1
+                For h = 0 To Me.AreaData(i).HotSpots.Length - 1
                     Me.AreaData(i).HotSpots(h).HotspotRectangle(0) = r.ReadSingle
                     Me.AreaData(i).HotSpots(h).HotspotRectangle(1) = r.ReadSingle
                     Me.AreaData(i).HotSpots(h).HotspotRectangle(2) = r.ReadSingle
@@ -82,8 +83,6 @@
             '----write with wrong offsets
 
             For i = 0 To Me.NumAreas - 1
-                Me.AreaData(i).NumHotSpots = Me.AreaData(i).HotSpots.Length
-
                 w.Write(Me.AreaData(i).PointerOffsetAreaName)
 
                 w.Write(Me.AreaData(i).NumHotSpots)
@@ -163,6 +162,24 @@
 
         End Sub
 
+        Public Function ToRx3Hotspot() As Rx3.HotSpot
+            Dim m_Rx3Hotspot As New Rx3.HotSpot
+
+            m_Rx3Hotspot.AreaDatas = New Rx3.HotSpotAreaData(Me.AreaData.Length - 1) {}
+            For i = 0 To m_Rx3Hotspot.AreaDatas.Length - 1
+                m_Rx3Hotspot.AreaDatas(i) = New Rx3.HotSpotAreaData
+                m_Rx3Hotspot.AreaDatas(i).AreaName = Me.AreaData(i).AreaName
+                m_Rx3Hotspot.AreaDatas(i).HotSpots = New Rx3.HotSpotData(Me.AreaData(i).HotSpots.Length - 1) {}
+
+                For j = 0 To m_Rx3Hotspot.AreaDatas(i).HotSpots.Length - 1
+                    m_Rx3Hotspot.AreaDatas(i).HotSpots(j) = New Rx3.HotSpotData With {
+                        .HotSpotName = Me.AreaData(i).HotSpots(j).HotSpotName,
+                        .HotspotRectangle = Me.AreaData(i).HotSpots(j).HotspotRectangle}
+                Next
+            Next
+
+            Return m_Rx3Hotspot
+        End Function
 
         Public Property Unknown_1 As Byte
         Public Property NumAreas As Byte
@@ -182,18 +199,33 @@
 
         Public Property PointerOffsetAreaName As UInteger
         Public Property OffsetAreaName As UInteger
-        Public Property NumHotSpots As Byte
+        ''' <summary>
+        ''' Returns the number of HotSpots (ReadOnly). </summary>
+        Public ReadOnly Property NumHotSpots As Byte
+            Get
+                Return If(HotSpots?.Count, 0)
+            End Get
+        End Property
         Public Property Unknown As Byte() = New Byte(3 - 1) {}
         Public Property PointerOffsetHotSpotNames As UInteger
         Public Property PointerHotspotRectangles As UInteger
+        ''' <summary>
+        ''' Name of the Area. </summary>
         Public Property AreaName As String
+        ''' <summary>
+        ''' Gets/Sets the HotSpots. </summary>
         Public Property HotSpots As HotSpotData()
 
     End Class
 
     Public Class HotSpotData
+        'Inherits Rx3.HotSpotData
+        ''' <summary>
+        ''' Name of the HotSpot. </summary>
         Public Property HotSpotName As String
         Public Property OffsetHotSpotName As UInteger
+        ''' <summary>
+        ''' Gets/Sets the Hotspot values. </summary>
         Public Property HotspotRectangle As Single() = New Single(4 - 1) {}
 
     End Class

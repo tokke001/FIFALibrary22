@@ -1,7 +1,7 @@
 ﻿Namespace Rw.OldAnimation
     Public Class Skeleton
         'rw::oldanimation::Skeleton
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.OBJECTTYPE_SKELETON
         Public Const ALIGNMENT As Integer = 4
 
@@ -71,6 +71,8 @@
 
         End Sub
 
+        ''' <summary>
+        ''' Export the Skeleton bone-infos as text-file. </summary>
         Public Function ExportSkeletonInfos(ByVal FileName As String) As Boolean
             Dim w As TextWriter = File.CreateText(FileName)
             Dim flag As Boolean = True
@@ -116,9 +118,14 @@
     End Class
 
     Public Class SkeletonBone
-
+        ''' <summary>
+        ''' Bone name (FNV132 hashed). </summary>
         Public Property Name As BoneNameHash    'hashed : FNV132 --> https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+        ''' <summary>
+        ''' Bone flags. </summary>
         Public Property Flags As UInteger     'value  0 to 3 
+        ''' <summary>
+        ''' Parent bone, -1 for root bone. </summary>
         Public Property Parent As Integer   'integer (not uintegers ! )
 
     End Class

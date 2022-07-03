@@ -48,19 +48,20 @@
 
         End Sub
 
-        Public Sub CreateList(ByVal Objects As List(Of RWObject))
+        Public Sub CreateList(ByVal Objects As List(Of RwObject))
             ' First we need to create the list with all the type codes
             Me.TypeCodes.Clear()
             Me.TypeCodes.Add(0)
-            Me.TypeCodes.Add(SectionTypeCode.RWOBJECTTYPE_BUFFER)
-            Me.TypeCodes.Add(&H10031)
-            Me.TypeCodes.Add(&H10032)
-            Me.TypeCodes.Add(&H10010)
+            Me.TypeCodes.Add(SectionTypeCode.RWOBJECTTYPE_BASERESOURCE_START)   '&H10030
+            Me.TypeCodes.Add(SectionTypeCode.RWOBJECTTYPE_BUFFER)               '&H10031
+            Me.TypeCodes.Add(SectionTypeCode.RWOBJECTTYPE_UNKNOWN_1)            '&H10032
+            Me.TypeCodes.Add(SectionTypeCode.RWOBJECTTYPE_UNKNOWN_2)            '&H10033
+            Me.TypeCodes.Add(SectionTypeCode.RWOBJECTTYPE_ARENALOCALATOMTABLE)  '&H10010
 
             ' We will do it in a separate list because these have to be sorted
             Dim newTypeCodes As ISet(Of SectionTypeCode) = New SortedSet(Of SectionTypeCode)()
 
-            For Each m_object As RWObject In Objects
+            For Each m_object As RwObject In Objects
                 ' Don't add the RWOBJECTTYPE_BUFFER one as this is special
                 ' Also don't repeat codes
                 Dim typeCode As SectionTypeCode = m_object.GetTypeCode()

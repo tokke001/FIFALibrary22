@@ -1,7 +1,7 @@
 ﻿Namespace Rw.EA.FxShader
     Public Class FxRenderableSimple
         'EA::FxShader::FxRenderableSimple
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_FxShader_FxRenderableSimple
         Public Const ALIGNMENT As Integer = 4
 

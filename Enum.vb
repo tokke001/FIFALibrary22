@@ -1,27 +1,85 @@
 ﻿
+Imports BCnEncoder.Shared
+
 Public Enum ETextureFormat As Byte
-    ' rx3 + RW4
-    DXT1
-    DXT3
-    DXT5
-    A8R8G8B8
-    GREY8
-    GREY8ALFA8
-    ATI2
-    A4R4G4B4
-    R5G6B5
-    X1R5G5B5
+    ''' <summary>
+    ''' Unknown format
+    ''' </summary>
+    UNKNOWN
+    '-- rx3 + RW4
+    ''' <summary>
+    ''' BC1 / DXT1 with no alpha. Very widely supported and good compression ratio.
+    ''' </summary>
+    BC1
+    ''' <summary>
+    ''' BC2 / DXT3 encoding with alpha. Good for sharp alpha transitions.
+    ''' </summary>
+    BC2
+    ''' <summary>
+    ''' BC3 / DXT5 encoding with alpha. Good for smooth alpha transitions.
+    ''' </summary>
+    BC3
+    ''' <summary>
+    ''' Raw unsigned byte 32-bit BGRA data.
+    ''' </summary>
+    B8G8R8A8
+    ''' <summary>
+    ''' Raw unsigned byte 8-bit Luminance data.
+    ''' </summary>
+    L8      'GREY8  = DxgiFormatR8Unorm
+    ''' <summary>
+    ''' Raw unsigned byte 16-bit Luminance data with Alpha.
+    ''' </summary>
+    L8A8    'GREY8ALFA8
+    ''' <summary>
+    ''' BC5 dual-channel encoding. Only red and green channels are encoded.
+    ''' </summary>
+    BC5    'ATI2
+    ''' <summary>
+    ''' Raw unsigned byte 16-bit BGRA data.
+    ''' </summary>
+    B4G4R4A4
+    ''' <summary>
+    ''' Raw unsigned byte 16-bit BGR data. 5 bits for blue, 6 bits for green, and 5 bits for red.
+    ''' </summary>
+    B5G6R5
+    ''' <summary>
+    ''' Raw unsigned byte 16-bit BGRA data. 5 bits for each color channel and 1-bit alpha.
+    ''' </summary>
+    B5G5R5A1
 
-    'RX3 only
-    RGBA
-    ATI1
+    '-- RX3 only
+    ''' <summary>
+    ''' Raw unsigned byte 32-bit RGBA data.
+    ''' </summary>
+    R8G8B8A8
+    ''' <summary>
+    ''' BC4 single-channel encoding. Only luminance is encoded.
+    ''' </summary>
+    BC4    'ATI1
     BIT8
-    R8G8B8
-    BC6H_UF16
+    ''' <summary>
+    ''' Raw unsigned byte 24-bit BGR data.
+    ''' Most texture formats do not support this format. Use <see cref="B8G8R8A8"/> instead.
+    ''' </summary>
+    B8G8R8
+    ''' <summary>
+    ''' BC6H / BPTC unsigned float encoding. Can compress HDR textures without alpha. Does not support negative values.
+    ''' </summary>
+    BC6H_UF16   'BC6
 
-    'RW4 only
+    '-- RW4 only
     CTX1 '= 124    'D3DFMT_CTX1    --->, same as ATI1 maybe?
-    A32B32G32R32F '= 166 '128 size, float values ?? -> Found at game "UEFA Champions League 2006-2007" > file "stadium_159_6_container_0.rx2"
+    ''' <summary>
+    ''' Raw floating point 32-bit-per-channel RGBA data.
+    ''' </summary>
+    R32G32B32A32Float '= 166 '128 size, float values ?? -> Found at game "UEFA Champions League 2006-2007" > file "stadium_159_6_container_0.rx2"
+
+    '-- dds only
+    ''' <summary>
+    ''' BC7 / BPTC unorm encoding. Very high Quality rgba or rgb encoding. Also very slow.
+    ''' </summary>
+    BC7
 End Enum
 
 Public Enum ETextureType As Byte
@@ -1127,3 +1185,480 @@ Public Enum SkeletonFrostbite As UShort
     Prop = 437
 End Enum
 
+Public Module TextureFormatHelpers
+    <System.Runtime.CompilerServices.Extension>
+    Public Function IsCompressedFormat(ByVal Format As ETextureFormat) As Boolean
+        Select Case Format
+            Case ETextureFormat.BC1, ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC4, ETextureFormat.BC5, ETextureFormat.BC6H_UF16, ETextureFormat.BC7
+                Return True
+            Case Else
+                Return False
+        End Select
+    End Function
+
+    <System.Runtime.CompilerServices.Extension>
+    Public Function SupportsAlpha(ByVal Format As ETextureFormat) As Boolean
+        Select Case Format
+            Case ETextureFormat.B8G8R8A8, ETextureFormat.L8A8, ETextureFormat.B4G4R4A4, ETextureFormat.B5G5R5A1, ETextureFormat.R8G8B8A8, ETextureFormat.R32G32B32A32Float, ETextureFormat.BC1, ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC7
+                Return True
+            Case Else
+                Return False
+        End Select
+    End Function
+
+    <System.Runtime.CompilerServices.Extension>
+    Public Function ToRx3TextureFormat(ByVal Format As ETextureFormat) As Rx3.TextureFormat
+        Select Case Format
+            ' rx3 + RW4
+            Case ETextureFormat.BC1
+                Return Rx3.TextureFormat.DXT1
+            Case ETextureFormat.BC2
+                Return Rx3.TextureFormat.DXT3
+            Case ETextureFormat.BC3
+                Return Rx3.TextureFormat.DXT5
+            Case ETextureFormat.B8G8R8A8
+                Return Rx3.TextureFormat.B8G8R8A8
+            Case ETextureFormat.L8
+                Return Rx3.TextureFormat.L8
+            Case ETextureFormat.L8A8
+                Return Rx3.TextureFormat.L8A8
+            Case ETextureFormat.BC5
+                Return Rx3.TextureFormat.ATI2
+            Case ETextureFormat.B4G4R4A4
+                Return Rx3.TextureFormat.B4G4R4A4
+            Case ETextureFormat.B5G6R5
+                Return Rx3.TextureFormat.B5G6R5
+            Case ETextureFormat.B5G5R5A1
+                Return Rx3.TextureFormat.B5G5R5A1
+
+            'RX3 only
+            Case ETextureFormat.R8G8B8A8
+                Return Rx3.TextureFormat.R8G8B8A8
+            Case ETextureFormat.BC4
+                Return Rx3.TextureFormat.ATI1
+            Case ETextureFormat.BIT8
+                Return Rx3.TextureFormat.BIT8
+            Case ETextureFormat.B8G8R8
+                Return Rx3.TextureFormat.B8G8R8
+            Case ETextureFormat.BC6H_UF16
+                Return Rx3.TextureFormat.BC6H_UF16
+
+                'RW4 only
+                'Case ETextureFormat.DXT1NORMAL
+                'Case ETextureFormat.A32B32G32R32F
+
+            Case Else
+                MsgBox("Unknown ETextureFormat found at function ""GetRx3FromETextureFormat"": " & Format.ToString)
+                Return Rx3.TextureFormat.DXT1
+        End Select
+    End Function
+
+    <System.Runtime.CompilerServices.Extension>
+    Public Function ToRwSurfaceFormat(ByVal Format As ETextureFormat) As Rw.SurfaceFormat ', ByVal DefaultRWFormat As RWTextureFormat) 
+
+        Select Case Format
+            ' rx3 + RW4
+            Case ETextureFormat.BC1
+                Return Rw.SurfaceFormat.FMT_DXT1
+            Case ETextureFormat.BC2
+                Return Rw.SurfaceFormat.FMT_DXT2_3
+            Case ETextureFormat.BC3
+                Return Rw.SurfaceFormat.FMT_DXT4_5
+            Case ETextureFormat.B8G8R8A8
+                Return Rw.SurfaceFormat.FMT_8_8_8_8
+            Case ETextureFormat.L8
+                Return Rw.SurfaceFormat.FMT_8
+            Case ETextureFormat.L8A8
+                Return Rw.SurfaceFormat.FMT_8_8
+            Case ETextureFormat.BC5
+                Return Rw.SurfaceFormat.FMT_DXN
+            Case ETextureFormat.B4G4R4A4
+                Return Rw.SurfaceFormat.FMT_4_4_4_4
+            Case ETextureFormat.B5G6R5
+                Return Rw.SurfaceFormat.FMT_5_6_5
+            Case ETextureFormat.B5G5R5A1
+                Return Rw.SurfaceFormat.FMT_1_5_5_5
+
+            'RX3 only
+            'Case ETextureFormat.RGBA
+            'Case ETextureFormat.ATI1
+            'Case ETextureFormat.BIT8
+            'Case ETextureFormat.R8G8B8
+            'Case ETextureFormat.BC6H_UF16
+
+            'RW4 only
+            Case ETextureFormat.CTX1
+                Return Rw.SurfaceFormat.FMT_CTX1
+            Case ETextureFormat.R32G32B32A32Float
+                Return Rw.SurfaceFormat.FMT_32_32_32_32_FLOAT
+
+            Case Else
+                MsgBox("Unknown ETextureFormat found at function ""GetRWFromETextureFormat"": " & Format.ToString)
+                Return Rw.SurfaceFormat.FMT_DXT1
+        End Select
+
+    End Function
+
+    <System.Runtime.CompilerServices.Extension>
+    Public Function ToDxgiFormat(ByVal Format As ETextureFormat) As DXGI_FORMAT
+        Select Case Format
+            Case ETextureFormat.BC1
+                Return DXGI_FORMAT.DXGI_FORMAT_BC1_UNORM
+            Case ETextureFormat.BC2
+                Return DXGI_FORMAT.DXGI_FORMAT_BC2_UNORM
+            Case ETextureFormat.BC3
+                Return DXGI_FORMAT.DXGI_FORMAT_BC3_UNORM
+            Case ETextureFormat.BC4
+                Return DXGI_FORMAT.DXGI_FORMAT_BC4_UNORM
+            Case ETextureFormat.BC5
+                Return DXGI_FORMAT.DXGI_FORMAT_BC5_UNORM
+            Case ETextureFormat.BC6H_UF16
+                Return DXGI_FORMAT.DXGI_FORMAT_BC6H_UF16
+            Case ETextureFormat.BC7
+                Return DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM
+
+            Case ETextureFormat.B8G8R8A8
+                Return DXGI_FORMAT.DXGI_FORMAT_B8G8R8A8_UNORM
+            Case ETextureFormat.B8G8R8
+                Return DXGI_FORMAT.DXGI_FORMAT_B8G8R8X8_UNORM
+            Case ETextureFormat.R8G8B8A8
+                Return DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM
+
+            Case ETextureFormat.L8
+                Return DXGI_FORMAT.DXGI_FORMAT_R8_UNORM
+            Case ETextureFormat.L8A8
+                Return DXGI_FORMAT.DXGI_FORMAT_R8G8_UNORM
+
+            Case ETextureFormat.B4G4R4A4
+                Return DXGI_FORMAT.DXGI_FORMAT_B4G4R4A4_UNORM
+
+            Case ETextureFormat.B5G6R5
+                Return DXGI_FORMAT.DXGI_FORMAT_B5G6R5_UNORM
+            Case ETextureFormat.B5G5R5A1
+                Return DXGI_FORMAT.DXGI_FORMAT_B5G5R5A1_UNORM
+
+            Case ETextureFormat.R32G32B32A32Float
+                Return DXGI_FORMAT.DXGI_FORMAT_R32G32B32A32_FLOAT
+
+                'Case ETextureFormat.BIT8
+                '    Return DXGI_FORMAT
+                'Case ETextureFormat.CTX1
+                '    Return DXGI_FORMAT
+        End Select
+
+        Return DXGI_FORMAT.DXGI_FORMAT_UNKNOWN
+    End Function
+
+    <System.Runtime.CompilerServices.Extension>
+    Public Function ToETextureFormat(ByVal DxgiFormat As BCnEncoder.Shared.DXGI_FORMAT) As ETextureFormat
+        Select Case DxgiFormat
+            Case DXGI_FORMAT.DXGI_FORMAT_R32G32B32A32_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_R32G32B32A32_FLOAT
+                Return ETextureFormat.R32G32B32A32Float
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32B32A32_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32B32A32_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32B32_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32B32_FLOAT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32B32_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32B32_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16B16A16_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16B16A16_FLOAT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16B16A16_UNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16B16A16_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16B16A16_SNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16B16A16_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32_FLOAT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G32_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32G8X24_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_D32_FLOAT_S8X24_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_X32_TYPELESS_G8X24_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R10G10B10A2_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R10G10B10A2_UNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R10G10B10A2_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R11G11B10_FLOAT
+                    '    Exit Select
+            Case DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
+                Return ETextureFormat.R8G8B8A8
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_SNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8G8B8A8_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16_FLOAT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16_UNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16_SNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16G16_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_D32_FLOAT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32_FLOAT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R32_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R24G8_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_D24_UNORM_S8_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R24_UNORM_X8_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_X24_TYPELESS_G8_UINT
+                    '    Exit Select
+            Case DXGI_FORMAT.DXGI_FORMAT_R8G8_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_R8G8_UNORM
+                Return ETextureFormat.L8A8
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8G8_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8G8_SNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8G8_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16_TYPELESS
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16_FLOAT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_D16_UNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16_UNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16_SNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R16_SINT
+                    '    Exit Select
+            Case DXGI_FORMAT.DXGI_FORMAT_R8_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_R8_UNORM
+                Return ETextureFormat.L8
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8_UINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8_SNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8_SINT
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_A8_UNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R1_UNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R9G9B9E5_SHAREDEXP
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R8G8_B8G8_UNORM
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_G8R8_G8B8_UNORM
+                    '    Exit Select
+            Case DXGI_FORMAT.DXGI_FORMAT_BC1_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT.DXGI_FORMAT_BC1_UNORM_SRGB
+                Return ETextureFormat.BC1
+            Case DXGI_FORMAT.DXGI_FORMAT_BC2_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT.DXGI_FORMAT_BC2_UNORM_SRGB
+                Return ETextureFormat.BC2
+            Case DXGI_FORMAT.DXGI_FORMAT_BC3_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_BC3_UNORM, DXGI_FORMAT.DXGI_FORMAT_BC3_UNORM_SRGB
+                Return ETextureFormat.BC3
+            Case DXGI_FORMAT.DXGI_FORMAT_BC4_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_BC4_UNORM, DXGI_FORMAT.DXGI_FORMAT_BC4_SNORM
+                Return ETextureFormat.BC4
+            Case DXGI_FORMAT.DXGI_FORMAT_BC5_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_BC5_UNORM, DXGI_FORMAT.DXGI_FORMAT_BC5_SNORM
+                Return ETextureFormat.BC5
+            Case DXGI_FORMAT.DXGI_FORMAT_B5G6R5_UNORM
+                Return ETextureFormat.B5G6R5
+            Case DXGI_FORMAT.DXGI_FORMAT_B5G5R5A1_UNORM
+                Return ETextureFormat.B5G5R5A1
+            Case DXGI_FORMAT.DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT.DXGI_FORMAT_B8G8R8A8_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_B8G8R8A8_UNORM_SRGB
+                Return ETextureFormat.B8G8R8A8
+            Case DXGI_FORMAT.DXGI_FORMAT_B8G8R8X8_UNORM, DXGI_FORMAT.DXGI_FORMAT_B8G8R8X8_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_B8G8R8X8_UNORM_SRGB
+                Return ETextureFormat.B8G8R8
+                    'Case DXGI_FORMAT.DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM
+                    '    Exit Select
+
+            Case DXGI_FORMAT.DXGI_FORMAT_BC6H_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_BC6H_UF16
+                Return ETextureFormat.BC6H_UF16
+                    'Case DXGI_FORMAT.DXGI_FORMAT_BC6H_SF16
+                    'Exit Select
+            Case DXGI_FORMAT.DXGI_FORMAT_BC7_TYPELESS, DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM, DXGI_FORMAT.DXGI_FORMAT_BC7_UNORM_SRGB
+                Return ETextureFormat.BC7
+                    'Case DXGI_FORMAT.DXGI_FORMAT_AYUV
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_Y410
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_Y416
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_NV12
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_P010
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_P016
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_420_OPAQUE
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_YUY2
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_Y210
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_Y216
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_NV11
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_AI44
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_IA44
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_P8
+                    '    Exit Select
+                    'Case DXGI_FORMAT.DXGI_FORMAT_A8P8
+                    '    Exit Select
+            Case DXGI_FORMAT.DXGI_FORMAT_B4G4R4A4_UNORM
+                Return ETextureFormat.B4G4R4A4
+                'Case DXGI_FORMAT.DXGI_FORMAT_P208
+                '    Exit Select
+                'Case DXGI_FORMAT.DXGI_FORMAT_V208
+                '    Exit Select
+                'Case DXGI_FORMAT.DXGI_FORMAT_V408
+                '    Exit Select
+                'Case DXGI_FORMAT.DXGI_FORMAT_FORCE_UINT
+                '    Exit Select
+        End Select
+
+        Return ETextureFormat.UNKNOWN
+    End Function
+
+    <System.Runtime.CompilerServices.Extension>
+    Public Function ToGlFormat(ByVal TextureFormat As ETextureFormat) As (GLFormat, GlInternalFormat, GLType)
+        Select Case TextureFormat
+            Case ETextureFormat.BC1
+                Return (GLFormat.GL_RGB, GlInternalFormat.GL_COMPRESSED_RGB_S3TC_DXT1_EXT, GLType.NONE)   'BC1
+                    'Return (GLFormat.GlRgba, GlInternalFormat.GL_CompressedRgbaS3TcDxt1Ext, GLType.None) 'BC1WithAlpha
+            Case ETextureFormat.BC2
+                Return (GLFormat.GL_RGBA, GlInternalFormat.GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, GLType.NONE)
+            Case ETextureFormat.BC3
+                Return (GLFormat.GL_RGBA, GlInternalFormat.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, GLType.NONE)
+            Case ETextureFormat.BC4
+                Return (GLFormat.GL_RED, GlInternalFormat.GL_COMPRESSED_RED_RGTC1_EXT, GLType.NONE)
+            Case ETextureFormat.BC5
+                Return (GLFormat.GL_RG, GlInternalFormat.GL_COMPRESSED_RED_GREEN_RGTC2_EXT, GLType.NONE)
+            Case ETextureFormat.BC6H_UF16
+                Return (GLFormat.GL_RGB, GlInternalFormat.GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB, GLType.NONE)
+                'Case ETextureFormat.Bc6S
+                '    Return (GLFormat.GL_RGB, GlInternalFormat.GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB, GLType.NONE)
+            Case ETextureFormat.BC7
+                Return (GLFormat.GL_RGBA, GlInternalFormat.GL_COMPRESSED_RGBA_BPTC_UNORM_ARB, GLType.NONE)
+
+
+            Case ETextureFormat.B8G8R8A8
+                Return (GLFormat.GL_BGRA, GlInternalFormat.GL_BGRA8_EXTENSION, GLType.GL_UNSIGNED_BYTE)
+
+                'Case ETextureFormat.B8G8R8
+                    'Return (GLFormat.GL_RGB, GlInternalFormat.GL_bgr8, GLType.GL_UNSIGNED_BYTE)
+
+            Case ETextureFormat.R8G8B8A8
+                Return (GLFormat.GL_RGBA, GlInternalFormat.GL_RGBA8, GLType.GL_UNSIGNED_BYTE)
+
+
+            Case ETextureFormat.L8
+                Return (GLFormat.GL_RED, GlInternalFormat.GL_R8, GLType.GL_UNSIGNED_BYTE)
+            Case ETextureFormat.L8A8
+                Return (GLFormat.GL_RG, GlInternalFormat.GL_RG8, GLType.GL_UNSIGNED_BYTE)
+
+                'Case ETextureFormat.B4G4R4A4
+                '    Return (GLFormat.GL_BGRA, GlInternalFormat.GL_BGRA4, GLType.GL_UNSIGNED_BYTE)
+
+
+                'Case ETextureFormat.B5G6R5
+                '    Return (GLFormat.GL_BGR, GlInternalFormat.GL_BGR565, GLType.GL_UNSIGNED_SHORT_5_6_5)
+
+                'Case ETextureFormat.B5G5R5A1
+                '    Return (GLFormat.GL_BGRA, GlInternalFormat.GL_BGR5_A1, GLType.GL_UNSIGNED_SHORT_5_5_5_1)
+
+            Case ETextureFormat.R32G32B32A32Float
+                Return (GLFormat.GL_RGBA, GlInternalFormat.GL_RGBA32F, GLType.GL_FLOAT)
+
+
+            Case Else
+                Return (0, 0, 0)
+        End Select
+
+    End Function
+
+    <System.Runtime.CompilerServices.Extension>
+    Public Function ToETextureFormat(ByVal InternalFormat As GlInternalFormat) As ETextureFormat
+        Select Case InternalFormat
+            Case GlInternalFormat.GL_COMPRESSED_RGB_S3TC_DXT1_EXT, GlInternalFormat.GL_COMPRESSED_SRGB_S3TC_DXT1_EXT
+                Return ETextureFormat.BC1
+
+            Case GlInternalFormat.GL_COMPRESSED_RGBA_S3TC_DXT1_EXT, GlInternalFormat.GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT
+                Return ETextureFormat.BC1   'ETextureFormat.BC1WithAlpha
+
+            Case GlInternalFormat.GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, GlInternalFormat.GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT
+                Return ETextureFormat.BC2
+
+            Case GlInternalFormat.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, GlInternalFormat.GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT
+                Return ETextureFormat.BC3
+
+            Case GlInternalFormat.GL_COMPRESSED_RED_RGTC1_EXT, GlInternalFormat.GL_COMPRESSED_SIGNED_RED_RGTC1_EXT
+                Return ETextureFormat.BC4
+
+            Case GlInternalFormat.GL_COMPRESSED_RED_GREEN_RGTC2_EXT, GlInternalFormat.GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT
+                Return ETextureFormat.BC5
+
+            Case GlInternalFormat.GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_ARB
+                Return ETextureFormat.BC6H_UF16
+
+            'Case GlInternalFormat.GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_ARB
+            '    Return ETextureFormat.Bc6S
+
+                ' TODO: Not sure what to do with SRGB input.
+            Case GlInternalFormat.GL_COMPRESSED_RGBA_BPTC_UNORM_ARB, GlInternalFormat.GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_ARB
+                Return ETextureFormat.BC7
+
+                ' HINT: Bgra is not supported by default. The format enum is added by an extension by Apple.
+            Case GlInternalFormat.GL_BGRA8_EXTENSION
+                Return ETextureFormat.B8G8R8A8
+
+            Case GlInternalFormat.GL_RGBA8, GlInternalFormat.GL_RGBA8I, GlInternalFormat.GL_RGBA8UI, GlInternalFormat.GL_RGBA8_SNORM
+                Return ETextureFormat.R8G8B8A8
+
+            Case GlInternalFormat.GL_R8, GlInternalFormat.GL_R8I, GlInternalFormat.GL_R8UI, GlInternalFormat.GL_R8_SNORM
+                Return ETextureFormat.L8
+
+            Case GlInternalFormat.GL_RG8, GlInternalFormat.GL_RG8I, GlInternalFormat.GL_RG8UI, GlInternalFormat.GL_RG8_SNORM
+                Return ETextureFormat.L8A8
+
+            Case GlInternalFormat.GL_RGBA32F
+                Return ETextureFormat.R32G32B32A32Float
+
+            Case Else
+                Return ETextureFormat.UNKNOWN
+        End Select
+    End Function
+
+End Module

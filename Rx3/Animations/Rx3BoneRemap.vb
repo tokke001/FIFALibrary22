@@ -4,12 +4,12 @@
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.BONE_REMAP
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
@@ -20,31 +20,40 @@
 
             Me.Padding = r.ReadBytes(11)    '0 : padding
 
-            Me.UsedBones = r.ReadBytes((Me.TotalSize - 16) \ 2)
-            Me.UsedBonesPositions = r.ReadBytes((Me.TotalSize - 16) \ 2)
-
-
-            'Me.FixShortBoneIndices()   disabled: UsedBonesPositions are always bytes, not shorts...
+            Me.ReservedSize = (Me.TotalSize - 16) \ 2
+            Me.UsedBones = r.ReadBytes(Me.ReservedSize)
+            Me.UsedBonesPositions = FixShortBoneIndices(r.ReadBytes(Me.ReservedSize))
 
         End Sub
 
-        Private Sub FixShortBoneIndices()
-            If Me.UsedBonesPositions(0) = 1 Then
-                For i = 0 To Me.NumUsedBones - 1
-                    If i + 1 <= Me.NumUsedBones - 1 Then
-                        Me.UsedBonesPositions(i) = Me.UsedBonesPositions(i + 1) + 256
-                    End If
+        ''' <summary>
+        ''' Converts bytes to short values (if first byte value is "1") </summary>
+        Private Function FixShortBoneIndices(ByVal UsedBonesPositions As Byte()) As UShort()
+            If UsedBonesPositions(0) = 1 Then
+                Dim ReturnList As UShort() = New UShort(Me.NumUsedBones - 1 - 1) {}
+                For i = 0 To Me.NumUsedBones - 1 - 1
+                    'If i + 1 <= Me.NumUsedBones - 1 Then
+                    ReturnList(i) = UsedBonesPositions(i + 1) + 256
+                    'End If
                 Next
 
-                Me.UsedBonesPositions(Me.NumUsedBones - 1) = 0
+                'Me.UsedBonesPositions(Me.NumUsedBones - 1) = 0
                 Me.NumUsedBones -= 1
+                Return ReturnList
+            Else
+                Dim ReturnList As UShort() = New UShort(Me.NumUsedBones - 1) {}
+                For i = 0 To Me.NumUsedBones - 1
+                    ReturnList(i) = UsedBonesPositions(i)
+                Next
+
+                Return ReturnList
             End If
-        End Sub
+        End Function
 
         Public Sub Save(ByVal Rx3VertexBuffer As VertexBuffer, ByVal BoneIndicesIsShort As Boolean, ByVal w As FileWriter)
-            Dim BaseOffset As Long = w.BaseStream.Position
-            Me.CreateFromVertexBuffer(Rx3VertexBuffer, BoneIndicesIsShort) 'creates NumUsedBones, UsedBones, UsedBonesPositions
-
+            Dim m_UsedBonesPositions As Byte() = New Byte(Me.ReservedSize - 1) {}
+            Me.CreateUsedBonesPositions(m_UsedBonesPositions, Me.NumUsedBones, Rx3VertexBuffer, BoneIndicesIsShort)    'creates UsedBones, NumUsedBones
+            Me.CreateUsedBones(Me.UsedBones, m_UsedBonesPositions)                                                     'creates UsedBonesPositions
 
             w.Write(Me.TotalSize)
             w.Write(Me.NumUsedBones)
@@ -52,34 +61,36 @@
             w.Write(Me.Padding)
 
             w.Write(Me.UsedBones)
-            w.Write(Me.UsedBonesPositions)
+            w.Write(m_UsedBonesPositions)
 
 
             'Padding    'unused (TotalSize always a fixed size of 528)
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, BaseOffset, w.BaseStream.Position)
+            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
 
-        Public Sub CreateFromVertexBuffer(ByVal VertexBuffer As VertexBuffer, ByVal BoneIndicesIsShort As Boolean)
+        ''' <summary>
+        ''' Create UsedBonesPositions array with short-values as bytes. 
+        ''' And calculate NumUsedBones (Number of used bones).
+        ''' </summary>
+        Public Sub CreateUsedBonesPositions(ByRef UsedBonesPositions As Byte(), ByRef NumUsedBones As Byte, ByVal VertexBuffer As VertexBuffer, ByVal BoneIndicesIsShort As Boolean)
             Dim HighValue_Found As Boolean = False
             Dim LowValue_Found As Boolean = False
-            Me.UsedBones = New Byte(256 - 1) {}
-            Me.UsedBonesPositions = New Byte(256 - 1) {}
-            Dim UsedBonesPositions_low As Byte() = New Byte(256 - 1) {}
-            Dim UsedBonesPositions_high As Byte() = New Byte(256 - 1) {}
-            Dim List_UsedBonesPositions = New UShort(256 - 1) {}
+            UsedBonesPositions = New Byte(UsedBonesPositions.Length - 1) {}
+            Dim UsedBonesPositions_low As Byte() = New Byte(UsedBonesPositions.Length - 1) {}
+            Dim UsedBonesPositions_high As Byte() = New Byte(UsedBonesPositions.Length - 1) {}
+            Dim List_UsedBonesPositions = New UShort(UsedBonesPositions.Length - 1) {}
 
             '1 - Create List 'UsedBonesPositions'
-            Me.NumUsedBones = 0
+            NumUsedBones = 0
             Dim NumUsedBones_low As Byte = 0
             Dim NumUsedBones_high As Byte = 0
 
 
-
-            For i = 0 To VertexBuffer.VertexData.Length - 1
+            For i = 0 To VertexBuffer.VertexData.Count - 1
                 If VertexBuffer.VertexData(i).BlendIndices IsNot Nothing Then
                     For j = 0 To VertexBuffer.VertexData(i).BlendIndices.Length - 1
 
@@ -154,31 +165,24 @@
             '1.1 - Add 00/01 in front if short values are found
             If BoneIndicesIsShort Then
                 If LowValue_Found Then
-                    Me.UsedBonesPositions(0) = 0
+                    UsedBonesPositions(0) = 0
                     For i = 0 To NumUsedBones_low - 1
-                        Me.UsedBonesPositions(i + 1) = UsedBonesPositions_low(i)
+                        UsedBonesPositions(i + 1) = UsedBonesPositions_low(i)
                     Next
-                    Me.NumUsedBones = NumUsedBones_low + 1
+                    NumUsedBones = NumUsedBones_low + 1
                 Else
-                    Me.UsedBonesPositions(0) = 1
+                    UsedBonesPositions(0) = 1
                     For i = 0 To NumUsedBones_high - 1
-                        Me.UsedBonesPositions(i + 1) = UsedBonesPositions_high(i)
+                        UsedBonesPositions(i + 1) = UsedBonesPositions_high(i)
                     Next
-                    Me.NumUsedBones = NumUsedBones_high + 1
+                    NumUsedBones = NumUsedBones_high + 1
                 End If
             Else
-                Me.UsedBonesPositions = UsedBonesPositions_low
-                Me.NumUsedBones = NumUsedBones_low
+                UsedBonesPositions = UsedBonesPositions_low
+                NumUsedBones = NumUsedBones_low
             End If
 
-            '2 - Update list UsedBones
-            Dim num2 As Integer = 0
-            For j = 0 To Me.UsedBonesPositions.Length - 1
-                If num2 <= NumUsedBones - 1 Then
-                    Me.UsedBones(Me.UsedBonesPositions(j)) = num2
-                    num2 += 1
-                End If
-            Next j
+
 
         End Sub
 
@@ -196,11 +200,70 @@
             Return False
         End Function
 
+        Private Sub CreateUsedBones(ByRef UsedBones As Byte(), ByVal UsedBonesPositions As Byte())
+            '2 - Update list UsedBones
+            UsedBones = New Byte(Me.ReservedSize - 1) {}
+            Dim num2 As Integer = 0
+            For j = 0 To UsedBonesPositions.Length - 1
+                If num2 <= Me.NumUsedBones - 1 Then
+                    UsedBones(UsedBonesPositions(j)) = num2
+                    num2 += 1
+                End If
+            Next j
+        End Sub
+
+        Private m_TotalSize As UInteger
+        Private m_UsedBones As Byte()
+        Private m_NumUsedBones As Byte
+        Private m_UsedBonesPositions As UShort()
+
+        ''' <summary>
+        ''' Total section size (ReadOnly). </summary>
         Public Property TotalSize As UInteger
+            Get
+                Return m_TotalSize
+            End Get
+            Private Set
+                m_TotalSize = Value
+            End Set
+        End Property
+        ''' <summary>
+        ''' Empty 0-values. </summary>
         Public Property Padding As Byte() = New Byte(11 - 1) {}
+        ''' <summary>
+        ''' Number of used bones (ReadOnly). </summary>
         Public Property NumUsedBones As Byte
+            Get
+                Return m_NumUsedBones
+            End Get
+            Private Set
+                m_NumUsedBones = Value
+            End Set
+        End Property
+
+        ''' <summary>
+        ''' Reserved size for UsedBones and UsedBonesPositions arrays (usually 256 or more). </summary>
+        Public Property ReservedSize As UShort = 256
+        ''' <summary>
+        ''' Used Bones array (ReadOnly). </summary>
         Public Property UsedBones As Byte()
-        Public Property UsedBonesPositions As Byte()
+            Get
+                Return m_UsedBones
+            End Get
+            Private Set
+                m_UsedBones = Value
+            End Set
+        End Property
+        ''' <summary>
+        ''' Used Bones-positions array (ReadOnly). </summary>
+        Public Property UsedBonesPositions As UShort()
+            Get
+                Return m_UsedBonesPositions
+            End Get
+            Private Set
+                m_UsedBonesPositions = Value
+            End Set
+        End Property
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash
             Return TYPE_CODE

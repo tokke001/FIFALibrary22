@@ -465,7 +465,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 0, 1)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 0, 1)
+                Value_16 = SetValueTo32bit(Value_16, Value, 0, 1)
             End Set
         End Property
         Public Property VolMinFilter As UInteger    '0x19D8, offset = 16
@@ -473,7 +473,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 1, 1)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 1, 1)
+                Value_16 = SetValueTo32bit(Value_16, Value, 1, 1)
             End Set
         End Property
         Public Property MinMipLevel As UInteger    '0x1C43, offset = 16
@@ -481,7 +481,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 2, 4)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 2, 4)
+                Value_16 = SetValueTo32bit(Value_16, Value, 2, 4)
             End Set
         End Property
         Public Property MaxMipLevel As UInteger    '0x19C4, offset = 16
@@ -489,7 +489,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 6, 4)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 6, 4)
+                Value_16 = SetValueTo32bit(Value_16, Value, 6, 4)
             End Set
         End Property
         Public Property MagAnisoWalk As UInteger    '0x16F3, offset = 16
@@ -497,7 +497,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 10, 1)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 10, 1)
+                Value_16 = SetValueTo32bit(Value_16, Value, 10, 1)
             End Set
         End Property
         Public Property MinAnisoWalk As UInteger    '0x16F4, offset = 16
@@ -505,7 +505,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 11, 1)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 11, 1)
+                Value_16 = SetValueTo32bit(Value_16, Value, 11, 1)
             End Set
         End Property
         Public Property LODBias As UInteger    '0x1C44, offset = 16
@@ -513,7 +513,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 12, 10)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 12, 10)
+                Value_16 = SetValueTo32bit(Value_16, Value, 12, 10)
             End Set
         End Property
         Public Property GradExpAdjustH As UInteger    '0x1C45, offset = 16
@@ -521,7 +521,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 22, 5)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 22, 5)
+                Value_16 = SetValueTo32bit(Value_16, Value, 22, 5)
             End Set
         End Property
         Public Property GradExpAdjustV As UInteger    '0x1C46, offset = 16
@@ -529,7 +529,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_16, 27, 5)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_16, Value, 27, 5)
+                Value_16 = SetValueTo32bit(Value_16, Value, 27, 5)
             End Set
         End Property
         Public Property BorderColor As UInteger    '0x12BF, offset = 20
@@ -537,7 +537,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_20, 0, 2)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_20, Value, 0, 2)
+                Value_20 = SetValueTo32bit(Value_20, Value, 0, 2)
             End Set
         End Property
         Public Property ForceBCWToMax As UInteger    '0x12C0, offset = 20
@@ -545,7 +545,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_20, 2, 1)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_20, Value, 2, 1)
+                Value_20 = SetValueTo32bit(Value_20, Value, 2, 1)
             End Set
         End Property
         Public Property TriClamp As UInteger    '0x1C47, offset = 20
@@ -553,7 +553,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_20, 3, 2)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_20, Value, 3, 2)
+                Value_20 = SetValueTo32bit(Value_20, Value, 3, 2)
             End Set
         End Property
         Public Property AnisoBias As UInteger    '0x1C48, offset = 20
@@ -561,7 +561,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_20, 5, 4)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_20, Value, 5, 4)
+                Value_20 = SetValueTo32bit(Value_20, Value, 5, 4)
             End Set
         End Property
         Public Property Dimension As GPUDimension    '0x1C49, offset = 20 -->not sure, but i think enum GPUDIMENSION: 0x109f ??   
@@ -569,7 +569,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_20, 9, 2)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_20, Value, 9, 2)
+                Value_20 = SetValueTo32bit(Value_20, Value, 9, 2)
             End Set
         End Property
         Public Property PackedMips As UInteger    '0x16F4, offset = 20
@@ -577,7 +577,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_20, 11, 1)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_20, Value, 11, 1)
+                Value_20 = SetValueTo32bit(Value_20, Value, 11, 1)
             End Set
         End Property
         Public Property MipAddress As UInteger    '0x12C8, offset = 20
@@ -585,7 +585,7 @@ Namespace Rw.D3D
                 Return GetValueFrom32bit(Value_20, 12, 20)
             End Get
             Set
-                Value_12 = SetValueTo32bit(Value_20, Value, 12, 20)
+                Value_20 = SetValueTo32bit(Value_20, Value, 12, 20)
             End Set
         End Property
     End Class

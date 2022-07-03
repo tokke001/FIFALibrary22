@@ -1,7 +1,7 @@
 ﻿Namespace Rw.OldAnimation
     Public Class AnimationSkin
         'rw::oldanimation:: ?? (not found)
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.OBJECTTYPE_ANIMATIONSKIN
         Public Const ALIGNMENT As Integer = 16
 
@@ -81,6 +81,8 @@
         Public Property Unknown_1 As UInteger   '"0"    
         Public Property Unknown_2 As UInteger   '"0"
         'Public Property BoneMatrices As New List(Of List(Of Vector4x1))
+        ''' <summary>
+        ''' Gets or Sets the Bone-Matrices. </summary>
         Public Property BoneMatrices As List(Of BonePose) = New List(Of BonePose)()
 
         Public Overrides Function GetTypeCode() As Rw.SectionTypeCode

@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Bxd
     Public Class SceneLayer
         'bxd::tSceneLayer
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.SCENELAYER_ARENAID
         Public Const ALIGNMENT As Integer = 4
 

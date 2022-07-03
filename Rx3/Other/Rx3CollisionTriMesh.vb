@@ -6,12 +6,12 @@ Namespace Rx3
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.COLLISION_TRI_MESH
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
@@ -27,9 +27,9 @@ Namespace Rx3
 
             Me.CollisionName = FifaUtil.ReadNullTerminatedString(r)
             Me.Unknown_3 = r.ReadUInt32
-            Me.NumCollTriangles = r.ReadUInt32
+            Dim m_NumCollTriangles = r.ReadUInt32
 
-            For i = 0 To Me.NumCollTriangles - 1
+            For i = 0 To m_NumCollTriangles - 1
                 Me_CollTrangles = New List(Of Vector3)
                 For j = 0 To 3 - 1
                     Me_Vector3 = New Vector3 With {
@@ -47,9 +47,6 @@ Namespace Rx3
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
-            Dim BaseOffset As Long = w.BaseStream.Position
-            Me.NumCollTriangles = Me.CollisionTriangles.Count
-
             w.Write(Me.TotalSize)
             w.Write(Me.Unknown_1)
             w.Write(Me.Unknown_2(0))
@@ -71,19 +68,39 @@ Namespace Rx3
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, BaseOffset, w.BaseStream.Position)
+            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
 
 
+        Private m_TotalSize As UInteger
+
+        ''' <summary>
+        ''' Total section size (ReadOnly). </summary>
         Public Property TotalSize As UInteger
+            Get
+                Return m_TotalSize
+            End Get
+            Private Set
+                m_TotalSize = Value
+            End Set
+        End Property
         Public Property Unknown_1 As UInteger   'always 1?
         Public Property Unknown_2 As UInteger() = New UInteger(2 - 1) {}    'always 0? maybe padding
+        ''' <summary>
+        ''' The Collision name. </summary>
         Public Property CollisionName As String
         Public Property Unknown_3 As UInteger   'always 1?
-        Public Property NumCollTriangles As UInteger
+        ''' <summary>
+        ''' Returns the number of Collision-Triangles (ReadOnly). </summary>
+        Public ReadOnly Property NumCollTriangles As UInteger
+            Get
+                Return If(CollisionTriangles?.Count, 0)
+            End Get
+        End Property
 
-        'CollisionTriangles: an array of triangles (each triangle is represented with Vector3 struct for 3 vertices).
+        ''' <summary>
+        ''' Collision Triangles: an array of triangles (each triangle is represented with Vector3 struct for 3 vertices). </summary>
         Public Property CollisionTriangles As New List(Of List(Of Vector3))
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash

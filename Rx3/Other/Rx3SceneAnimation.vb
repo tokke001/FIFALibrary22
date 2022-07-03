@@ -4,12 +4,12 @@
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.SCENE_ANIMATION
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
@@ -25,8 +25,6 @@
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
-            Dim BaseOffset As Long = w.BaseStream.Position
-
             w.Write(Me.TotalSize)
             w.Write(Me.NumLocations)
             w.Write(Me.Unknown_1)
@@ -38,13 +36,31 @@
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, BaseOffset, w.BaseStream.Position)
+            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
 
 
+        Private m_TotalSize As UInteger
+
+        ''' <summary>
+        ''' Total section size (ReadOnly). </summary>
         Public Property TotalSize As UInteger
+            Get
+                Return m_TotalSize
+            End Get
+            Private Set
+                m_TotalSize = Value
+            End Set
+        End Property
+        ''' <summary>
+        ''' Returns the number of Locations. </summary>
         Public Property NumLocations As UInteger
+        '    Get
+        '        Return If(?.Count, 0)
+        '    End Get
+        'End Property
+
         Public Property Unknown_1 As UInteger   'usually 1
         Public Property Unknown_2 As UInteger   'usually 0
         Public Property String_1 As String   'ex. "tree"

@@ -1,10 +1,4 @@
-﻿Imports FIFALibrary22.Rw.Bxd
-Imports FIFALibrary22.Rw.Collision
-Imports FIFALibrary22.Rw.EA
-Imports FIFALibrary22.Rw.EA.FxShader
-Imports FIFALibrary22.Rw.Graphics
-Imports FIFALibrary22.Rw.OldAnimation
-
+﻿
 Namespace Rw.Core.Arena
     Public Class ArenaDictEntry     'RW4SectionInfo
         'rw::core::arena::ArenaDictEntry
@@ -25,7 +19,7 @@ Namespace Rw.Core.Arena
             Me.TypeIndex = r.ReadUInt32
             Me.TypeId = r.ReadUInt32
 
-            'Select Case TypeId
+            'Select Case TypeId '--> debugger
             '    Case AnimationSkin.TYPE_CODE
             '    Case AnimSeq.TYPE_CODE
             '    Case Bxd.Skeleton.TYPE_CODE

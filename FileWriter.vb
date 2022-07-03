@@ -1,4 +1,6 @@
 ﻿
+Imports BCnEncoder.Shared
+
 Public Class FileWriter
     Inherits BinaryWriter
     ' Methods
@@ -192,14 +194,12 @@ Public Class FileWriter
         End If
     End Sub
 
-    Public Sub Write16BitEncodedSingle(ByVal value As Single)
+    Public Overloads Sub Write(ByVal value As Half)
+        Dim bytes As Byte() = Half.GetBytes(value)
         If (Me.m_Endianness = Endian.Big) Then
-            Dim bytes As Byte() = BitConverter.GetBytes(FifaUtil.ConvertFloat16ToShort(value))
             Array.Reverse(bytes)
-            MyBase.Write(bytes)
-        Else
-            MyBase.Write(FifaUtil.ConvertFloat16ToShort(value))
         End If
+        MyBase.Write(bytes)
     End Sub
 
     Public Overloads Sub Write(ByVal buffer As Integer())

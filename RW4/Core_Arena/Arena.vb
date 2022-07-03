@@ -1,28 +1,35 @@
 ﻿'https://github.com/emd4600/SporeModder-FX/tree/d5353aa43fca7c6cc0d8ac78c550e69547096e98/src/sporemodder/file/rw4
 'https://emd4600.github.io/Spore-ModAPI/
-Imports FIFALibrary22.Rw.Bxd
-Imports FIFALibrary22.Rw.Collision
-Imports FIFALibrary22.Rw.EA
-Imports FIFALibrary22.Rw.EA.FxShader
-Imports FIFALibrary22.Rw.Graphics
-Imports FIFALibrary22.Rw.OldAnimation
-Imports Microsoft.DirectX.Direct3D
+
+Imports System.Drawing
+Imports BCnEncoder.Shared
 
 Namespace Rw.Core.Arena
     Public Class Arena
         'rw::core::arena::Arena
+        Public Sub New()
+        End Sub
+
+        Public Sub New(ByVal Endianness As Endian)
+            Me.FileHeader = New ArenaFileHeader(Endianness)
+        End Sub
+
         Public Sub New(ByVal r As FileReader)
             Me.Load(r)
         End Sub
 
-        'Private ReadOnly DictEntries As List(Of ArenaDictEntry) = New List(Of ArenaDictEntry)()
+        'Public Sub New(ByVal UseRwBuffers As Boolean, ByVal r As FileReader)
+        '    Me.UseRwBuffers = UseRwBuffers
+        '    Me.Load(r)
+        'End Sub
 
         Public Sub Load(ByVal r As FileReader)
 
             Me.FileHeader = New ArenaFileHeader(r)
 
             Me.LoadGeneralStructure(r)
-            'Me.RW4GeneralStructure = New RW4GeneralStructure(r)
+
+            Me.UseRwBuffers = CheckUseRwBuffers(r)
 
             r.BaseStream.Position = Me.OffsetDict
             For i = 0 To Me.NumEntries - 1
@@ -37,218 +44,20 @@ Namespace Rw.Core.Arena
             r.BaseStream.Position = Me.OffsetSectManifest
             Me.SectionManifest = New ArenaSectionManifest(Me, r)
 
-            Me.Sections = New RWSections(Me, r)
+            Me.Sections.Load(Me.UseRwBuffers, r) '= New RWSections(Me, r)
 
         End Sub
 
-        'Public Sub Load_old(ByVal r As FileReader)
+        Public Function CheckUseRwBuffers(ByVal r As FileReader) As Boolean
+            r.BaseStream.Position = Me.ResourceDescriptor.BaseResourceDescriptors(0).Size
 
-        '    Me.FileHeader = New ArenaFileHeader(r)
+            If r.BaseStream.Position + 4 <= r.BaseStream.Length - 1 Then
+                Dim Str As New String(r.ReadChars(4))
+                Return Not Str.StartsWith("RX3")
+            End If
 
-        '    LoadGeneralStructure(r)
-        '    'Me.RW4GeneralStructure = New RW4GeneralStructure(r)
-
-        '    r.BaseStream.Position = Me.OffsetDict
-        '    Me.DictEntries = New ArenaDictEntry(Me.NumEntries - 1) {}
-        '    For i = 0 To Me.NumEntries - 1
-        '        Me.DictEntries(i) = New ArenaDictEntry(r) '
-        '    Next
-
-        '    r.BaseStream.Position = Me.OffsetSectManifest
-        '    Me.SectionManifest = New ArenaSectionManifest(r)
-
-
-        '    Dim num1 As Integer = 0
-        '    Dim num2 As Integer = 0
-        '    Dim num3 As Integer = 0
-        '    Dim num4 As Integer = 0
-        '    Dim num5 As Integer = 0
-        '    Dim num6 As Integer = 0
-        '    Dim num7 As Integer = 0
-        '    Dim num8 As Integer = 0
-        '    Dim num9 As Integer = 0
-        '    Dim num10 As Integer = 0
-        '    Dim num11 As Integer = 0
-        '    Dim num12 As Integer = 0
-        '    Dim num13 As Integer = 0
-        '    Dim num14 As Integer = 0
-        '    Dim num15 As Integer = 0
-        '    Dim num16 As Integer = 0
-        '    Dim num17 As Integer = 0
-        '    Dim num18 As Integer = 0
-        '    Dim num19 As Integer = 0
-        '    Dim num20 As Integer = 0
-        '    Dim num21 As Integer = 0
-        '    Dim num22 As Integer = 0
-        '    Dim num23 As Integer = 0
-        '    Dim num24 As Integer = 0
-        '    Dim num25 As Integer = 0
-        '    Dim num26 As Integer = 0
-        '    For j = 0 To Me.NumEntries - 1
-        '        'If Me.RW4SectionInfos(j).Offset = 0 Then   'if offset = 0 --> dont exist 
-        '        'Continue For
-        '        'Else
-        '        If Not (Me.DictEntries(j).TypeId = 0 Or Me.DictEntries(j).TypeId = SectionTypeCode.RWOBJECTTYPE_BUFFER) Then
-        '            r.BaseStream.Position = Me.DictEntries(j).Offset
-        '        End If
-        '        'End If
-
-        '        Select Case Me.DictEntries(j).TypeId
-
-        '            Case SectionTypeCode.RWOBJECTTYPE_BUFFER    'texture / vertex / index buffer       'present at end of file / Rx3 sections
-        '                Continue For
-
-        '            Case 0  'FIFA 07 "stadium_141_3_container_0.rx2"
-        '                Continue For
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_VERTEXDESCRIPTOR
-        '                ReDim Preserve Me.Sections.VertexDescriptor(num5)
-        '                Me.Sections.VertexDescriptor(num5) = New VertexDescriptor(r)
-        '                num5 += 1
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_VERTEXBUFFER
-        '                ReDim Preserve Me.Sections.VertexBuffer(num1)
-        '                Me.Sections.VertexBuffer(num1) = New VertexBuffer(r)
-        '                num1 += 1
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_INDEXBUFFER
-        '                ReDim Preserve Me.Sections.IndexBuffer(num2)
-        '                Me.Sections.IndexBuffer(num2) = New IndexBuffer(r)
-        '                num2 += 1
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_MESH
-        '                ReDim Preserve Me.Sections.RW4Meshes(num3)
-        '                Me.Sections.RW4Meshes(num3) = New EmbeddedMesh(r)
-        '                num3 += 1
-
-        '            Case SectionTypeCode.EA_FxShader_FxRenderableSimple
-        '                ReDim Preserve Me.Sections.FxRenderableSimple(num4)
-        '                Me.Sections.FxRenderableSimple(num4) = New FxRenderableSimple(r)
-        '                num4 += 1
-
-        '            Case SectionTypeCode.OBJECTTYPE_SKELETON
-        '                ReDim Preserve Me.Sections.RW4Skeletons(num7)
-        '                Me.Sections.RW4Skeletons(num7) = New OldAnimation.Skeleton(r)
-        '                num7 += 1
-
-        '            Case SectionTypeCode.OBJECTTYPE_ANIMATIONSKIN    'BONE_MATRICES
-        '                ReDim Preserve Me.Sections.AnimationSkin(num6)
-        '                Me.Sections.AnimationSkin(num6) = New AnimationSkin(r)
-        '                num6 += 1
-
-        '            Case SectionTypeCode.EA_HOTSPOT
-        '                Me.Sections.RW4HotSpot = New HotSpot(r)
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_RASTER
-        '                ReDim Preserve Me.Sections.Raster(num8)
-        '                Me.Sections.Raster(num8) = New Raster(r)
-        '                num8 += 1
-
-        '            Case SectionTypeCode.EA_ArenaDictionary
-        '                Me.Sections.ArenaDictionary = New ArenaDictionary(r)
-
-        '            Case SectionTypeCode.OBJECTTYPE_SKINMATRIXBUFFER
-        '                ReDim Preserve Me.Sections.RW4SkinMatrixBuffers(num9)
-        '                Me.Sections.RW4SkinMatrixBuffers(num9) = New SkinMatrixBuffer(r)
-        '                num9 += 1
-
-        '            Case SectionTypeCode.EA_FxShader_ParameterBlockDescriptor  '2
-        '                ReDim Preserve Me.RW4Shader_ParameterBlockDescriptors(num10)
-        '                Me.RW4Shader_ParameterBlockDescriptors(num10) = New ParameterBlockDescriptor(r)  'ALWAYS little endian (set in section) !
-        '                num10 += 1
-
-        '            Case SectionTypeCode.EA_FxShader_ParameterBlock     '2
-        '                ReDim Preserve Me.RW4Shader_ParameterBlocks(num11)
-        '                Me.RW4Shader_ParameterBlocks(num11) = New ParameterBlock(r, Me.RW4Shader_ParameterBlockDescriptors(num11))
-        '                num11 += 1
-
-        '            Case SectionTypeCode.EA_FxShader_FxMaterial           '2
-        '                ReDim Preserve Me.Sections.RW4Shader_FxMaterials(num12)
-        '                Me.Sections.RW4Shader_FxMaterials(num12) = New FxMaterial(r)
-        '                num12 += 1
-
-        '            Case SectionTypeCode.RWCOBJECTTYPE_VOLUME      '2
-        '                ReDim Preserve Me.RW4Volumes(num13)
-        '                Me.RW4Volumes(num13) = New Volume(r)
-        '                num13 += 1
-
-        '            Case SectionTypeCode.RWCOBJECTTYPE_SIMPLEMAPPEDARRAY   '2
-        '                ReDim Preserve Me.RW4SimpleMappedArrays(num14)
-        '                Me.RW4SimpleMappedArrays(num14) = New SimpleMappedArray(r)
-        '                num14 += 1
-
-        '            Case SectionTypeCode.MODELINSTANCE_ARENAID '2
-        '                ReDim Preserve Me.RW4ModelInstances(num15)
-        '                Me.RW4ModelInstances(num15) = New Instance(r, Me.DictEntries(j).Size)
-        '                num15 += 1
-
-        '            Case SectionTypeCode.MODELSKELETON_ARENAID '2
-        '                ReDim Preserve Me.RW4ModelSkeletons(num16)
-        '                Me.RW4ModelSkeletons(num16) = New Bxd.Skeleton(r)
-        '                num16 += 1
-
-        '            Case SectionTypeCode.MODELSKELETONPOSE_ARENAID '2
-        '                ReDim Preserve Me.RW4ModelSkeletonPoses(num17)
-        '                Me.RW4ModelSkeletonPoses(num17) = New Skeletonpose(r)
-        '                num17 += 1
-
-        '            Case SectionTypeCode.MODELRENDER_ARENAID        '2
-        '                ReDim Preserve Me.RW4ModelRenders(num18)
-        '                Me.RW4ModelRenders(num18) = New RenderModel(r)
-        '                num18 += 1
-
-        '            Case SectionTypeCode.MODELCOLLISION_ARENAID   '2
-        '                ReDim Preserve Me.RW4ModelCollisions(num19)
-        '                Me.RW4ModelCollisions(num19) = New CollisionModel(r)
-        '                num19 += 1
-
-        '            Case SectionTypeCode.SPLINE_ARENAID '2
-        '                ReDim Preserve Me.RW4Splines(num20)
-        '                Me.RW4Splines(num20) = New Spline(r)
-        '                num20 += 1
-
-        '            Case SectionTypeCode.SCENELAYER_ARENAID '2
-        '                ReDim Preserve Me.RW4SceneLayers(num21)
-        '                Me.RW4SceneLayers(num21) = New SceneLayer(r)
-        '                num21 += 1
-
-        '            Case SectionTypeCode.LOCATION_ARENAID '2
-        '                ReDim Preserve Me.RW4Locations(num22)
-        '                Me.RW4Locations(num22) = New Location(r)
-        '                num22 += 1
-
-        '            Case SectionTypeCode.CULLINFO_ARENAID   '1
-        '                'ReDim Preserve Me.RW4CullInfos(num23)
-        '                Me.RW4CullInfo = New CullInfo(r)
-        '                num23 += 1
-        '                If num23 > 1 Then MsgBox("Error - Found multiple sections at loading: CullInfo_ArenaId")
-
-        '            Case SectionTypeCode.CAMERA_ARENAID   'euro08 "stadium_167_3_container_0.rx2" "stadium_167_4_container_0.rx2" '1
-        '                ReDim Preserve Me.RW4Cameras(num24)
-        '                Me.RW4Cameras(num24) = New Camera(r)
-        '                num24 += 1
-
-        '            Case SectionTypeCode.CHANNELCURVE_ARENAID    ' 'WC2010 "stadium_213_1_container_0.rx3"  'FIFA09 "festadium_188_4_container_0.rx2" "stadium_29_1_container_0.rx2" "stadium_29_4_container_0.rx2"  'array
-        '                ReDim Preserve Me.RW4ChannelCurves(num25)
-        '                Me.RW4ChannelCurves(num25) = New ChannelCurve(r)
-        '                num25 += 1
-
-        '            Case SectionTypeCode.ANIMSEQ_ARENAID   'array      'WC2010 "stadium_213_1_container_0.rx3" 'FIFA09 "festadium_188_4_container_0.rx2" (1) "stadium_29_1_container_0.rx2" (1) "stadium_29_4_container_0.rx2" (1) "stadium_175_1_container_0.rx2"  (array)  'usually exists with CHANNELCURVE_ARENAID ? -> may have links ! ?
-        '                ReDim Preserve Me.RW4AnimSeqs(num26)
-        '                Me.RW4AnimSeqs(num26) = New AnimSeq(r)
-        '                num26 += 1
-        '                'If num26 > 1 Then MsgBox("Error - Found multiple sections at loading: AnimSeq_ArenaId")
-
-        '            Case Else
-        '                MsgBox("Error at loading Rx3File: Unknown RW4 section found - " & Me.DictEntries(j).TypeId.ToString)
-        '                Continue For
-
-        '        End Select
-        '    Next j
-
-        '    'Me.RW4SectionManifest.SubReferences.LoadReferences(r)
-
-        'End Sub
+            Return True
+        End Function
 
         Private Sub LoadGeneralStructure(ByVal r As FileReader)
             Me.AssetId = r.ReadUInt32               'id
@@ -288,20 +97,20 @@ Namespace Rw.Core.Arena
 
             '2 - Save General Structure
             Dim OffsetGeneralStructure As Long = w.BaseStream.Position
-            w.Write(New Byte(144) {}) 'Me.SaveGeneralStructure(w)
+            w.Write(New Byte(144 - 1) {}) 'Me.SaveGeneralStructure(w)
 
             ' - Section Manifest > SubReferences : clear first
             'Me.SectionManifest.SubReferences.Records.Clear()
 
             ' - Section Manifest > Types : Create the list with all the type codes
-            Me.SectionManifest.Types.CreateList(Me.Sections.GetObjects)
+            'Me.SectionManifest.Types.CreateList(Me.Sections.GetObjects)
 
             '3 - Save Section Manifest
             Me.OffsetSectManifest = w.BaseStream.Position
             Me.SectionManifest.Save(w)
 
             '4 - Save Sections
-            Me.Sections.Save(w)
+            Me.Sections.Save(Me, w)
 
             ' - padding after last section
             'If Me.RW4GeneralStructure.Resources_3_Used(0).DataSize <> 0 Then
@@ -323,7 +132,8 @@ Namespace Rw.Core.Arena
                 w.Write(CByte(0))
                 FifaUtil.WriteAlignment(w, Me.ResourcesUsed.BaseResourceDescriptors(2).Alignment)
             End If
-            Me.ResourceDescriptor.BaseResourceDescriptors(0).Size = w.BaseStream.Position
+            Me.ResourceDescriptor.BaseResourceDescriptors(0).Size = w.BaseStream.Position   '--> size of the RW section (without buffers)
+            Me.ResourceDescriptor.BaseResourceDescriptors(2).Size = Me.Sections.GetTotalBuffersSize   '--> size of buffers
 
             '8 - Save GeneralStructure & SectionManifest  (now with correct offsets/sizes)
             w.BaseStream.Position = OffsetGeneralStructure
@@ -333,250 +143,11 @@ Namespace Rw.Core.Arena
 
             '9 - Go to end of RW4 section (to continue to rx3b/rx2 section)
             w.BaseStream.Position = Me.ResourceDescriptor.BaseResourceDescriptors(0).Size
+            If Me.UseRwBuffers Then '-- rx2 = True , Rx3Hybrid = False
+                Me.Sections.SaveBuffers(w)
+            End If
 
         End Sub
-
-        'Public Sub Save_OLD(ByVal w As FileWriter)
-        '    'Dim BlnHasBetaRW4Sections As Boolean = False  'HasBetaRW4Sections(Me.RW4SectionInfos) --> all known sections added !
-
-        '    '1 - Save Header
-        '    Me.FileHeader.Save(w)
-
-        '    '2 - Save General Structure
-        '    Dim OffsetRW4GeneralStructure As Long = w.BaseStream.Position
-        '    SaveGeneralStructure(w)
-        '    'Me.RW4GeneralStructure.Save(w)
-
-        '    '3 - Save Section Manifest
-        '    Me.OffsetSectManifest = w.BaseStream.Position
-        '    Me.SectionManifest.Save(w)
-
-
-        '    Dim num1_VB As Integer = 0
-        '    Dim num2_IB As Integer = 0
-        '    Dim num3 As Integer = 0
-        '    Dim num4 As Integer = 0
-        '    Dim num5 As Integer = 0
-        '    Dim num6 As Integer = 0
-        '    Dim num7 As Integer = 0
-        '    Dim num8_RAS As Integer = 0
-        '    Dim num9 As Integer = 0
-        '    Dim num10 As Integer = 0
-        '    Dim num11 As Integer = 0
-        '    Dim num12 As Integer = 0
-        '    Dim num13 As Integer = 0
-        '    Dim num14 As Integer = 0
-        '    Dim num15 As Integer = 0
-        '    Dim num16 As Integer = 0
-        '    Dim num17 As Integer = 0
-        '    Dim num18 As Integer = 0
-        '    Dim num19 As Integer = 0
-        '    Dim num20 As Integer = 0
-        '    Dim num21 As Integer = 0
-        '    Dim num22 As Integer = 0
-        '    Dim num23 As Integer = 0
-        '    Dim num24 As Integer = 0
-        '    Dim num25 As Integer = 0
-        '    Dim num26 As Integer = 0
-        '    Dim OffsetBuffers As UInteger = 0
-
-        '    '4 - Save Sections
-        '    For j = 0 To Me.ArenaDictEntries.Length - 1
-
-        '        '4.1 - Add padding + Save Offset Section (to Section info)
-        '        If Me.ArenaDictEntries(j).TypeId = 0 Then
-        '            Continue For
-        '        ElseIf Me.ArenaDictEntries(j).TypeId = SectionTypeCode.RWOBJECTTYPE_BUFFER Then
-        '            Me.ArenaDictEntries(j).Offset = OffsetBuffers
-        '        Else
-        '            '4.1.1 - Add padding (so alignment is oke)   'put alignment of previous section before current starts: because current "Alignment" value is used before this section
-        '            FifaUtil.WriteAlignment(w, Me.ArenaDictEntries(j).Alignment)
-        '            '4.1.2 - Save Offset Section (to Section info)
-        '            Me.ArenaDictEntries(j).Offset = w.BaseStream.Position
-        '        End If
-
-        '        '4.2 - Save Section
-        '        Select Case Me.ArenaDictEntries(j).TypeId
-
-        '            Case SectionTypeCode.RWOBJECTTYPE_BUFFER    'texture / vertex / index buffer       'present at end of file / Rx3 sections
-        '                'Continue For
-
-        '            Case 0  'FIFA 07 "stadium_141_3_container_0.rx2"
-        '                Continue For
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_VERTEXDESCRIPTOR
-        '                Me.Sections.VertexDescriptor(num5).Save(w)
-        '                num5 += 1
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_VERTEXBUFFER
-        '                Me.Sections.VertexBuffer(num1_VB).Save(w)
-        '                num1_VB += 1
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_INDEXBUFFER
-        '                Me.Sections.IndexBuffer(num2_IB).Save(w)
-        '                num2_IB += 1
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_MESH
-        '                Me.Sections.RW4Meshes(num3).Save(w)
-        '                num3 += 1
-
-        '            Case SectionTypeCode.EA_FxShader_FxRenderableSimple
-        '                Me.Sections.FxRenderableSimple(num4).Save(w)
-        '                num4 += 1
-
-        '            Case SectionTypeCode.OBJECTTYPE_SKELETON
-        '                Me.Sections.RW4Skeletons(num7).Save(w)
-        '                num7 += 1
-
-        '            Case SectionTypeCode.OBJECTTYPE_ANIMATIONSKIN    'BONE_MATRICES
-        '                Me.Sections.AnimationSkin(num6).Save(w)
-        '                num6 += 1
-
-        '            Case SectionTypeCode.EA_HOTSPOT
-        '                Me.Sections.RW4HotSpot.Save(w)
-
-        '            Case SectionTypeCode.RWGOBJECTTYPE_RASTER
-        '                Me.Sections.Raster(num8_RAS).Save(w)
-        '                num8_RAS += 1
-
-        '            Case SectionTypeCode.EA_ArenaDictionary
-        '                Me.Sections.ArenaDictionary.Save(w)
-
-        '            Case SectionTypeCode.OBJECTTYPE_SKINMATRIXBUFFER
-        '                Me.Sections.RW4SkinMatrixBuffers(num9).Save(w)
-        '                num9 += 1
-
-        '            Case SectionTypeCode.EA_FxShader_ParameterBlockDescriptor  '2
-        '                Me.RW4Shader_ParameterBlockDescriptors(num10).Save(w)      'ALWAYS little endian (set in section) !
-        '                num10 += 1
-
-        '            Case SectionTypeCode.EA_FxShader_ParameterBlock     '2
-        '                Me.RW4Shader_ParameterBlocks(num11).Save(w) ', Me.RW4Shader_ParameterBlockDescriptors(num11))
-        '                num11 += 1
-
-        '            Case SectionTypeCode.EA_FxShader_FxMaterial           '2
-        '                Me.Sections.RW4Shader_FxMaterials(num12).Save(w)
-        '                num12 += 1
-
-        '            Case SectionTypeCode.RWCOBJECTTYPE_VOLUME      '2
-        '                Me.RW4Volumes(num13).Save(w)
-        '                num13 += 1
-
-        '            Case SectionTypeCode.RWCOBJECTTYPE_SIMPLEMAPPEDARRAY   '2
-        '                Me.RW4SimpleMappedArrays(num14).Save(w)
-        '                num14 += 1
-
-        '            Case SectionTypeCode.MODELINSTANCE_ARENAID '2
-        '                Me.RW4ModelInstances(num15).Save(w)
-        '                num15 += 1
-
-        '            Case SectionTypeCode.MODELSKELETON_ARENAID '2
-        '                Me.RW4ModelSkeletons(num16).Save(w)
-        '                num16 += 1
-
-        '            Case SectionTypeCode.MODELSKELETONPOSE_ARENAID '2
-        '                Me.RW4ModelSkeletonPoses(num17).Save(w)
-        '                num17 += 1
-
-        '            Case SectionTypeCode.MODELRENDER_ARENAID        '2
-        '                Me.RW4ModelRenders(num18).Save(w)
-        '                num18 += 1
-
-        '            Case SectionTypeCode.MODELCOLLISION_ARENAID   '2
-        '                Me.RW4ModelCollisions(num19).Save(w)
-        '                num19 += 1
-
-        '            Case SectionTypeCode.SPLINE_ARENAID '2
-        '                Me.RW4Splines(num20).Save(w)
-        '                num20 += 1
-
-        '            Case SectionTypeCode.SCENELAYER_ARENAID '2
-        '                Me.RW4SceneLayers(num21).Save(w)
-        '                num21 += 1
-
-        '            Case SectionTypeCode.LOCATION_ARENAID '2
-        '                Me.RW4Locations(num22).Save(w)
-        '                num22 += 1
-
-        '            Case SectionTypeCode.CULLINFO_ARENAID   '1
-        '                Me.RW4CullInfo.Save(w)
-        '                'num23 += 1
-
-        '            Case SectionTypeCode.CAMERA_ARENAID
-        '                Me.RW4Cameras(num24).Save(w)
-        '                num24 += 1
-
-        '            Case SectionTypeCode.CHANNELCURVE_ARENAID
-        '                Me.RW4ChannelCurves(num25).Save(w)
-        '                num25 += 1
-
-        '            Case SectionTypeCode.ANIMSEQ_ARENAID
-        '                Me.RW4AnimSeqs(num26).Save(w)
-        '                num26 += 1
-
-        '            Case Else
-        '                MsgBox("Error at saving Rx3File: Unknown RW4 section found - " & Me.ArenaDictEntries(j).TypeId.ToString)
-        '                Continue For
-
-        '        End Select
-
-        '        '4.3 - Save Size Section (to Section info)
-        '        If Me.ArenaDictEntries(j).TypeId = SectionTypeCode.RWOBJECTTYPE_BUFFER Then
-        '            If j + 1 <= Me.ArenaDictEntries.Length Then
-        '                Dim IdType As UInteger = 0
-        '                Select Case Me.ArenaDictEntries(j + 1).TypeId
-        '                    Case SectionTypeCode.RWGOBJECTTYPE_VERTEXBUFFER
-        '                        IdType = num1_VB
-        '                    Case SectionTypeCode.RWGOBJECTTYPE_INDEXBUFFER
-        '                        IdType = num2_IB
-        '                    Case SectionTypeCode.RWGOBJECTTYPE_RASTER
-        '                        IdType = num8_RAS
-        '                End Select
-        '                Me.ArenaDictEntries(j).Size = GetSizeRWBuffer(Me.ArenaDictEntries(j).Alignment, Me.ArenaDictEntries(j + 1).TypeId, IdType)
-        '                OffsetBuffers += Me.ArenaDictEntries(j).Size
-        '            End If
-        '        Else
-        '            Me.ArenaDictEntries(j).Size = w.BaseStream.Position - Me.ArenaDictEntries(j).Offset
-        '        End If
-
-        '    Next j
-
-        '    ' - padding after last section
-        '    'If Me.RW4GeneralStructure.Resources_3_Used(0).DataSize <> 0 Then
-        '    'FifaUtil.WriteAllignment(w, Me.RW4GeneralStructure.Resources_3_Used(0).DataAlignment)
-        '    'Else
-        '    FifaUtil.WriteAlignment(w, 4)
-        '    'End If
-
-        '    '5 - Save Section infos
-        '    Me.OffsetDict = w.BaseStream.Position
-        '    For i = 0 To Me.ArenaDictEntries.Length - 1
-        '        Me.ArenaDictEntries(i).Save(w)
-        '    Next
-
-        '    '6 - Save SubReferences (at end of RW4 section)
-        '    CType(Me.SectionManifest.Sections(Me.SectionManifest.IndexOf(GetType(ArenaSectionSubreferences))), ArenaSectionSubreferences).SaveRecords(w)
-
-        '    '7 - Add padding + get Offset rx3b/rx2 section
-        '    FifaUtil.WriteAlignment(w, Me.ResourceDescriptor.BaseResourceDescriptors(0).Alignment)
-        '    If Me.ResourcesUsed.BaseResourceDescriptors(2).Size <> 0 Then 'And Me.RW4GeneralStructure.Resources_3_Used(2).DataAlignment = 4096 Then
-        '        w.Write(CByte(0))
-        '        FifaUtil.WriteAlignment(w, Me.ResourcesUsed.BaseResourceDescriptors(2).Alignment)
-        '    End If
-        '    Me.ResourceDescriptor.BaseResourceDescriptors(0).Size = w.BaseStream.Position
-
-        '    '8 - Save GeneralStructure & SectionManifest  (now with correct offsets/sizes)
-        '    Me.NumEntries = Me.ArenaDictEntries.Length
-        '    Me.NumUsed = Me.ArenaDictEntries.Length
-        '    w.BaseStream.Position = OffsetRW4GeneralStructure
-        '    SaveGeneralStructure(w)
-        '    w.BaseStream.Position = Me.OffsetSectManifest
-        '    Me.SectionManifest.Save(w)
-
-        '    '9 - Go to end of RW4 section (to continue to rx3b/rx2 section)
-        '    w.BaseStream.Position = Me.ResourceDescriptor.BaseResourceDescriptors(0).Size
-
-        'End Sub
 
         Private Sub SaveGeneralStructure(ByVal w As FileWriter)
             Me.NumEntries = Me.ArenaDictEntries.Count
@@ -616,76 +187,6 @@ Namespace Rw.Core.Arena
 
         End Sub
 
-        'Private Function HasBetaRW4Sections(ByVal RW4SectionInfos As ArenaDictEntry()) As Boolean
-        '    For j = 0 To RW4SectionInfos.Length - 1
-        '        Select Case RW4SectionInfos(j).TypeId
-        '            Case SectionTypeCode.RWOBJECTTYPE_BUFFER
-        '                Continue For
-        '            Case SectionTypeCode.RWGOBJECTTYPE_VERTEXDESCRIPTOR
-        '                Continue For
-        '            Case SectionTypeCode.RWGOBJECTTYPE_VERTEXBUFFER
-        '                Continue For
-        '            Case SectionTypeCode.RWGOBJECTTYPE_INDEXBUFFER
-        '                Continue For
-        '            Case SectionTypeCode.RWGOBJECTTYPE_MESH
-        '                Continue For
-        '            Case SectionTypeCode.EA_FxShader_FxRenderableSimple
-        '                Continue For
-        '            Case SectionTypeCode.OBJECTTYPE_SKELETON
-        '                Continue For
-        '            Case SectionTypeCode.OBJECTTYPE_ANIMATIONSKIN
-        '                Continue For
-        '            Case SectionTypeCode.EA_HOTSPOT
-        '                Continue For
-        '            Case SectionTypeCode.RWGOBJECTTYPE_RASTER
-        '                Continue For
-        '            Case SectionTypeCode.EA_ArenaDictionary
-        '                Continue For
-        '            Case SectionTypeCode.OBJECTTYPE_SKINMATRIXBUFFER
-        '                Continue For
-        '            Case SectionTypeCode.EA_FxShader_ParameterBlockDescriptor
-        '                Continue For
-        '            Case SectionTypeCode.EA_FxShader_ParameterBlock
-        '                Continue For
-        '            Case SectionTypeCode.EA_FxShader_FxMaterial
-        '                Continue For
-        '            Case SectionTypeCode.SCENELAYER_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.MODELINSTANCE_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.MODELSKELETON_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.MODELSKELETONPOSE_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.MODELRENDER_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.MODELCOLLISION_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.RWCOBJECTTYPE_VOLUME
-        '                Continue For
-        '            Case SectionTypeCode.RWCOBJECTTYPE_SIMPLEMAPPEDARRAY
-        '                Continue For
-        '            Case SectionTypeCode.SPLINE_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.LOCATION_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.CULLINFO_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.CAMERA_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.CHANNELCURVE_ARENAID
-        '                Continue For
-        '            Case SectionTypeCode.ANIMSEQ_ARENAID
-        '                Continue For
-        '            Case Else
-        '                Return True
-        '        End Select
-        '    Next j
-        '    Return False
-        'End Function
-
-
-
         'Public Overridable Sub addReference(ByVal [object] As RWObject, ByVal offset As Integer)
         '    header_Conflict.sectionManifest.subReferences.references.add(New SubReference([object], offset))
         'End Sub
@@ -694,9 +195,99 @@ Namespace Rw.Core.Arena
         '    Return m_Object.GetTypeCode.ToString 'm_Object.GetType().Name + AscW("-"c) + sectionInfos.IndexOf(m_Object.sectionInfo)
         'End Function
 
-        Public Function WriteDictionary()   '--> found at dump
+        'Public Function WriteDictionary()   '--> found at dump
 
-        End Function
+        'End Function
+
+        Public Property Bitmaps As List(Of Bitmap)
+            Get
+                Dim BitmapArray As New List(Of Bitmap)
+                For i = 0 To Me.Sections.Rasters.Count - 1
+                    BitmapArray.Add(Me.Sections.Rasters(i).GetBitmap)
+                Next i
+                Return BitmapArray
+            End Get
+            Set
+                Dim num As Integer = If((Value.Count < Me.Sections.Rasters.Count), Value.Count, Me.Sections.Rasters.Count)
+                For i = 0 To num - 1
+                    If (Value(i) IsNot Nothing) Then
+                        Me.Sections.Rasters(i).SetBitmap(Value(i))
+                    End If
+                Next i
+            End Set
+        End Property
+
+        Public Property DdsTextures As List(Of DdsFile)
+            Get
+                Dim DdsArray As New List(Of DdsFile)
+                For i = 0 To Me.Sections.Rasters.Count - 1
+                    DdsArray.Add(Me.Sections.Rasters(i).GetDds)
+                Next i
+                Return DdsArray
+            End Get
+            Set
+                Dim num As Integer = If((Value.Count < Me.Sections.Rasters.Count), Value.Count, Me.Sections.Rasters.Count)
+                For i = 0 To num - 1
+                    If (Value(i) IsNot Nothing) Then
+                        Me.Sections.Rasters(i).SetDds(Value(i))
+                    End If
+                Next i
+            End Set
+        End Property
+
+        Public Property KtxTextures As List(Of KtxFile)
+            Get
+                Dim KtxArray As New List(Of KtxFile)
+                For i = 0 To Me.Sections.Rasters.Count - 1
+                    KtxArray.Add(Me.Sections.Rasters(i).GetKtx)
+                Next i
+                Return KtxArray
+            End Get
+            Set
+                Dim num As Integer = If((Value.Count < Me.Sections.Rasters.Count), Value.Count, Me.Sections.Rasters.Count)
+                For i = 0 To num - 1
+                    If (Value(i) IsNot Nothing) Then
+                        Me.Sections.Rasters(i).SetKtx(Value(i))
+                    End If
+                Next i
+            End Set
+        End Property
+
+        Public Property VertexStreams As List(Of List(Of Vertex))
+            Get
+                Dim VertexArray As New List(Of List(Of Vertex))
+                For i = 0 To Me.Sections.VertexBuffers.Count - 1
+                    VertexArray.Add(Me.Sections.VertexBuffers(i).GetVertexData)
+                Next i
+                Return VertexArray
+            End Get
+            Set
+                Dim num As Integer = If((Value.Count < Me.Sections.VertexBuffers.Count), Value.Count, Me.Sections.VertexBuffers.Count)
+                For i = 0 To num - 1
+                    If (Value(i) IsNot Nothing) Then
+                        Me.Sections.VertexBuffers(i).SetVertexData(Value(i))
+                    End If
+                Next i
+            End Set
+        End Property
+
+        Public Property IndexStreams As List(Of List(Of UInteger))
+            Get
+                Dim IndexArray As New List(Of List(Of UInteger))
+                For i = 0 To Me.Sections.IndexBuffers.Count - 1
+                    IndexArray.Add(Me.Sections.IndexBuffers(i).GetIndexData)
+                Next i
+                Return IndexArray
+            End Get
+            Set
+                Dim num As Integer = If((Value.Count < Me.Sections.IndexBuffers.Count), Value.Count, Me.Sections.IndexBuffers.Count)
+                For i = 0 To num - 1
+                    If (Value(i) IsNot Nothing) Then
+                        Me.Sections.IndexBuffers(i).SetIndexData(Value(i))
+                    End If
+                Next i
+            End Set
+        End Property
 
         Public Property PrimitiveTypes(ByVal MeshIndex As UInteger) As Microsoft.DirectX.Direct3D.PrimitiveType
             Get
@@ -734,11 +325,125 @@ Namespace Rw.Core.Arena
             End Set
         End Property
 
+        Public Property VertexFormats(ByVal MeshIndex As UInteger) As VertexElement()
+            Get
+                'If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(MeshIndex) IsNot Nothing Then
+                Return Me.Sections.FxRenderableSimples(MeshIndex).PVertexDescriptor.Elements 'Me.RW4Section.Sections.EmbeddedMeshes(MeshIndex).PVertexBuffers(0).PVertexDescriptor.Elements
+                'End If
+
+            End Get
+            Set
+                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(MeshIndex) IsNot Nothing Then
+                    Me.Sections.FxRenderableSimples(MeshIndex).PVertexDescriptor.Elements = New Graphics.VertexDescriptor.Element(Value.Count - 1) {}
+                    For j = 0 To Value.Count - 1
+                        Me.Sections.FxRenderableSimples(MeshIndex).PVertexDescriptor.Elements(j) = New Graphics.VertexDescriptor.Element(Value(j))
+                    Next j
+                End If
+            End Set
+        End Property
+
+        Public Property VertexFormats As List(Of VertexElement())
+            Get
+                Dim m_Lists As New List(Of VertexElement())
+                If Me.Sections.FxRenderableSimples IsNot Nothing Then
+                    For i = 0 To Me.Sections.FxRenderableSimples.Count - 1
+                        m_Lists.Add(Me.Sections.FxRenderableSimples(i).PVertexDescriptor.Elements)
+                    Next
+                End If
+
+                Return m_Lists
+            End Get
+            Set
+                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples.Count = Value.Count Then
+                    For i = 0 To Me.Sections.FxRenderableSimples.Count - 1
+                        Me.Sections.FxRenderableSimples(i).PVertexDescriptor.Elements = New Graphics.VertexDescriptor.Element(Value(i).Count - 1) {}
+                        For j = 0 To Value(i).Count - 1
+                            Me.Sections.FxRenderableSimples(i).PVertexDescriptor.Elements(j) = New Graphics.VertexDescriptor.Element(Value(i)(j))
+                        Next j
+                    Next i
+                End If
+            End Set
+        End Property
+
+        Public ReadOnly Property NameTable As List(Of FIFALibrary22.NameTable)
+            Get
+                Return Me.Sections.ArenaDictionary.GetNameTable()
+            End Get
+            'Set
+            '     = Value
+            'End Set
+        End Property
+
+        Public Property MeshName(ByVal MeshIndex As UInteger) As String
+            Get
+                If Me.Sections.ArenaDictionary IsNot Nothing Then
+                    Return Me.Sections.ArenaDictionary.GetNameByType(Rw.SectionTypeCode.EA_FxShader_FxRenderableSimple, MeshIndex)
+                End If
+
+                Return ""
+            End Get
+            Set
+                Me.Sections.ArenaDictionary.SetNameByType(Value, Rw.SectionTypeCode.EA_FxShader_FxRenderableSimple, MeshIndex)
+            End Set
+        End Property
+
+        Public Property TextureName(ByVal TextureIndex As UInteger) As String
+            Get
+                If Me.Sections.ArenaDictionary IsNot Nothing Then
+                    Return Me.Sections.ArenaDictionary.GetNameByType(Rw.SectionTypeCode.RWGOBJECTTYPE_RASTER, TextureIndex)
+                End If
+
+                Return ""
+            End Get
+            Set
+                Me.Sections.ArenaDictionary.SetNameByType(Value, Rw.SectionTypeCode.RWGOBJECTTYPE_RASTER, TextureIndex)
+            End Set
+        End Property
+
+        Public ReadOnly Property NumMeshes As UInteger
+            Get
+                If Me.Sections.VertexBuffers IsNot Nothing Then
+                    Return Me.Sections.VertexBuffers.Count
+                End If
+
+                Return 0
+            End Get
+        End Property
+
+        Public ReadOnly Property NumTextures As UInteger
+            Get
+                If Me.Sections.Rasters IsNot Nothing Then
+                    Return Me.Sections.Rasters.Count
+                End If
+
+                Return 0
+            End Get
+        End Property
+
+        Public Property BoneMatrices As List(Of List(Of BonePose))
+            Get
+                Dim m_Lists As New List(Of List(Of BonePose))
+                If Me.Sections.AnimationSkins IsNot Nothing Then
+                    For i = 0 To Me.Sections.AnimationSkins.Count - 1
+                        m_Lists.Add(Me.Sections.AnimationSkins(i).BoneMatrices)
+                    Next
+                End If
+
+                Return m_Lists
+            End Get
+            Set
+                If Me.Sections.AnimationSkins IsNot Nothing AndAlso Me.Sections.AnimationSkins.Count = Value.Count Then
+                    For i = 0 To Me.Sections.AnimationSkins.Count - 1
+                        Me.Sections.AnimationSkins(i).BoneMatrices = Value(i)
+                    Next i
+                End If
+            End Set
+        End Property
 
         Public Property FileHeader As ArenaFileHeader
         Friend ReadOnly ArenaDictEntries As List(Of ArenaDictEntry) = New List(Of ArenaDictEntry)
         Public Property SectionManifest As ArenaSectionManifest
-        Public Property Sections As RWSections
+        Public Property Sections As New RwSections(Me)
 
         Public Property AssetId As UInteger     'Id
         Public Property NumEntries As UInteger
@@ -754,6 +459,8 @@ Namespace Rw.Core.Arena
         Public Property ResourcesUsed As ResourceDescriptor '() = New ResourceDescriptor(5 - 1) {}
         Public Property Resource As TargetResource 'UInteger() = New UInteger(5 - 1) {}
         Public Property ArenaGroup As UInteger  ' (0)
+
+        Friend Property UseRwBuffers As Boolean = True      '-- rx2: True , Rx3Hybrid: False
 
     End Class
 End Namespace

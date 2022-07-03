@@ -1,7 +1,7 @@
 ﻿Namespace Rw.EA.FxShader
     Public Class FxMaterial
         'EA::FxShader::FxMaterial
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_FxShader_FxMaterial
         Public Const ALIGNMENT As Integer = 4
 

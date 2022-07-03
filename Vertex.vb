@@ -1,4 +1,5 @@
-﻿Imports FIFALibrary22.Rw.D3D
+﻿Imports BCnEncoder.Shared
+Imports FIFALibrary22.Rw.D3D
 Imports Microsoft.DirectX.Direct3D
 
 Public Class Vertex
@@ -29,9 +30,9 @@ Public Class Vertex
                 Case DeclarationUsage.Position
                     Select Case VElement.DataType
                         Case D3DDECLTYPE.FLOAT3
-                            Me.LoadPosition_3f32(VElement.UsageIndex, r)
+                            Me.LoadPosition_3f32(r)
                         Case D3DDECLTYPE.FLOAT16_4
-                            Me.LoadPosition_4f16(VElement.UsageIndex, r)
+                            Me.LoadPosition_4f16(r)
                         Case Else
                             flag_Unknown_Type = True
                     End Select
@@ -57,9 +58,9 @@ Public Class Vertex
 
                 Case DeclarationUsage.Normal
                     If VElement.DataType = D3DDECLTYPE.DEC3N Then '3s10n
-                        Me.LoadNormal_3s10n(VElement.UsageIndex, r)
+                        Me.LoadNormal_3s10n(r)
                     ElseIf VElement.DataType = D3DDECLTYPE.FLOAT3 Then
-                        Me.LoadNormal_3f32(VElement.UsageIndex, r)
+                        Me.LoadNormal_3f32(r)
                     Else
                         flag_Unknown_Type = True
                     End If
@@ -82,27 +83,27 @@ Public Class Vertex
 
                 Case DeclarationUsage.Tangent
                     If VElement.DataType = D3DDECLTYPE.DEC3N Then '3s10n
-                        Me.LoadTangent_3s10n(VElement.UsageIndex, r)
+                        Me.LoadTangent_3s10n(r)
                     ElseIf VElement.DataType = D3DDECLTYPE.FLOAT3 Then
-                        Me.LoadTangent_3f32(VElement.UsageIndex, r)
+                        Me.LoadTangent_3f32(r)
                     Else
                         flag_Unknown_Type = True
                     End If
 
                 Case DeclarationUsage.BiNormal
                     If VElement.DataType = D3DDECLTYPE.DEC3N Then '3s10n
-                        Me.LoadBiNormal_3s10n(VElement.UsageIndex, r)
+                        Me.LoadBiNormal_3s10n(r)
                     ElseIf VElement.DataType = D3DDECLTYPE.FLOAT3 Then
-                        Me.LoadBiNormal_3f32(VElement.UsageIndex, r)
+                        Me.LoadBiNormal_3f32(r)
                     Else
                         flag_Unknown_Type = True
                     End If
 
                 Case DeclarationUsage.Color
                     If VElement.DataType = D3DDECLTYPE.UBYTE4N Then '4u8n
-                        Me.LoadColor_4u8n(VElement.UsageIndex, r)
+                        Me.LoadColor_4u8n(r)
                     ElseIf VElement.DataType = D3DDECLTYPE.D3DCOLOR Then
-                        Me.LoadColor_D3DC(VElement.UsageIndex, r)
+                        Me.LoadColor_D3DC(r)
                     Else
                         flag_Unknown_Type = True
                     End If
@@ -120,36 +121,34 @@ Public Class Vertex
 
     End Sub
 
-    Private Sub LoadPosition_3f32(ByVal UsageIndex As Integer, ByVal r As FileReader)
-        ReDim Preserve Me.Positions(UsageIndex)
-        Me.Positions(UsageIndex) = New Position
+    Private Sub LoadPosition_3f32(ByVal r As FileReader)
+        Me.Position = New Position
 
         If Me.m_Endianness = Endian.Big Then
-            Me.Positions(UsageIndex).X = r.ReadSingle
-            Me.Positions(UsageIndex).Y = r.ReadSingle
-            Me.Positions(UsageIndex).Z = r.ReadSingle
+            Me.Position.X = r.ReadSingle
+            Me.Position.Y = r.ReadSingle
+            Me.Position.Z = r.ReadSingle
         Else
-            Me.Positions(UsageIndex).X = r.ReadSingle
-            Me.Positions(UsageIndex).Y = r.ReadSingle
-            Me.Positions(UsageIndex).Z = r.ReadSingle
+            Me.Position.X = r.ReadSingle
+            Me.Position.Y = r.ReadSingle
+            Me.Position.Z = r.ReadSingle
         End If
 
     End Sub
 
-    Private Sub LoadPosition_4f16(ByVal UsageIndex As Integer, ByVal r As FileReader)
-        ReDim Preserve Me.Positions(UsageIndex)
-        Me.Positions(UsageIndex) = New Position
+    Private Sub LoadPosition_4f16(ByVal r As FileReader)
+        Me.Position = New Position
 
         If Me.m_Endianness = Endian.Big Then
-            Me.Positions(UsageIndex).X = r.Read16BitEncodedSingle
-            Me.Positions(UsageIndex).Y = r.Read16BitEncodedSingle
-            Me.Positions(UsageIndex).Z = r.Read16BitEncodedSingle
-            Me.Positions(UsageIndex).W = r.Read16BitEncodedSingle
+            Me.Position.X = r.ReadHalf
+            Me.Position.Y = r.ReadHalf
+            Me.Position.Z = r.ReadHalf
+            Me.Position.W = r.ReadHalf
         Else
-            Me.Positions(UsageIndex).X = r.Read16BitEncodedSingle
-            Me.Positions(UsageIndex).Y = r.Read16BitEncodedSingle
-            Me.Positions(UsageIndex).Z = r.Read16BitEncodedSingle
-            Me.Positions(UsageIndex).W = r.Read16BitEncodedSingle
+            Me.Position.X = r.ReadHalf
+            Me.Position.Y = r.ReadHalf
+            Me.Position.Z = r.ReadHalf
+            Me.Position.W = r.ReadHalf
         End If
 
     End Sub
@@ -224,41 +223,37 @@ Public Class Vertex
 
     End Sub
 
-    Private Sub LoadNormal_3s10n(ByVal UsageIndex As Integer, ByVal r As FileReader)    'DEC3N
-        ReDim Preserve Me.Normals(UsageIndex)
-        Me.Normals(UsageIndex) = New Normal
+    Private Sub LoadNormal_3s10n(ByVal r As FileReader)    'DEC3N
+        Me.Normal = New Normal
 
-        Me.Normals(UsageIndex).DEC3N = r.ReadInt32
-
-        Dim SngValues As Single() = FifaUtil.DEC3NtoFloats(Me.Normals(UsageIndex).DEC3N)
-        'Dim SngValues_v2 As Single() = FifaUtil.DEC3NtoFloats_v2(Me.Normals(UsageIndex).DEC3N)
-        'Dim SngValues_v3 As Single() = FifaUtil.DEC3NtoFloats_v3(Me.Normals(UsageIndex).DEC3N)  '<--
+        Dim SngValues As Single() = FifaUtil.DEC3NtoFloats(r.ReadInt32)
+        'Dim SngValues_v2 As Single() = FifaUtil.DEC3NtoFloats_v2(Me.Normals.DEC3N)
+        'Dim SngValues_v3 As Single() = FifaUtil.DEC3NtoFloats_v3(Me.Normals.DEC3N)  '<--
         'FloatsToDEC3N_v2
-        'Me.Normals(UsageIndex).DEC3N = FifaUtil.FloatsToDEC3N(SngValues(0), SngValues(1), SngValues(2))
+        'Me.Normals.DEC3N = FifaUtil.FloatsToDEC3N(SngValues(0), SngValues(1), SngValues(2))
         'Dim SngValues2 = FifaUtil.DEC3NtoFloats(test)
         'Dim test As Integer = FifaUtil.FloatsToDEC3N_OLD(SngValues(0), SngValues(1), SngValues(2)) ', SngValues(3))
         'Dim test2 As Integer = FifaUtil.FloatsToDEC3N(SngValues(0), SngValues(1), SngValues(2)) ', SngValues(3))
         'Dim test3 As Integer = FifaUtil.FloatsToDEC3N(SngValues_v2(0), SngValues_v2(1), SngValues_v2(2)) ', SngValues(3))
-        'Dim difference As Integer = Me.Normals(UsageIndex).DEC3N - test
+        'Dim difference As Integer = Me.Normals.DEC3N - test
         'Dim SngValues_2 As Single() = FifaUtil.DEC3NtoFloats(test)
-        Me.Normals(UsageIndex).Normal_x = SngValues(0) - 1
-        Me.Normals(UsageIndex).Normal_y = SngValues(1) - 1
-        Me.Normals(UsageIndex).Normal_z = SngValues(2) - 1
+        Me.Normal.Normal_x = SngValues(0)
+        Me.Normal.Normal_y = SngValues(1)
+        Me.Normal.Normal_z = SngValues(2)
 
     End Sub
 
-    Private Sub LoadNormal_3f32(ByVal UsageIndex As Integer, ByVal r As FileReader)
-        ReDim Preserve Me.Normals(UsageIndex)
-        Me.Normals(UsageIndex) = New Normal
+    Private Sub LoadNormal_3f32(ByVal r As FileReader)
+        Me.Normal = New Normal
 
         If Me.m_Endianness = Endian.Big Then
-            Me.Normals(UsageIndex).Normal_x = r.ReadSingle
-            Me.Normals(UsageIndex).Normal_y = r.ReadSingle
-            Me.Normals(UsageIndex).Normal_z = r.ReadSingle
+            Me.Normal.Normal_x = r.ReadSingle
+            Me.Normal.Normal_y = r.ReadSingle
+            Me.Normal.Normal_z = r.ReadSingle
         Else
-            Me.Normals(UsageIndex).Normal_x = r.ReadSingle
-            Me.Normals(UsageIndex).Normal_y = r.ReadSingle
-            Me.Normals(UsageIndex).Normal_z = r.ReadSingle
+            Me.Normal.Normal_x = r.ReadSingle
+            Me.Normal.Normal_y = r.ReadSingle
+            Me.Normal.Normal_z = r.ReadSingle
         End If
 
     End Sub
@@ -296,11 +291,11 @@ Public Class Vertex
         Me.TextureCoordinates(UsageIndex) = New TextureCoordinate
 
         If Me.m_Endianness = Endian.Big Then
-            Me.TextureCoordinates(UsageIndex).U = r.Read16BitEncodedSingle
-            Me.TextureCoordinates(UsageIndex).V = r.Read16BitEncodedSingle
+            Me.TextureCoordinates(UsageIndex).U = r.ReadHalf
+            Me.TextureCoordinates(UsageIndex).V = r.ReadHalf
         Else
-            Me.TextureCoordinates(UsageIndex).U = r.Read16BitEncodedSingle
-            Me.TextureCoordinates(UsageIndex).V = r.Read16BitEncodedSingle
+            Me.TextureCoordinates(UsageIndex).U = r.ReadHalf
+            Me.TextureCoordinates(UsageIndex).V = r.ReadHalf
         End If
 
     End Sub
@@ -330,98 +325,92 @@ Public Class Vertex
             Me.TextureCoordinates(UsageIndex).V = r.ReadUInt16 / 32767
         End If
     End Sub
-    Private Sub LoadTangent_3s10n(ByVal UsageIndex As Integer, ByVal r As FileReader)   'DEC3N
-        ReDim Preserve Me.Tangents(UsageIndex)
-        Me.Tangents(UsageIndex) = New Tangent
+    Private Sub LoadTangent_3s10n(ByVal r As FileReader)   'DEC3N
+        Me.Tangent = New Tangent
 
-        Me.Tangents(UsageIndex).DEC3N = r.ReadInt32
-
-        Dim SngValues As Single() = FifaUtil.DEC3NtoFloats(Me.Tangents(UsageIndex).DEC3N)
-        Me.Tangents(UsageIndex).Tangent_x = SngValues(0)
-        Me.Tangents(UsageIndex).Tangent_y = SngValues(1)
-        Me.Tangents(UsageIndex).Tangent_z = SngValues(2)
+        Dim SngValues As Single() = FifaUtil.DEC3NtoFloats(r.ReadInt32)
+        Me.Tangent.Tangent_x = -SngValues(0)
+        Me.Tangent.Tangent_y = -SngValues(1)
+        Me.Tangent.Tangent_z = -SngValues(2)
     End Sub
 
-    Private Sub LoadTangent_3f32(ByVal UsageIndex As Integer, ByVal r As FileReader)
-        ReDim Preserve Me.Tangents(UsageIndex)
-        Me.Tangents(UsageIndex) = New Tangent
+    Private Sub LoadTangent_3f32(ByVal r As FileReader)
+        Me.Tangent = New Tangent
 
         If Me.m_Endianness = Endian.Big Then
-            Me.Tangents(UsageIndex).Tangent_x = r.ReadSingle
-            Me.Tangents(UsageIndex).Tangent_y = r.ReadSingle
-            Me.Tangents(UsageIndex).Tangent_z = r.ReadSingle
+            Me.Tangent.Tangent_x = r.ReadSingle
+            Me.Tangent.Tangent_y = r.ReadSingle
+            Me.Tangent.Tangent_z = r.ReadSingle
         Else
-            Me.Tangents(UsageIndex).Tangent_x = r.ReadSingle
-            Me.Tangents(UsageIndex).Tangent_y = r.ReadSingle
-            Me.Tangents(UsageIndex).Tangent_z = r.ReadSingle
+            Me.Tangent.Tangent_x = r.ReadSingle
+            Me.Tangent.Tangent_y = r.ReadSingle
+            Me.Tangent.Tangent_z = r.ReadSingle
         End If
     End Sub
 
-    Private Sub LoadBiNormal_3s10n(ByVal UsageIndex As Integer, ByVal r As FileReader)
-        ReDim Preserve Me.Binormals(UsageIndex)
-        Me.Binormals(UsageIndex) = New Binormal
+    Private Sub LoadBiNormal_3s10n(ByVal r As FileReader)
+        Me.Binormal = New Binormal
 
-        Me.Binormals(UsageIndex).DEC3N = r.ReadInt32
-
-        Dim SngValues As Single() = FifaUtil.DEC3NtoFloats(Me.Binormals(UsageIndex).DEC3N)
-        Me.Binormals(UsageIndex).Binormal_x = SngValues(0)
-        Me.Binormals(UsageIndex).Binormal_y = SngValues(1)
-        Me.Binormals(UsageIndex).Binormal_z = SngValues(2)
+        Dim SngValues As Single() = FifaUtil.DEC3NtoFloats(r.ReadInt32)
+        Me.Binormal.Binormal_x = SngValues(0)
+        Me.Binormal.Binormal_y = SngValues(1)
+        Me.Binormal.Binormal_z = SngValues(2)
     End Sub
 
-    Private Sub LoadBiNormal_3f32(ByVal UsageIndex As Integer, ByVal r As FileReader)
-        ReDim Preserve Me.Binormals(UsageIndex)
-        Me.Binormals(UsageIndex) = New Binormal
+    Private Sub LoadBiNormal_3f32(ByVal r As FileReader)
+        Me.Binormal = New Binormal
 
         If Me.m_Endianness = Endian.Big Then
-            Me.Binormals(UsageIndex).Binormal_x = r.ReadSingle
-            Me.Binormals(UsageIndex).Binormal_y = r.ReadSingle
-            Me.Binormals(UsageIndex).Binormal_z = r.ReadSingle
+            Me.Binormal.Binormal_x = r.ReadSingle
+            Me.Binormal.Binormal_y = r.ReadSingle
+            Me.Binormal.Binormal_z = r.ReadSingle
         Else
-            Me.Binormals(UsageIndex).Binormal_x = r.ReadSingle
-            Me.Binormals(UsageIndex).Binormal_y = r.ReadSingle
-            Me.Binormals(UsageIndex).Binormal_z = r.ReadSingle
+            Me.Binormal.Binormal_x = r.ReadSingle
+            Me.Binormal.Binormal_y = r.ReadSingle
+            Me.Binormal.Binormal_z = r.ReadSingle
         End If
     End Sub
 
-    Private Sub LoadColor_4u8n(ByVal UsageIndex As Integer, ByVal r As FileReader)     '4 ubytes normalized (sum should be 255), swapped bytes (big/little endian) possible !
-        ReDim Preserve Me.Colors(UsageIndex)
-        Me.Colors(UsageIndex) = New VertexColor
+    Private Sub LoadColor_4u8n(ByVal r As FileReader)     '4 ubytes normalized (sum should be 255), swapped bytes (big/little endian) possible !
+        Me.Color = New VertexColor
 
         If Me.m_Endianness = Endian.Big Then
-            Me.Colors(UsageIndex).Value_A = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_B = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_G = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_R = r.ReadByte / 255
+            Me.Color.Value_A = r.ReadByte / 255
+            Me.Color.Value_B = r.ReadByte / 255
+            Me.Color.Value_G = r.ReadByte / 255
+            Me.Color.Value_R = r.ReadByte / 255
         Else
-            Me.Colors(UsageIndex).Value_R = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_G = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_B = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_A = r.ReadByte / 255
+            Me.Color.Value_R = r.ReadByte / 255
+            Me.Color.Value_G = r.ReadByte / 255
+            Me.Color.Value_B = r.ReadByte / 255
+            Me.Color.Value_A = r.ReadByte / 255
         End If
     End Sub
 
-    Private Sub LoadColor_D3DC(ByVal UsageIndex As Integer, ByVal r As FileReader)    'confirmed: ABGR at big endian vertex format !
-        ReDim Preserve Me.Colors(UsageIndex)
-        Me.Colors(UsageIndex) = New VertexColor
+    Private Sub LoadColor_D3DC(ByVal r As FileReader)    'confirmed: ABGR at big endian vertex format !
+        Me.Color = New VertexColor
 
-        If Me.m_Endianness = Endian.Big Then
-            Me.Colors(UsageIndex).Value_A = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_B = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_G = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_R = r.ReadByte / 255
+        If Me.m_Endianness = Endian.Big Then    'argb at rx2 --> confirmed by beedy
+            Me.Color.Value_A = r.ReadByte / 255
+            Me.Color.Value_R = r.ReadByte / 255
+            Me.Color.Value_G = r.ReadByte / 255
+            Me.Color.Value_B = r.ReadByte / 255
         Else
-            Me.Colors(UsageIndex).Value_R = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_G = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_B = r.ReadByte / 255
-            Me.Colors(UsageIndex).Value_A = r.ReadByte / 255
+            Me.Color.Value_R = r.ReadByte / 255
+            Me.Color.Value_G = r.ReadByte / 255
+            Me.Color.Value_B = r.ReadByte / 255
+            Me.Color.Value_A = r.ReadByte / 255
         End If
 
     End Sub
 
-    Public Sub Save(ByVal VertexElements As VertexElement(), ByVal w As FileWriter)
-        Me.m_Endianness = w.Endianness
+    Public Sub Save(ByVal VertexElements As VertexElement(), ByVal w As FileWriter)     '--> this should be deleted : force to create a new vertex when u change the vertexelements
         Me.m_VertexElements = VertexElements
+        Me.Save(w)
+    End Sub
+
+    Public Sub Save(ByVal w As FileWriter)
+        Me.m_Endianness = w.Endianness
 
         'Dim num_textcords As Integer = 0
 
@@ -433,9 +422,9 @@ Public Class Vertex
                 Case DeclarationUsage.Position
                     Select Case VElement.DataType
                         Case D3DDECLTYPE.FLOAT3
-                            Me.SavePosition_3f32(VElement.UsageIndex, w)
+                            Me.SavePosition_3f32(w)
                         Case D3DDECLTYPE.FLOAT16_4
-                            Me.SavePosition_4f16(VElement.UsageIndex, w)
+                            Me.SavePosition_4f16(w)
                         Case Else
                             flag_Unknown_Type = True
                     End Select
@@ -461,9 +450,9 @@ Public Class Vertex
 
                 Case DeclarationUsage.Normal
                     If VElement.DataType = D3DDECLTYPE.DEC3N Then '3s10n
-                        Me.SaveNormal_3s10n(VElement.UsageIndex, w)
+                        Me.SaveNormal_3s10n(w)
                     ElseIf VElement.DataType = D3DDECLTYPE.FLOAT3 Then
-                        Me.SaveNormal_3f32(VElement.UsageIndex, w)
+                        Me.SaveNormal_3f32(w)
                     Else
                         flag_Unknown_Type = True
                     End If
@@ -486,27 +475,27 @@ Public Class Vertex
 
                 Case DeclarationUsage.Tangent
                     If VElement.DataType = D3DDECLTYPE.DEC3N Then '3s10n
-                        Me.SaveTangent_3s10n(VElement.UsageIndex, w)
+                        Me.SaveTangent_3s10n(w)
                     ElseIf VElement.DataType = D3DDECLTYPE.FLOAT3 Then
-                        Me.SaveTangent_3f32(VElement.UsageIndex, w)
+                        Me.SaveTangent_3f32(w)
                     Else
                         flag_Unknown_Type = True
                     End If
 
                 Case DeclarationUsage.BiNormal
                     If VElement.DataType = D3DDECLTYPE.DEC3N Then '3s10n
-                        Me.SaveBiNormal_3s10n(VElement.UsageIndex, w)
+                        Me.SaveBiNormal_3s10n(w)
                     ElseIf VElement.DataType = D3DDECLTYPE.FLOAT3 Then
-                        Me.SaveBiNormal_3f32(VElement.UsageIndex, w)
+                        Me.SaveBiNormal_3f32(w)
                     Else
                         flag_Unknown_Type = True
                     End If
 
                 Case DeclarationUsage.Color
                     If VElement.DataType = D3DDECLTYPE.UBYTE4N Then '4u8n
-                        Me.SaveColor_4u8n(VElement.UsageIndex, w)
+                        Me.SaveColor_4u8n(w)
                     ElseIf VElement.DataType = D3DDECLTYPE.D3DCOLOR Then
-                        Me.SaveColor_D3DC(VElement.UsageIndex, w)
+                        Me.SaveColor_D3DC(w)
                     Else
                         flag_Unknown_Type = True
                     End If
@@ -523,30 +512,29 @@ Public Class Vertex
 
     End Sub
 
-    Private Sub SavePosition_3f32(ByVal UsageIndex As Integer, ByVal w As FileWriter)
-
+    Private Sub SavePosition_3f32(ByVal w As FileWriter)
         If Me.m_Endianness = Endian.Big Then
-            w.Write(Me.Positions(UsageIndex).X)
-            w.Write(Me.Positions(UsageIndex).Y)
-            w.Write(Me.Positions(UsageIndex).Z)
+            w.Write(Me.Position.X)
+            w.Write(Me.Position.Y)
+            w.Write(Me.Position.Z)
         Else
-            w.Write(Me.Positions(UsageIndex).X)
-            w.Write(Me.Positions(UsageIndex).Y)
-            w.Write(Me.Positions(UsageIndex).Z)
+            w.Write(Me.Position.X)
+            w.Write(Me.Position.Y)
+            w.Write(Me.Position.Z)
         End If
     End Sub
 
-    Private Sub SavePosition_4f16(ByVal UsageIndex As Integer, ByVal w As FileWriter)
+    Private Sub SavePosition_4f16(ByVal w As FileWriter)
         If Me.m_Endianness = Endian.Big Then
-            w.Write16BitEncodedSingle(Me.Positions(UsageIndex).X)
-            w.Write16BitEncodedSingle(Me.Positions(UsageIndex).Y)
-            w.Write16BitEncodedSingle(Me.Positions(UsageIndex).Z)
-            w.Write16BitEncodedSingle(Me.Positions(UsageIndex).W)
+            w.Write(CType(Me.Position.X, Half))
+            w.Write(CType(Me.Position.Y, Half))
+            w.Write(CType(Me.Position.Z, Half))
+            w.Write(CType(Me.Position.W, Half))
         Else
-            w.Write16BitEncodedSingle(Me.Positions(UsageIndex).X)
-            w.Write16BitEncodedSingle(Me.Positions(UsageIndex).Y)
-            w.Write16BitEncodedSingle(Me.Positions(UsageIndex).Z)
-            w.Write16BitEncodedSingle(Me.Positions(UsageIndex).W)
+            w.Write(CType(Me.Position.X, Half))
+            w.Write(CType(Me.Position.Y, Half))
+            w.Write(CType(Me.Position.Z, Half))
+            w.Write(CType(Me.Position.W, Half))
         End If
     End Sub
 
@@ -609,21 +597,21 @@ Public Class Vertex
         End If
     End Sub
 
-    Private Sub SaveNormal_3s10n(ByVal UsageIndex As Integer, ByVal w As FileWriter)    'DEC3N
-        Dim DEC3N As Integer = FifaUtil.FloatsToDEC3N(Me.Normals(UsageIndex).Normal_x + 1, Me.Normals(UsageIndex).Normal_y + 1, Me.Normals(UsageIndex).Normal_z + 1)
+    Private Sub SaveNormal_3s10n(ByVal w As FileWriter)    'DEC3N
+        Dim DEC3N As Integer = FifaUtil.FloatsToDEC3N(Me.Normal.Normal_x, Me.Normal.Normal_y, Me.Normal.Normal_z)
         w.Write(DEC3N)
 
     End Sub
 
-    Private Sub SaveNormal_3f32(ByVal UsageIndex As Integer, ByVal w As FileWriter)
+    Private Sub SaveNormal_3f32(ByVal w As FileWriter)
         If Me.m_Endianness = Endian.Big Then
-            w.Write(Me.Normals(UsageIndex).Normal_x)
-            w.Write(Me.Normals(UsageIndex).Normal_y)
-            w.Write(Me.Normals(UsageIndex).Normal_z)
+            w.Write(Me.Normal.Normal_x)
+            w.Write(Me.Normal.Normal_y)
+            w.Write(Me.Normal.Normal_z)
         Else
-            w.Write(Me.Normals(UsageIndex).Normal_x)
-            w.Write(Me.Normals(UsageIndex).Normal_y)
-            w.Write(Me.Normals(UsageIndex).Normal_z)
+            w.Write(Me.Normal.Normal_x)
+            w.Write(Me.Normal.Normal_y)
+            w.Write(Me.Normal.Normal_z)
         End If
     End Sub
 
@@ -651,11 +639,11 @@ Public Class Vertex
 
     Private Sub SaveTextureCoordinate_2f16(ByVal UsageIndex As Integer, ByVal w As FileWriter)
         If Me.m_Endianness = Endian.Big Then
-            w.Write16BitEncodedSingle(Me.TextureCoordinates(UsageIndex).U)
-            w.Write16BitEncodedSingle(Me.TextureCoordinates(UsageIndex).V)
+            w.Write(CType(Me.TextureCoordinates(UsageIndex).U, Half))
+            w.Write(CType(Me.TextureCoordinates(UsageIndex).V, Half))
         Else
-            w.Write16BitEncodedSingle(Me.TextureCoordinates(UsageIndex).U)
-            w.Write16BitEncodedSingle(Me.TextureCoordinates(UsageIndex).V)
+            w.Write(CType(Me.TextureCoordinates(UsageIndex).U, Half))
+            w.Write(CType(Me.TextureCoordinates(UsageIndex).V, Half))
         End If
     End Sub
 
@@ -679,65 +667,65 @@ Public Class Vertex
         End If
     End Sub
 
-    Private Sub SaveTangent_3s10n(ByVal UsageIndex As Integer, ByVal w As FileWriter)   'DEC3N
-        Dim DEC3N As Integer = FifaUtil.FloatsToDEC3N(Me.Tangents(UsageIndex).Tangent_x + 1, Me.Tangents(UsageIndex).Tangent_y + 1, Me.Tangents(UsageIndex).Tangent_z + 1)
+    Private Sub SaveTangent_3s10n(ByVal w As FileWriter)   'DEC3N
+        Dim DEC3N As Integer = FifaUtil.FloatsToDEC3N(-Me.Tangent.Tangent_x, -Me.Tangent.Tangent_y, -Me.Tangent.Tangent_z)
         w.Write(DEC3N)
     End Sub
 
-    Private Sub SaveTangent_3f32(ByVal UsageIndex As Integer, ByVal w As FileWriter)
+    Private Sub SaveTangent_3f32(ByVal w As FileWriter)
         If Me.m_Endianness = Endian.Big Then
-            w.Write(Me.Tangents(UsageIndex).Tangent_x)
-            w.Write(Me.Tangents(UsageIndex).Tangent_y)
-            w.Write(Me.Tangents(UsageIndex).Tangent_z)
+            w.Write(Me.Tangent.Tangent_x)
+            w.Write(Me.Tangent.Tangent_y)
+            w.Write(Me.Tangent.Tangent_z)
         Else
-            w.Write(Me.Tangents(UsageIndex).Tangent_x)
-            w.Write(Me.Tangents(UsageIndex).Tangent_y)
-            w.Write(Me.Tangents(UsageIndex).Tangent_z)
+            w.Write(Me.Tangent.Tangent_x)
+            w.Write(Me.Tangent.Tangent_y)
+            w.Write(Me.Tangent.Tangent_z)
         End If
     End Sub
 
-    Private Sub SaveBiNormal_3s10n(ByVal UsageIndex As Integer, ByVal w As FileWriter)
-        Dim DEC3N As Integer = FifaUtil.FloatsToDEC3N(Me.Binormals(UsageIndex).Binormal_x + 1, Me.Binormals(UsageIndex).Binormal_y + 1, Me.Binormals(UsageIndex).Binormal_z + 1)
+    Private Sub SaveBiNormal_3s10n(ByVal w As FileWriter)
+        Dim DEC3N As Integer = FifaUtil.FloatsToDEC3N(Me.Binormal.Binormal_x, Me.Binormal.Binormal_y, Me.Binormal.Binormal_z)
         w.Write(DEC3N)
     End Sub
 
-    Private Sub SaveBiNormal_3f32(ByVal UsageIndex As Integer, ByVal w As FileWriter)
+    Private Sub SaveBiNormal_3f32(ByVal w As FileWriter)
         If Me.m_Endianness = Endian.Big Then
-            w.Write(Me.Binormals(UsageIndex).Binormal_x)
-            w.Write(Me.Binormals(UsageIndex).Binormal_y)
-            w.Write(Me.Binormals(UsageIndex).Binormal_z)
+            w.Write(Me.Binormal.Binormal_x)
+            w.Write(Me.Binormal.Binormal_y)
+            w.Write(Me.Binormal.Binormal_z)
         Else
-            w.Write(Me.Binormals(UsageIndex).Binormal_x)
-            w.Write(Me.Binormals(UsageIndex).Binormal_y)
-            w.Write(Me.Binormals(UsageIndex).Binormal_z)
+            w.Write(Me.Binormal.Binormal_x)
+            w.Write(Me.Binormal.Binormal_y)
+            w.Write(Me.Binormal.Binormal_z)
         End If
     End Sub
 
-    Private Sub SaveColor_4u8n(ByVal UsageIndex As Integer, ByVal w As FileWriter)
+    Private Sub SaveColor_4u8n(ByVal w As FileWriter)
         If Me.m_Endianness = Endian.Big Then
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_A * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_B * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_G * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_R * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_A * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_B * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_G * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_R * 255)))
         Else
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_R * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_G * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_B * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_A * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_R * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_G * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_B * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_A * 255)))
         End If
     End Sub
 
-    Private Sub SaveColor_D3DC(ByVal UsageIndex As Integer, ByVal w As FileWriter)
+    Private Sub SaveColor_D3DC(ByVal w As FileWriter)
         If Me.m_Endianness = Endian.Big Then
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_A * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_B * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_G * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_R * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_A * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_R * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_G * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_B * 255)))
         Else
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_R * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_G * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_B * 255)))
-            w.Write(CByte(Math.Round(Me.Colors(UsageIndex).Value_A * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_R * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_G * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_B * 255)))
+            w.Write(CByte(Math.Round(Me.Color.Value_A * 255)))
         End If
     End Sub
 
@@ -752,37 +740,18 @@ Public Class Vertex
     'End Set
     'End Property
 
-    Public Property Positions As Position()
+    Public Property Position As Position
     Public Property TextureCoordinates As TextureCoordinate() '= New TextureCoordinate(0) {}
     Public Property BlendWeights As BlendWeights() 'Byte() '= New Byte(4 - 1) {}
     Public Property BlendIndices As BlendIndices() 'UShort() '= New UShort(4 - 1) {}
-    Public Property Tangents As Tangent()
-    Public Property Binormals As Binormal()
-    Public Property Colors As VertexColor()
-    Public Property Normals As Normal()
+    Public Property Tangent As Tangent
+    Public Property Binormal As Binormal
+    Public Property Color As VertexColor    'array?
+    Public Property Normal As Normal
 
     ' Fields
     Private m_Endianness As Endian = Endian.Little
     Private m_VertexElements As VertexElement()
-    'Private U As Single
-    'Private Unknown As Single() = New Single(20 - 1) {}
-    'Private Normals As Single() = New Single(3 - 1) {}
-    'Private V As Single
-    'Private VertexSize As Single
-    'Private X As Single
-    'Private Y As Single
-    'Private Z As Single
-    'Private Shared s_FloatType As EFloatType
-    'Private SwapEndian As Boolean = True
-
-    ' Nested Types
-    'Public Enum EFloatType
-    'Fields
-    'Float16 = 0
-    'Float32 = 1
-    'End Enum
-
-
 
 End Class
 
@@ -817,7 +786,6 @@ Public Class Position
 End Class
 
 Public Class Normal
-    Public Property DEC3N As Integer
     Public Property Normal_x As Single
     Public Property Normal_y As Single
     Public Property Normal_z As Single
@@ -825,7 +793,6 @@ Public Class Normal
 End Class
 
 Public Class Tangent
-    Public Property DEC3N As Integer
     Public Property Tangent_x As Single
     Public Property Tangent_y As Single
     Public Property Tangent_z As Single
@@ -833,7 +800,6 @@ Public Class Tangent
 End Class
 
 Public Class Binormal
-    Public Property DEC3N As Integer
     Public Property Binormal_x As Single
     Public Property Binormal_y As Single
     Public Property Binormal_z As Single
@@ -847,6 +813,3 @@ Public Class VertexColor    'RGBA
     Public Property Value_A As Single
 
 End Class
-
-
-

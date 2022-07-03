@@ -6,7 +6,7 @@
         'MyBase.New
         'End Sub
         Public Sub New(ByVal width As Integer, ByVal height As Integer, ByVal dxtType As TextureFormat, ByVal SwapEndian_DxtBlock As Boolean)
-            MyBase.New(width, height, GraphicUtil.GetEFromRx3TextureFormat(dxtType), 0, SwapEndian_DxtBlock)
+            MyBase.New(width, height, dxtType.ToETextureFormat, 0, SwapEndian_DxtBlock)
         End Sub
 
         Public Overloads Sub Load(ByVal r As FileReader)
@@ -31,7 +31,8 @@
             MyBase.Save(SwapEndian_DxtBlock, w)
 
         End Sub
-
+        ''' <summary>
+        ''' Calculate the Pitch, Lines, Size -values. </summary>
         Public Sub CalcPitchLinesSize() '(ByVal width As Integer, ByVal height As Integer, ByVal TextureFormat As ETextureFormat)
             'https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
             'http://www.soccergaming.com/index.php?threads/rx3-file-format-research-thread.6467750/page-2#post-6600051

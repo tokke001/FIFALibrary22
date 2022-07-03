@@ -5,51 +5,57 @@
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.INDEX_BUFFER_BATCH
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
         Public Sub Load(ByVal r As FileReader)
 
-            Me.NumIndexbuffers = r.ReadUInt32
+            Dim m_NumIndexbuffers = r.ReadUInt32
             Me.Unknown(0) = r.ReadUInt32                       'usually: = 0
             Me.Unknown(1) = r.ReadUInt32                       'usually: = 0
             Me.Unknown(2) = r.ReadUInt32                       'usually: = 0
 
-            Me.Rx3IndexBufferHeaders = New IndexBufferHeader(Me.NumIndexbuffers - 1) {}
-            For i = 0 To Me.NumIndexbuffers - 1
-                Me.Rx3IndexBufferHeaders(i) = New IndexBufferHeader(r)
+            Me.IndexBufferHeaders = New IndexBufferHeader(m_NumIndexbuffers - 1) {}
+            For i = 0 To m_NumIndexbuffers - 1
+                Me.IndexBufferHeaders(i) = New IndexBufferHeader(r, Nothing)
             Next i
 
         End Sub
 
         Public Sub Save(ByVal Rx3IndexBuffers As List(Of IndexBuffer), ByVal w As FileWriter)
-            Me.NumIndexbuffers = Rx3IndexBuffers.Count
-
-            w.Write(Me.NumIndexbuffers)
+            w.Write(If(Rx3IndexBuffers?.Count, 0))
             w.Write(Me.Unknown(0))
             w.Write(Me.Unknown(1))
             w.Write(Me.Unknown(2))
 
-            Me.Rx3IndexBufferHeaders = New IndexBufferHeader(Me.NumIndexbuffers - 1) {}
-            For i = 0 To Me.NumIndexbuffers - 1
-                Me.Rx3IndexBufferHeaders(i) = New IndexBufferHeader
-                Me.Rx3IndexBufferHeaders(i).Save(Rx3IndexBuffers(i).Rx3IndexBufferHeader, w)
+            Me.IndexBufferHeaders = New IndexBufferHeader(Rx3IndexBuffers.Count - 1) {}
+            For i = 0 To Rx3IndexBuffers.Count - 1
+                Me.IndexBufferHeaders(i) = Rx3IndexBuffers(i).Header
+                Me.IndexBufferHeaders(i).Save(w)
             Next i
 
             FifaUtil.WriteAlignment(w, ALIGNMENT)  'not needed
-
         End Sub
 
 
         ' Properties
-        Public Property NumIndexbuffers As UInteger
-        Public Property Rx3IndexBufferHeaders As IndexBufferHeader()
+        ''' <summary>
+        ''' Number of IndexBuffer-Headers (ReadOnly). </summary>
+        Public ReadOnly Property NumIndexbuffers As UInteger
+            Get
+                Return If(IndexBufferHeaders?.Count, 0)
+            End Get
+        End Property
+
+        Public Property IndexBufferHeaders As IndexBufferHeader()
+        ''' <summary>
+        ''' Empty 0-values. </summary>
         Public Property Unknown As UInteger() = New UInteger(3 - 1) {}
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash

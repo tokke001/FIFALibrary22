@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Bxd
     Public Class Instance
         'bxd::tInstance
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.MODELINSTANCE_ARENAID
         Public Const ALIGNMENT As Integer = 16
 
@@ -61,10 +61,10 @@
 
             Me.BBox.Save(w)
 
-            w.Write(Me.RwArena.Sections.IndexOf(Me.PRenderModel))
-            w.Write(Me.RwArena.Sections.IndexOf(Me.PSkeleton))
-            w.Write(Me.RwArena.Sections.IndexOf(Me.PDefaultPose))
-            w.Write(Me.RwArena.Sections.IndexOf(Me.PCollisionModel))
+            w.Write(Me.RwArena.Sections.IndexOf(Me.PRenderModel, -1))
+            w.Write(Me.RwArena.Sections.IndexOf(Me.PSkeleton, -1))
+            w.Write(Me.RwArena.Sections.IndexOf(Me.PDefaultPose, -1))
+            w.Write(Me.RwArena.Sections.IndexOf(Me.PCollisionModel, -1))
 
             Me.AnimSeqMap.Save(w)
             w.Write(Me.NumAnimSeqs)

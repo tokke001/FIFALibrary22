@@ -1,16 +1,18 @@
 ﻿'beta by Dmitri : http://soccergaming.com/index.php?threads/rx3-file-format-research-thread.6467750/post-6652209
+Imports Microsoft.DirectX
+
 Namespace Rx3
     Public Class ClothDef
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.CLOTH_DEF
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal SectionSize As Long, ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal SectionSize As Long, ByVal r As FileReader)
+            MyBase.New
             Me.Load(SectionSize, r)
         End Sub
 
@@ -60,13 +62,13 @@ Namespace Rx3
             For i = 0 To Me.Unk71.Length - 1
                 Me.Unk71(i) = r.ReadSingle
             Next
-            Me.Unk72 = New Float4(Me.Count2 - 1) {}
+            Me.Unk72 = New Vector4(Me.Count2 - 1) {}
             For i = 0 To Me.Unk72.Length - 1
-                Me.Unk72(i) = New Float4(r)
+                Me.Unk72(i) = r.ReadVector4
             Next
-            Me.Unk73 = New Float4(Me.Count3 - 1) {}
+            Me.Unk73 = New Vector4(Me.Count3 - 1) {}
             For i = 0 To Me.Unk73.Length - 1
-                Me.Unk73(i) = New Float4(r)
+                Me.Unk73(i) = r.ReadVector4
             Next
             Me.Unk74 = New ClothDefUnk8(Me.Count4 - 1) {}
             For i = 0 To Me.Unk74.Length - 1
@@ -102,9 +104,9 @@ Namespace Rx3
             For i = 0 To Me.ClothAdjacencyTris.Length - 1
                 Me.ClothAdjacencyTris(i) = New ClothDefTri(r)
             Next
-            Me.ClothAdjacencyVerts = New Float3(Me.Numclothadjacencyverts - 1) {}
+            Me.ClothAdjacencyVerts = New Vector3(Me.Numclothadjacencyverts - 1) {}
             For i = 0 To Me.ClothAdjacencyVerts.Length - 1
-                Me.ClothAdjacencyVerts(i) = New Float3(r)
+                Me.ClothAdjacencyVerts(i) = r.ReadVector3 'New Vector3(r)
             Next
             Me.NumBonesPerVertex = r.ReadUInt32
             Me.NumBoneIndices = r.ReadUInt32
@@ -172,8 +174,6 @@ Namespace Rx3
                 Exit Sub
             End If
 
-            Dim BaseOffset As Long = w.BaseStream.Position
-
 
             '--header - 284 bytes
             w.Write(Me.TotalSize)
@@ -211,10 +211,10 @@ Namespace Rx3
                 w.Write(Me.Unk71(i))
             Next
             For i = 0 To Me.Unk72.Length - 1
-                Me.Unk72(i).Save(w)
+                w.Write(Me.Unk72(i))
             Next
             For i = 0 To Me.Unk73.Length - 1
-                Me.Unk73(i).Save(w)
+                w.Write(Me.Unk73(i))
             Next
             For i = 0 To Me.Unk74.Length - 1
                 Me.Unk74(i).Save(w)
@@ -243,7 +243,7 @@ Namespace Rx3
                 Me.ClothAdjacencyTris(i).Save(w)
             Next
             For i = 0 To Me.ClothAdjacencyVerts.Length - 1
-                Me.ClothAdjacencyVerts(i).Save(w)
+                w.Write(Me.ClothAdjacencyVerts(i))
             Next
             w.Write(Me.NumBonesPerVertex)
             w.Write(Me.NumBoneIndices)
@@ -286,14 +286,25 @@ Namespace Rx3
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, BaseOffset, w.BaseStream.Position)
+            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
 
+        Private m_TotalSize As UInteger
 
         Public Property _ByteData As Byte() = Nothing   'in case the section format is different, it will be read out as byte-data : example FIFA online 4 !!
         'header - 284 bytes
+
+        ''' <summary>
+        ''' Total section size (ReadOnly). </summary>
         Public Property TotalSize As UInteger
+            Get
+                Return m_TotalSize
+            End Get
+            Private Set
+                m_TotalSize = Value
+            End Set
+        End Property
         Public Property Version As UInteger     '0x5143
         Public Property Name As String          '64 size string
         Public Property Unk18 As Integer() = New Integer(30 - 1) {}
@@ -323,8 +334,8 @@ Namespace Rx3
 
         'data
         Public Property Unk71 As Single()   'array of count1    '0 and 1
-        Public Property Unk72 As Float4()   'array of count2    
-        Public Property Unk73 As Float4()   'array of count3    
+        Public Property Unk72 As Vector4()   'array of count2    
+        Public Property Unk73 As Vector4()   'array of count3    
         Public Property Unk74 As ClothDefUnk8()   'array of count4    
         Public Property Unk75 As ClothDefUnk8()   'array of count5    
         Public Property Unk76 As ClothDefUnk8()   'array of count6    
@@ -335,7 +346,7 @@ Namespace Rx3
 
         'Cloth Adjacency Tris
         Public Property ClothAdjacencyTris As ClothDefTri()   'array of numClothAdjacencyTris    
-        Public Property ClothAdjacencyVerts As Float3()   'array of numClothAdjacencyVerts    
+        Public Property ClothAdjacencyVerts As Vector3()   'array of numClothAdjacencyVerts    
         Public Property NumBonesPerVertex As UInteger
         Public Property NumBoneIndices As UInteger
 

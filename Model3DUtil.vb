@@ -3,10 +3,10 @@ Imports Microsoft.DirectX.Direct3D
 
 Public Class Model3DUtil
     Public Shared Function GetListFromIndices(ByVal indexArray As Rx3.IndexBuffer, ByVal NumVertices As UInteger, ByVal m_PrimitiveType As PrimitiveType) As UInteger()
-        Dim m_NIndex As UInteger = indexArray.Rx3IndexBufferHeader.NumIndices
+        Dim m_NIndex As UInteger = indexArray.Header.NumIndices
         'Dim m_NOriginalIndex As UInteger = m_NIndex
         Dim m_Index As UInteger()
-        Dim m_IndexStream As UInteger() = indexArray.IndexData
+        Dim m_IndexStream As List(Of UInteger) = indexArray.IndexData
         Dim m_NFaces As Integer = indexArray.GetNumFaces(m_PrimitiveType) 'indexArray.NumFaces
 
 

@@ -4,23 +4,23 @@
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.ANIMATION_SKIN
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
         Public Sub Load(ByVal r As FileReader)
 
             Me.TotalSize = r.ReadUInt32
-            Me.NumBones = r.ReadUInt32
+            Dim m_NumBones As UInteger = r.ReadUInt32
             Me.Unknown(0) = r.ReadUInt32
             Me.Unknown(1) = r.ReadUInt32
 
-            For i = 0 To Me.NumBones - 1
+            For i = 0 To m_NumBones - 1
                 Dim pose As New BonePose(r)
                 Me.BoneMatrices.Add(pose)
             Next i
@@ -28,8 +28,6 @@
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
-            Dim BaseOffset As Long = w.BaseStream.Position
-            Me.NumBones = Me.BoneMatrices.Count
 
             w.Write(Me.TotalSize)
             w.Write(Me.NumBones)
@@ -45,7 +43,7 @@
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, BaseOffset, w.BaseStream.Position)
+            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
 
@@ -85,10 +83,31 @@
         '    Return flag
         '   End Function
 
-        Public Property TotalSize As UInteger   'total size of this section
-        Public Property Unknown As UInteger() = New UInteger(2 - 1) {}   '{ 0, 0 }, maybe padding
-        Public Property NumBones As UInteger
-        Public Property BoneMatrices As List(Of BonePose) = New List(Of BonePose)()
+        Private m_TotalSize As UInteger
+
+        ''' <summary>
+        ''' Total section size (ReadOnly). </summary>
+        Public Property TotalSize As UInteger
+            Get
+                Return m_TotalSize
+            End Get
+            Private Set
+                m_TotalSize = Value
+            End Set
+        End Property
+        ''' <summary>
+        ''' Empty 0-values. </summary>
+        Public Property Unknown As UInteger() = New UInteger(2 - 1) {}   ' maybe padding
+        ''' <summary>
+        ''' Number of BoneMatrices (ReadOnly). </summary>
+        Public ReadOnly Property NumBones As UInteger
+            Get
+                Return If(BoneMatrices?.Count, 0)
+            End Get
+        End Property
+        ''' <summary>
+        ''' Gets or Sets the Bone-Matrices. </summary>
+        Public Property BoneMatrices As New List(Of BonePose)
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash
             Return TYPE_CODE

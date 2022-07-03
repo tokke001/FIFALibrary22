@@ -1,15 +1,29 @@
 ﻿Imports System.Drawing
-Imports Microsoft.DirectX.Direct3D
+Imports BCnEncoder.Shared
 Imports FIFALibrary22.Rw.Core.Arena
-'imports FIFALibrary22
 
 'http://www.soccergaming.com/index.php?threads/rx3-file-format-research-thread.6467750/
 'http://www.soccergaming.com/index.php?threads/fifa-11-pc-file-formats-resarch-renderware-4-5-assets.6468020/
-Namespace Rx3
-    Partial Public Class Rx3FileRx3Section
 
-        Public Sub New(RW4Section As Arena, ByVal r As FileReader)
-            Me.RW4Section = RW4Section
+Namespace Rx3
+    Public Class Rx3File
+
+        Public Sub New()
+            Me.Rw4Section = Nothing
+        End Sub
+
+        Public Sub New(ByVal Endianness As Endian)
+            Me.Rx3Header = New Rx3FileHeader(Endianness)
+            Me.Rw4Section = Nothing
+        End Sub
+
+        Public Sub New(ByVal Endianness As Endian, Rw4Section As Arena)
+            Me.Rx3Header = New Rx3FileHeader(Endianness)
+            Me.Rw4Section = Rw4Section
+        End Sub
+
+        Public Sub New(Rw4Section As Arena, ByVal r As FileReader)
+            Me.Rw4Section = Rw4Section
             Me.Load(r)
         End Sub
 
@@ -25,24 +39,11 @@ Namespace Rx3
                 Me.Rx3SectionHeaders.Add(sectionInfo)
             Next i
 
-            Me.Sections = New Rx3Sections(Me, RW4Section, r)
+            Me.Sections = New Rx3Sections(Me, Rw4Section, r)
+            'Me.Sections.Load(r) '= New Rx3Sections(Me, Rw4Section, r)
 
             Return True
         End Function
-
-        'Public Function ConvertKit(ByVal sourceRx3File As Rx3File) As Boolean
-        'Return If(Not Me.IsFifa12, Me.ConvertKitFrom12(sourceRx3File), Me.ConvertKitFrom11(sourceRx3File))
-        'End Function
-
-        'Public Function ConvertKitFrom11(ByVal sourceRx3File As Rx3File) As Boolean
-        'Return If(Not Me.IsFifa11, Not sourceRx3File.IsFifa12, False)
-        'End Function
-
-        'Public Function ConvertKitFrom12(ByVal sourceRx3File As Rx3File) As Boolean
-        'Return If(Not Me.IsFifa12, Not sourceRx3File.IsFifa11, False)
-        'End Function
-
-
 
         'Public Sub GenerateRx3SectionHeaders()
         '    Dim Index As Long = 0
@@ -197,68 +198,9 @@ Namespace Rx3
         'Return result
         'End Function
 
-        'Private Function GetVertexElementList11() As List(Of VertexElement())
-        '    Dim m_ListVertexElements As New List(Of VertexElement()) '= Nothing
-        '    Dim m_VertexElements As VertexElement() '{}'= Nothing
-
-        '    If Me.RW4Section.Sections.VertexBuffers Is Nothing Then
-        '        Return Nothing
-        '    End If
-
-        '    For v = 0 To Me.RW4Section.Sections.VertexBuffers.Count - 1
-        '        'm_VertexElements = New VertexElement(Me.RW4Section.VertexDescription(v).nElements - 1) {}
-
-        '        If Me.RW4Section.Sections.VertexDescriptors.Count = 1 Then
-        '            For u = 0 To Me.RW4Section.Sections.VertexDescriptors(0).NumElements - 1
-        '                ReDim Preserve m_VertexElements(Me.RW4Section.Sections.VertexDescriptors(0).NumElements - 1)
-        '                m_VertexElements(u) = New VertexElement With {
-        '                    .DataType = Me.RW4Section.Sections.VertexDescriptors(0).Elements(u).DataType,
-        '                    .Usage = Me.RW4Section.Sections.VertexDescriptors(0).Elements(u).Usage,
-        '                    .Offset = Me.RW4Section.Sections.VertexDescriptors(0).Elements(u).Offset,
-        '                    .UsageIndex = Me.RW4Section.Sections.VertexDescriptors(0).Elements(u).UsageIndex
-        '                }
-        '            Next u
-        '        Else
-        '            For u = 0 To Me.RW4Section.Sections.VertexDescriptors(v).NumElements - 1
-        '                ReDim Preserve m_VertexElements(Me.RW4Section.Sections.VertexDescriptors(v).NumElements - 1)
-        '                m_VertexElements(u) = New VertexElement With {
-        '                        .DataType = Me.RW4Section.Sections.VertexDescriptors(v).Elements(u).DataType,
-        '                        .Usage = Me.RW4Section.Sections.VertexDescriptors(v).Elements(u).Usage,
-        '                        .Offset = Me.RW4Section.Sections.VertexDescriptors(v).Elements(u).Offset,
-        '                        .UsageIndex = Me.RW4Section.Sections.VertexDescriptors(v).Elements(u).UsageIndex
-        '                    }
-        '            Next u
-        '        End If
-
-
-
-
-        '        m_ListVertexElements.Add(m_VertexElements)
-        '    Next v
-
-        '    Return m_ListVertexElements
-        'End Function
-        'Private Function GetVertexElementList12(m_ListVertexElements As List(Of VertexElement()), m_Rx3VertexElements As Rx3.VertexFormat.Element()) As List(Of VertexElement())
-        '    'Dim m_ListVertexElements As List(Of VertexElement()) = Nothing
-        '    'Dim m_VertexElements As VertexElement() = Nothing
-
-        '    'For v = 0 To Me.m_Rx3ModelDirectory.NFiles - 1
-        '    Dim m_VertexElements = New VertexElement(m_Rx3VertexElements.Length - 1) {}
-        '    For u = 0 To m_VertexElements.Length - 1
-        '        m_VertexElements(u) = New VertexElement With {
-        '            .DataType = m_Rx3VertexElements(u).DataType,
-        '            .Usage = m_Rx3VertexElements(u).Usage,
-        '            .Offset = m_Rx3VertexElements(u).Offset,
-        '            .UsageIndex = m_Rx3VertexElements(u).UsageIndex
-        '            }
-        '    Next u
-        '    m_ListVertexElements.Add(m_VertexElements)
-        '    'Next v
-
-        '    Return m_ListVertexElements
-        'End Function
-
         Public Function Save(ByVal w As FileWriter) As Boolean
+            '1 - Set objects from private values to the objects list
+            Me.Sections.SetObjectsFromMemory()
 
             '2 - Save Header (Rx3)
             Dim OffsetRx3Headers As Long = w.BaseStream.Position
@@ -266,29 +208,29 @@ Namespace Rx3
             Me.Rx3Header.Save(w)
 
             '3 - Save Section headers 
-            Me.Sections.WriteSectionInfos(w)
+            w.Write(New Byte((Me.Rx3Header.NumSections * 16) - 1) {}) 'Me.Sections.WriteSectionInfos(w)
 
             '5 - Save Sections
             Me.Sections.Save(w)
 
             '6 - Save Filesize
             'FifaUtil.WriteFilePaddings(w)
-            If Me.RW4Section IsNot Nothing Then '-- FIFA 11
+            If Me.Rw4Section IsNot Nothing Then '-- FIFA 11
                 'totalsize_vertexbuffers + totalsizeindexbuffers + 16
                 Me.Rx3Header.Size = 0
                 If Me.Sections.VertexBuffers IsNot Nothing Then
-                    For i = 0 To Me.Sections.VertexBuffers.Length - 1
+                    For i = 0 To Me.Sections.VertexBuffers.Count - 1
                         Me.Rx3Header.Size += Me.Sections.VertexBuffers(i).TotalSize
                     Next
                 End If
                 If Me.Sections.IndexBuffers IsNot Nothing Then
-                    For i = 0 To Me.Sections.IndexBuffers.Length - 1
-                        Me.Rx3Header.Size += Me.Sections.IndexBuffers(i).Rx3IndexBufferHeader.TotalSize
+                    For i = 0 To Me.Sections.IndexBuffers.Count - 1
+                        Me.Rx3Header.Size += Me.Sections.IndexBuffers(i).Header.TotalSize
                     Next
                 End If
                 If Me.Sections.Textures IsNot Nothing Then
-                    For i = 0 To Me.Sections.Textures.Length - 1
-                        Me.Rx3Header.Size += Me.Sections.Textures(i).Rx3TextureHeader.TotalSize
+                    For i = 0 To Me.Sections.Textures.Count - 1
+                        Me.Rx3Header.Size += Me.Sections.Textures(i).Header.TotalSize
                     Next
                 End If
                 Me.Rx3Header.Size += 16
@@ -310,13 +252,13 @@ Namespace Rx3
         Public Property Bitmaps As List(Of Bitmap)
             Get
                 Dim BitmapArray As New List(Of Bitmap)
-                For i = 0 To Me.Sections.Textures.Length - 1
+                For i = 0 To Me.Sections.Textures.Count - 1
                     BitmapArray.Add(Me.Sections.Textures(i).GetBitmap)
                 Next i
                 Return BitmapArray
             End Get
             Set
-                Dim num As Integer = If((Value.Count < Me.Sections.Textures.Length), Value.Count, Me.Sections.Textures.Length)
+                Dim num As Integer = If((Value.Count < Me.Sections.Textures.Count), Value.Count, Me.Sections.Textures.Count)
                 For i = 0 To num - 1
                     If (Value(i) IsNot Nothing) Then
                         Me.Sections.Textures(i).SetBitmap(Value(i))
@@ -325,16 +267,16 @@ Namespace Rx3
             End Set
         End Property
 
-        Public Property DDSTextures As List(Of DDSFile)
+        Public Property DdsTextures As List(Of DdsFile)
             Get
-                Dim DDSArray As New List(Of DDSFile)
-                For i = 0 To Me.Sections.Textures.Length - 1
-                    DDSArray.Add(Me.Sections.Textures(i).GetDds)
+                Dim DdsArray As New List(Of DdsFile)
+                For i = 0 To Me.Sections.Textures.Count - 1
+                    DdsArray.Add(Me.Sections.Textures(i).GetDds)
                 Next i
-                Return DDSArray
+                Return DdsArray
             End Get
             Set
-                Dim num As Integer = If((Value.Count < Me.Sections.Textures.Length), Value.Count, Me.Sections.Textures.Length)
+                Dim num As Integer = If((Value.Count < Me.Sections.Textures.Count), Value.Count, Me.Sections.Textures.Count)
                 For i = 0 To num - 1
                     If (Value(i) IsNot Nothing) Then
                         Me.Sections.Textures(i).SetDds(Value(i))
@@ -343,16 +285,34 @@ Namespace Rx3
             End Set
         End Property
 
-        Public Property VertexStreams As List(Of Vertex())
+        Public Property KtxTextures As List(Of KtxFile)
             Get
-                Dim VertexArray As New List(Of Vertex())
-                For i = 0 To Me.Sections.VertexBuffers.Length - 1
+                Dim KtxArray As New List(Of KtxFile)
+                For i = 0 To Me.Sections.Textures.Count - 1
+                    KtxArray.Add(Me.Sections.Textures(i).GetKtx)
+                Next i
+                Return KtxArray
+            End Get
+            Set
+                Dim num As Integer = If((Value.Count < Me.Sections.Textures.Count), Value.Count, Me.Sections.Textures.Count)
+                For i = 0 To num - 1
+                    If (Value(i) IsNot Nothing) Then
+                        Me.Sections.Textures(i).SetKtx(Value(i))
+                    End If
+                Next i
+            End Set
+        End Property
+
+        Public Property VertexStreams As List(Of List(Of Vertex))
+            Get
+                Dim VertexArray As New List(Of List(Of Vertex))
+                For i = 0 To Me.Sections.VertexBuffers.Count - 1
                     VertexArray.Add(Me.Sections.VertexBuffers(i).VertexData)
                 Next i
                 Return VertexArray
             End Get
             Set
-                Dim num As Integer = If((Value.Count < Me.Sections.VertexBuffers.Length), Value.Count, Me.Sections.VertexBuffers.Length)
+                Dim num As Integer = If((Value.Count < Me.Sections.VertexBuffers.Count), Value.Count, Me.Sections.VertexBuffers.Count)
                 For i = 0 To num - 1
                     If (Value(i) IsNot Nothing) Then
                         Me.Sections.VertexBuffers(i).VertexData = Value(i)
@@ -361,16 +321,16 @@ Namespace Rx3
             End Set
         End Property
 
-        Public Property IndexStreams As List(Of UInteger())
+        Public Property IndexStreams As List(Of List(Of UInteger))
             Get
-                Dim IndexArray As New List(Of UInteger())
-                For i = 0 To Me.Sections.IndexBuffers.Length - 1
+                Dim IndexArray As New List(Of List(Of UInteger))
+                For i = 0 To Me.Sections.IndexBuffers.Count - 1
                     IndexArray.Add(Me.Sections.IndexBuffers(i).IndexData)
                 Next i
                 Return IndexArray
             End Get
             Set
-                Dim num As Integer = If((Value.Count < Me.Sections.IndexBuffers.Length), Value.Count, Me.Sections.IndexBuffers.Length)
+                Dim num As Integer = If((Value.Count < Me.Sections.IndexBuffers.Count), Value.Count, Me.Sections.IndexBuffers.Count)
                 For i = 0 To num - 1
                     If (Value(i) IsNot Nothing) Then
                         Me.Sections.IndexBuffers(i).IndexData = Value(i)
@@ -414,10 +374,77 @@ Namespace Rx3
             End Set
         End Property
 
+        Public Property VertexFormats(ByVal MeshIndex As UInteger) As VertexElement()
+            Get
+                'If Me.Sections.VertexFormats IsNot Nothing AndAlso Me.Sections.VertexFormats(MeshIndex) IsNot Nothing Then
+                Return Me.Sections.VertexFormats(MeshIndex).Elements
+                'End If
+
+            End Get
+            Set
+                If Me.Sections.VertexFormats IsNot Nothing AndAlso Me.Sections.VertexFormats(MeshIndex) IsNot Nothing Then
+                    Me.Sections.VertexFormats(MeshIndex).Elements = New VertexFormat.Element(Value.Count - 1) {}
+                    For j = 0 To Value.Count - 1
+                        Me.Sections.VertexFormats(MeshIndex).Elements(j) = New VertexFormat.Element(Value(j))
+                    Next j
+                End If
+            End Set
+        End Property
+
+        Public Property VertexFormats As List(Of VertexElement())
+            Get
+                Dim m_Lists As New List(Of VertexElement())
+                If Me.Sections.VertexFormats IsNot Nothing Then
+                    For i = 0 To Me.Sections.VertexFormats.Count - 1
+                        m_Lists.Add(Me.Sections.VertexFormats(i).Elements)
+                    Next
+                End If
+
+                Return m_Lists
+            End Get
+            Set
+                If Me.Sections.VertexFormats IsNot Nothing AndAlso Me.Sections.VertexFormats.Count = Value.Count Then
+                    For i = 0 To Me.Sections.VertexFormats.Count - 1
+                        Me.Sections.VertexFormats(i).Elements = New VertexFormat.Element(Value(i).Count - 1) {}
+                        For j = 0 To Value(i).Count - 1
+                            Me.Sections.VertexFormats(i).Elements(j) = New VertexFormat.Element(Value(i)(j))
+                        Next j
+                    Next i
+                End If
+            End Set
+        End Property
+
+        Public ReadOnly Property NameTable As List(Of FIFALibrary22.NameTable)
+            Get
+                Return Me.Sections.NameTable.GetNameTable()
+            End Get
+            'Set
+            '     = Value
+            'End Set
+        End Property
+
+        Public Property MeshName(ByVal MeshIndex As UInteger) As String
+            Get
+                Return Me.Sections.NameTable.GetNameByType(Rx3.SectionHash.SIMPLE_MESH, MeshIndex)
+            End Get
+            Set
+                Me.Sections.NameTable.SetNameByType(Value, Rx3.SectionHash.SIMPLE_MESH, MeshIndex)
+            End Set
+        End Property
+
+        Public Property TextureName(ByVal TextureIndex As UInteger) As String
+            Get
+                Return Me.Sections.NameTable.GetNameByType(Rx3.SectionHash.TEXTURE, TextureIndex)
+            End Get
+            Set
+                Me.Sections.NameTable.SetNameByType(Value, Rx3.SectionHash.TEXTURE, TextureIndex)
+            End Set
+        End Property
+
         Public ReadOnly Property NumMeshes As UInteger
             Get
                 If Me.Sections.VertexBuffers IsNot Nothing Then
-                    Return Me.Sections.VertexBuffers.Length
+                    Return Me.Sections.VertexBuffers.Count
                 End If
 
                 Return 0
@@ -427,23 +454,38 @@ Namespace Rx3
         Public ReadOnly Property NumTextures As UInteger
             Get
                 If Me.Sections.Textures IsNot Nothing Then
-                    Return Me.Sections.Textures.Length
+                    Return Me.Sections.Textures.Count
                 End If
 
                 Return 0
             End Get
         End Property
 
+        Public Property BoneMatrices As List(Of List(Of BonePose))
+            Get
+                Dim m_Lists As New List(Of List(Of BonePose))
+                If Me.Sections.AnimationSkins IsNot Nothing Then
+                    For i = 0 To Me.Sections.AnimationSkins.Count - 1
+                        m_Lists.Add(Me.Sections.AnimationSkins(i).BoneMatrices)
+                    Next
+                End If
+
+                Return m_Lists
+            End Get
+            Set
+                If Me.Sections.AnimationSkins IsNot Nothing AndAlso Me.Sections.AnimationSkins.Count = Value.Count Then
+                    For i = 0 To Me.Sections.AnimationSkins.Count - 1
+                        Me.Sections.AnimationSkins(i).BoneMatrices = Value(i)
+                    Next i
+                End If
+            End Set
+        End Property
+
         ' Properties
-        Private RW4Section As Arena
+        Private Rw4Section As Arena = Nothing
         Public Property Rx3Header As Rx3FileHeader
-
-        Friend ReadOnly Rx3SectionHeaders As List(Of SectionHeader)
-        Public Property Sections As Rx3Sections
-
-        'Private m_IsFifa11 As Boolean
-        'Private m_FileName As String
-        'Private m_FileSize As Long
+        Friend ReadOnly Property Rx3SectionHeaders As New List(Of SectionHeader)
+        Public Property Sections As Rx3Sections = New Rx3Sections(Me, Rw4Section)
 
     End Class
 End Namespace

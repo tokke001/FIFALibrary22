@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Bxd
     Public Class Skeletonpose
         'bxd::tSkeletonpose
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.MODELSKELETONPOSE_ARENAID
         Public Const ALIGNMENT As Integer = 16
 

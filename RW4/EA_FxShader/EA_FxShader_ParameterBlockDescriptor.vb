@@ -1,7 +1,7 @@
 ﻿Namespace Rw.EA.FxShader
     Public Class ParameterBlockDescriptor
         'EA::FxShader::ParameterBlockDescriptor
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_FxShader_ParameterBlockDescriptor
         Public Const ALIGNMENT As Integer = 16
 

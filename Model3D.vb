@@ -47,7 +47,7 @@ Public Class Model3D
     Public Function Clone() As Model3D
         Dim modeld1 As Model3D = DirectCast(MyBase.MemberwiseClone, Model3D)
         modeld1.m_Index = DirectCast(Me.m_Index.Clone, Short())
-        modeld1.m_IndexStream = DirectCast(Me.m_IndexStream.Clone, UInteger())
+        modeld1.m_IndexStream = DirectCast(Me.m_IndexStream.ToArray.Clone, List(Of UInteger))
         modeld1.m_Vertex = DirectCast(Me.m_Vertex.Clone, PositionNormalTextured())
         Return modeld1
     End Function
@@ -444,7 +444,7 @@ Public Class Model3D
     End Sub
 
     Private Sub SetIndexArray(ByVal indexArray As Rx3.IndexBuffer, ByVal PrimitiveType As PrimitiveType)
-        Me.m_NIndex = indexArray.Rx3IndexBufferHeader.NumIndices
+        Me.m_NIndex = indexArray.Header.NumIndices
         Me.m_NOriginalIndex = Me.m_NIndex
         Me.m_IndexStream = indexArray.IndexData
         Me.m_NFaces = indexArray.GetNumFaces(PrimitiveType) 'indexArray.NumFaces
@@ -525,9 +525,9 @@ Public Class Model3D
         Me.m_Vertex = New PositionNormalTextured(Me.m_NVertex - 1) {}
         Dim i As Integer
         For i = 0 To Me.m_NVertex - 1
-            Me.m_Vertex(i).X = vertexArray.VertexData(i).Positions(0).X
-            Me.m_Vertex(i).Y = vertexArray.VertexData(i).Positions(0).Y
-            Me.m_Vertex(i).Z = vertexArray.VertexData(i).Positions(0).Z
+            Me.m_Vertex(i).X = vertexArray.VertexData(i).Position.X
+            Me.m_Vertex(i).Y = vertexArray.VertexData(i).Position.Y
+            Me.m_Vertex(i).Z = vertexArray.VertexData(i).Position.Z
             Me.m_Vertex(i).Tu = vertexArray.VertexData(i).TextureCoordinates(0).U
             Me.m_Vertex(i).Tv = vertexArray.VertexData(i).TextureCoordinates(0).V
         Next i
@@ -594,7 +594,7 @@ Public Class Model3D
     'Private m_IsTriangleList As Boolean
     Private m_Vertex As PositionNormalTextured()
     Private m_Index As Short()
-    Private m_IndexStream As UInteger() 'UShort()
+    Private m_IndexStream As List(Of UInteger) 'UShort()
     Private m_NFaces As Integer
 
     Private m_PrimitiveType As PrimitiveType

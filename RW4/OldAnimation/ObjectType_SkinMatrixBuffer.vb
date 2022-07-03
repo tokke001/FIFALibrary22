@@ -1,7 +1,7 @@
 ﻿Namespace Rw.OldAnimation
     Public Class SkinMatrixBuffer
         'rw::oldanimation:: ?? (not found)
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.OBJECTTYPE_SKINMATRIXBUFFER
         Public Const ALIGNMENT As Integer = 128
 

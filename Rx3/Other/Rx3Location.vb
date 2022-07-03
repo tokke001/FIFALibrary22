@@ -6,12 +6,12 @@ Namespace Rx3
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.LOCATION
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
@@ -33,7 +33,6 @@ Namespace Rx3
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
-            Dim BaseOffset As Long = w.BaseStream.Position
 
             w.Write(Me.TotalSize)
             w.Write(Me.Position.X)
@@ -49,13 +48,28 @@ Namespace Rx3
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, BaseOffset, w.BaseStream.Position)
+            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
 
 
+        Private m_TotalSize As UInteger
+
+        ''' <summary>
+        ''' Total section size (ReadOnly). </summary>
         Public Property TotalSize As UInteger
+            Get
+                Return m_TotalSize
+            End Get
+            Private Set
+                m_TotalSize = Value
+            End Set
+        End Property
+        ''' <summary>
+        ''' Gets/Sets the Position X/Y/Z values. </summary>
         Public Property Position As Vector3
+        ''' <summary>
+        ''' Gets/Sets the Rotation X/Y/Z values. </summary>
         Public Property Rotation As Vector3
         Public Property Unknown As UInteger         'always 0? maybe padding
 

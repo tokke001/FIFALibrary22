@@ -5,73 +5,61 @@ Namespace Rx3
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.INDEX_BUFFER
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
         Public Sub Load(ByVal r As FileReader)
 
-            Me.Rx3IndexBufferHeader = New IndexBufferHeader(r)
+            Me.Header.Load(r) ' = New IndexBufferHeader(r)
 
-            Me.IndexData = New UInteger(Me.Rx3IndexBufferHeader.NumIndices - 1) {}
-            For i = 0 To Me.Rx3IndexBufferHeader.NumIndices - 1
-                If Me.Rx3IndexBufferHeader.IndexStride = 2 Then
-                    Me.IndexData(i) = r.ReadUInt16
-                ElseIf Me.Rx3IndexBufferHeader.IndexStride = 4 Then
-                    Me.IndexData(i) = Me.IndexData(i) = r.ReadUInt32
+            For i = 0 To Me.Header.NumIndices_FileLoad - 1
+                If Me.Header.IndexStride_FileLoad = 2 Then
+                    Me.IndexData.Add(r.ReadUInt16)
+                ElseIf Me.Header.IndexStride_FileLoad = 4 Then
+                    Me.IndexData.Add(r.ReadUInt32)
                 End If
             Next i
-
-
-            'Me.NumFaces = GetNumFaces()    'disabled, to save loading time
 
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
-            Dim BaseOffset As Long = w.BaseStream.Position
-            Me.Rx3IndexBufferHeader.NumIndices = Me.IndexData.Length
+            Me.Header.Save(w)
 
-            If Me.Rx3IndexBufferHeader.NumIndices > UShort.MaxValue Then
-                Me.Rx3IndexBufferHeader.IndexStride = 4
-            Else
-                Me.Rx3IndexBufferHeader.IndexStride = 2
-            End If
+            Dim m_indexStride As Byte = Me.Header.IndexStride   'using variable: to save time when calculating the stride in each loop ! 
 
-
-            Me.Rx3IndexBufferHeader.Save(Me.Rx3IndexBufferHeader, w)
-
-            For i = 0 To Me.Rx3IndexBufferHeader.NumIndices - 1
-                If Me.Rx3IndexBufferHeader.IndexStride = 2 Then
+            For i = 0 To Me.Header.NumIndices - 1
+                If m_indexStride = 2 Then
                     w.Write(CUShort(Me.IndexData(i)))
-                ElseIf Me.Rx3IndexBufferHeader.IndexStride = 4 Then
+                ElseIf m_indexStride = 4 Then
                     w.Write(CUInt(Me.IndexData(i)))
                 End If
             Next i
-
 
             'Padding
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.Rx3IndexBufferHeader.TotalSize = FifaUtil.WriteSectionTotalSize(w, BaseOffset, w.BaseStream.Position)
+            Me.Header.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
-
+        ''' <summary>
+        ''' Returns the number of faces at the index data. </summary>
         Public Function GetNumFaces(ByVal m_PrimitiveType As PrimitiveType) As Integer
             Dim NumFaces As Integer = 0
 
             'https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dprimitivetype
             If m_PrimitiveType = PrimitiveType.TriangleList Then
-                NumFaces = (Me.Rx3IndexBufferHeader.NumIndices \ 3)
+                NumFaces = (Me.Header.NumIndices \ 3)
 
             ElseIf m_PrimitiveType = PrimitiveType.TriangleFan Then
                 NumFaces = 0
-                For i = 0 To (Me.Rx3IndexBufferHeader.NumIndices - 2) - 1
+                For i = 0 To (Me.Header.NumIndices - 2) - 1
                     Dim num8 As Short = Me.IndexData(i)
                     Dim num9 As Short = Me.IndexData((i + 1))
                     Dim num10 As Short = Me.IndexData((i + 2))
@@ -85,11 +73,22 @@ Namespace Rx3
             Return NumFaces
         End Function
 
+        Private m_IndexData As New List(Of UInteger)
+
         ' Properties
-        Public Property IndexData As UInteger()
-        'Public Property NumFaces As UInteger
-        'Public Property PrimitiveType As PrimitiveType
-        Public Property Rx3IndexBufferHeader As IndexBufferHeader
+        ''' <summary>
+        ''' Gets/Sets the list of indices. </summary>
+        Public Property IndexData As List(Of UInteger)
+            Get
+                Return m_IndexData
+            End Get
+            Set
+                m_IndexData = Value
+                Me.Header = New IndexBufferHeader(m_IndexData)
+            End Set
+        End Property
+
+        Public Property Header As New IndexBufferHeader(Me.IndexData)
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash
             Return TYPE_CODE

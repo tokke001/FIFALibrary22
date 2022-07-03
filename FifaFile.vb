@@ -28,7 +28,7 @@ Public Class FifaFile
         If ((buffer(0) = 16) AndAlso (buffer(1) = 251)) Then
             Me.m_CurrentCompression = ECompressionMode.Compressed_10FB
             Me.m_RequiredCompression = Me.m_CurrentCompression
-            Me.m_UncompressedSize = (((buffer(2) << 16) + (buffer(3) << 8)) + buffer(4))
+            Me.m_UncompressedSize = (((CInt(buffer(2)) << 16) + (CInt(buffer(3)) << 8)) + CInt(buffer(4)))
         Else
             Dim chArray As Char() = New Char(8 - 1) {}
             For i = 0 To 8 - 1
@@ -36,7 +36,7 @@ Public Class FifaFile
             Next i
             Dim str As New String(chArray)
             If str.StartsWith("EASF") Then
-                Me.m_CompressedSize = ((((buffer(4) << 24) + (buffer(5) << 16)) + (buffer(6) << 8)) + buffer(7))
+                Me.m_CompressedSize = ((((CInt(buffer(4)) << 24) + (CInt(buffer(5)) << 16)) + (CInt(buffer(6)) << 8)) + CInt(buffer(7)))
                 r.ReadBytes(8)
                 Me.m_CurrentCompression = ECompressionMode.EASF
                 Me.m_RequiredCompression = Me.m_CurrentCompression
@@ -79,7 +79,7 @@ Public Class FifaFile
                     If ((buffer(0) = 16) AndAlso (buffer(1) = 251)) Then
                         Me.m_CurrentCompression = ECompressionMode.Chunkref
                         Me.m_RequiredCompression = Me.m_CurrentCompression
-                        Me.m_UncompressedSize = (((buffer(2) << 16) + (buffer(3) << 8)) + buffer(4))
+                        Me.m_UncompressedSize = (((CInt(buffer(2)) << 16) + (CInt(buffer(3)) << 8)) + CInt(buffer(4)))
                     Else
                         Me.m_CurrentCompression = ECompressionMode.Unknown
                     End If
@@ -525,28 +525,21 @@ TR_004F:
         Select Case Me.m_CurrentCompression
             Case ECompressionMode.Compressed_10FB
                 Me.Uncompress_10FB(outputStream)
-                Exit Select
             Case ECompressionMode.Chunkzip
                 Me.UnChunkzip(outputStream)
-                Exit Select
             Case ECompressionMode.Chunkzip2
-                Me.UnChunkZip2(outputStream)
-                Exit Select
+                Me.UncompressBms(outputStream)
+                'Me.UnChunkZip2(outputStream)       'gives errors sometimes, but may be fixed ?
             Case ECompressionMode.Chunkref
                 Me.UnChunkref(outputStream)
-                Exit Select
             Case ECompressionMode.Chunkref2
                 Me.UnChunkref2(outputStream)
-                Exit Select
             Case ECompressionMode.EASF
                 Me.UnEASF(outputStream)
-                Exit Select
                 'Case ECompressionMode.Chunklzma    'doing with BMS method
                 'Me.UnChunklzma(outputStream)
-                'Exit Select
             Case ECompressionMode.Chunklzma, ECompressionMode.chunklzx, ECompressionMode.chunklz4, ECompressionMode.chunkunc, ECompressionMode.chunzstd, ECompressionMode.chunoodl  'https://github.com/Crauzer/OodleSharp  '"oodle compression"
                 Me.UncompressBms(outputStream)
-                Exit Select
 
             Case Else
                 Exit Select
@@ -1045,39 +1038,40 @@ TR_004F:
     End Function
 
     Private Function UnChunkZip2(ByVal outputStream As Stream) As Boolean
-        If (Me.m_CompressedSize = -1) Then
+        If Me.m_CompressedSize = -1 Then
             Return False
         End If
-        Dim r As FileReader = Me.GetReader
-        If (New String(r.ReadChars(8)) <> "chunkzip") Then
+        Dim r As BinaryReader = Me.GetReader()
+        If New String(r.ReadChars(8)) <> "chunkzip" Then
             Return False
         End If
         r.ReadInt32()
-        Me.m_UncompressedSize = FifaUtil.SwapEndian(r.ReadInt32)
-        Me.m_MaxBlockUncompressedSize = FifaUtil.SwapEndian(r.ReadInt32)
-        FifaUtil.SwapEndian(r.ReadInt32)
-        FifaUtil.SwapEndian(r.ReadInt32)
+        Me.m_UncompressedSize = FifaUtil.SwapEndian(r.ReadInt32())
+        Me.m_MaxBlockUncompressedSize = FifaUtil.SwapEndian(r.ReadInt32())
+        FifaUtil.SwapEndian(r.ReadInt32())
+        FifaUtil.SwapEndian(r.ReadInt32())
         r.ReadInt32()
         r.ReadInt32()
         r.ReadInt32()
         Dim v As Integer = 40
-        Do While True
-            v = (v + 8)
-            Dim count As Integer = (FifaUtil.RoundUp(v, 16) - v)
-            If (count > 0) Then
+        Do
+            v += 8
+            Dim count As Integer = FifaUtil.RoundUp(v, 16) - v
+            If count > 0 Then
                 r.ReadBytes(count)
-                v = (v + count)
+                v += count
             End If
-            Dim blockCompressedSize As Integer = FifaUtil.SwapEndian(r.ReadInt32)
-            r.ReadInt32()
-            v = (v + blockCompressedSize)
-            Me.InflateBlock2(r.BaseStream, outputStream, blockCompressedSize)
-            If (v >= Me.m_CompressedSize) Then
-                Me.ReleaseReader(r)
-                Return True
+            If v < Me.m_CompressedSize Then
+                Dim blockCompressedSize As Integer = FifaUtil.SwapEndian(r.ReadInt32())
+                r.ReadInt32()
+                v += blockCompressedSize
+                Me.InflateBlock2(r.BaseStream, outputStream, blockCompressedSize)
             End If
-        Loop
+        Loop While v < Me.m_CompressedSize
+        Me.ReleaseReader(r)
+        Return True
     End Function
+
 
     Private Function Uncompress_10FB(ByVal outputStream As Stream) As Boolean
         If (Me.m_CompressedSize = -1) Then
@@ -1101,7 +1095,7 @@ TR_004F:
             num9 = 1
             Return Nothing
         End If
-        Dim num6 As Integer = (((inputBuffer(2) << 16) + (inputBuffer(3) << 8)) + inputBuffer(4))
+        Dim num6 As Integer = (((CInt(inputBuffer(2)) << 16) + (CInt(inputBuffer(3)) << 8)) + CInt(inputBuffer(4)))
         If (num6 > (length * 128)) Then
             num9 = 2
             Return Nothing
@@ -1111,7 +1105,7 @@ TR_004F:
         Dim num8 As Integer = 0
         Do While ((index < length) AndAlso (inputBuffer(index) < 252))
             Dim num2 As Integer
-            Dim num As Byte = inputBuffer(index)
+            Dim num As Integer = inputBuffer(index)
             index += 1
             If ((num And 128) = 0) Then
                 If ((index + 1) >= length) Then

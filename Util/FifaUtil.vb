@@ -242,113 +242,6 @@ Public Class FifaUtil
         Return FifaUtil.ue.GetString(bytes)
     End Function
 
-    '------test--------------------------------------------------------
-    'source : https://stackoverflow.com/questions/34952297/ieee754-half-precision-16-bit-floating-point-data-in-vb-net
-    Private Shared BaseTable As UShort() = GenerateBaseTable()
-    Private Shared ShiftTable As SByte() = GenerateShiftTable()
-
-    Private Shared Function GenerateBaseTable() As UShort()
-        Dim intBaseTable = New UShort(511) {}
-        For i = 0 To 255
-            Dim e = CSByte(127 - i)
-            If e > 24 Then
-                ' Very small numbers map to zero
-                intBaseTable(i Or &H0) = &H0
-                intBaseTable(i Or &H100) = &H8000
-            ElseIf e > 14 Then
-                ' Small numbers map to denorms
-                intBaseTable(i Or &H0) = CUShort(&H400 >> (18 + e))
-                intBaseTable(i Or &H100) = CUShort((&H400 >> (18 + e)) Or &H8000)
-            ElseIf e >= -15 Then
-                ' Normal numbers just lose precision
-                intBaseTable(i Or &H0) = CUShort((15 - e) << 10)
-                intBaseTable(i Or &H100) = CUShort(((15 - e) << 10) Or &H8000)
-            ElseIf e > -128 Then
-                ' Large numbers map to Infinity
-                intBaseTable(i Or &H0) = &H7C00
-                intBaseTable(i Or &H100) = &HFC00
-            Else
-                ' Infinity and NaN's stay Infinity and NaN's
-                intBaseTable(i Or &H0) = &H7C00
-                intBaseTable(i Or &H100) = &HFC00
-            End If
-        Next
-
-        Return intBaseTable
-    End Function
-
-    Private Shared Function GenerateShiftTable() As SByte()
-        Dim intShiftTable = New SByte(511) {}
-        For i = 0 To 255
-            Dim e = CSByte(127 - i)
-            If e > 24 Then
-                ' Very small numbers map to zero
-                intShiftTable(i Or &H0) = 24
-                intShiftTable(i Or &H100) = 24
-            ElseIf e > 14 Then
-                ' Small numbers map to denorms
-                intShiftTable(i Or &H0) = CSByte(e - 1)
-                intShiftTable(i Or &H100) = CSByte(e - 1)
-            ElseIf e >= -15 Then
-                ' Normal numbers just lose precision
-                intShiftTable(i Or &H0) = 13
-                intShiftTable(i Or &H100) = 13
-            ElseIf e > -128 Then
-                ' Large numbers map to Infinity
-                intShiftTable(i Or &H0) = 24
-                intShiftTable(i Or &H100) = 24
-            Else
-                ' Infinity and NaN's stay Infinity and NaN's
-                intShiftTable(i Or &H0) = 13
-                intShiftTable(i Or &H100) = 13
-            End If
-        Next
-
-        Return intShiftTable
-    End Function
-
-    Public Shared Function ConvertFloat16ToShort(f As Single) As UShort 'function SingleToHalf
-        Dim value As UInteger = BitConverter.ToUInt32(BitConverter.GetBytes(f), 0)
-
-        Dim result = CUShort(BaseTable((value >> 23) And &H1FF) + ((value And &H7FFFFF) >> ShiftTable(value >> 23)))
-        Return result
-    End Function
-
-    '--------------------------
-    ' Public Shared Function ConvertFloat16ToShort_old(ByVal f As Single) As UInt16
-    'bug : -7,99844 becomes -4 at writing 
-
-    'Dim num5 As UInt16
-    'If (f = 0!) Then
-    'Return 0
-    'End If
-    'Dim num As Integer = 1
-    'If (f < 0!) Then
-    '       f = -f
-    '      num = -1
-    'End If
-    'Dim num2 As Single = (f * 32768.0!)
-    'Dim num3 As Integer = 0
-    'Do While (num2 >= 2)
-    '       num2 = (num2 / 2.0!)
-    '      num3 += 1
-    'Loop
-    'Dim num4 As UInt16 = 0
-    'If (num < 0) Then
-    '       num4 = 32768
-    'End If
-    'If (num3 > 31) Then
-    '       num3 = 31
-    'End If
-    '   num4 = CUShort((num4 Or (num3 << 10)))
-    'If (num2 >= 1.0!) Then
-    '       num5 = Convert.ToUInt16(CDbl(((num2 - 1.0!) * 1024)))
-    'Else
-    '       num5 = 1
-    'End If
-    'Return CUShort((num4 Or num5))
-    'End Function
-
     Public Shared Function ConvertFromDate(ByVal [date] As DateTime) As Integer
         Dim time As New DateTime(&H62E, 10, 14, 0, 0, 0)
         Dim span As TimeSpan = DirectCast(([date] - time), TimeSpan)
@@ -365,21 +258,6 @@ Public Class FifaUtil
             Return time
         End If
         Return time.AddDays(CDbl(gregorian))
-    End Function
-
-    Public Shared Function ConvertToFloat(ByVal float16Bit As Short) As Single
-        Dim num As Integer = If(((float16Bit And &H8000) = 0), 1, -1)
-        Dim num2 As Integer = ((float16Bit And &H7C00) >> 10)
-        Dim num3 As Integer = ((float16Bit And &H3FF) + &H400)
-        If ((num2 = 0) AndAlso (num3 = 0)) Then
-            Return 0!
-        End If
-        If (num2 = &H1F) Then
-            Return Single.NaN
-        End If
-        num2 = (num2 - 15)
-        Dim num4 As Single = CSng(Math.Pow(2, CDbl(num2)))
-        Return ((CSng((num * num3)) / 1024.0!) * num4)
     End Function
 
     Public Shared Function decompress(ByVal float16Bit As Short) As Single
@@ -411,7 +289,6 @@ Public Class FifaUtil
         f = f << 13
         Return Int((s << 31) Or (e << 23) Or f)
     End Function
-
 
     Private Shared Function DEKHash(ByVal str As Byte(), ByVal length As Integer) As UInt32
         Dim num As UInt32 = Convert.ToUInt32(length)
@@ -475,29 +352,6 @@ Public Class FifaUtil
             End If
         Next i
         Return ((num2 << &H10) Or num)
-    End Function
-
-    Public Shared Function FNVHash_2(ByVal str As String, ByVal length As Integer) As ULong
-        Dim num As ULong = 2166136261
-
-        For Each c In str
-
-
-            num = (num * 16777619)
-            num = (num Xor AscW(c))
-        Next c
-
-
-        'For i = 0 To length - 1
-        'Dim num3 As Byte = str(i)
-        'If ((num3 >= 65) AndAlso (num3 <= 90)) Then
-        'num3 = CByte((num3 + 32))
-        'End If
-
-        'num = (num * 16777619)
-        'num = (num Xor num3)
-        'Next i
-        Return num
     End Function
 
     Public Shared Function FNVHash(ByVal str As Byte(), ByVal length As Integer) As UInt32
@@ -741,41 +595,6 @@ Public Class FifaUtil
         Return FifaUtil.RoundUp4((CShort(FifaUtil.ue.GetByteCount(s)) + 2))
     End Function
 
-    'Public Shared Function SwapAndConvertToFloat(ByVal r As FileReader) As Single
-    '    Dim buffer As Byte() = New Byte(4 - 1) {}
-    '    buffer(3) = r.ReadByte
-    '    buffer(2) = r.ReadByte
-    '    buffer(1) = r.ReadByte
-    '    buffer(0) = r.ReadByte
-    '    Dim input As New MemoryStream(buffer)
-    '    'input.Close
-    '    Return New FileReader(input).ReadSingle
-    'End Function
-
-    'Public Shared Sub SwapAndWriteFloat(ByVal w As BinaryWriter, ByVal f As Single)
-    '    Dim buffer As Byte() = New Byte(4 - 1) {}
-    '    Dim output As New MemoryStream(buffer)
-    '    Dim w2 As New BinaryWriter(output)
-    '    w2.Write(f)
-
-    '    output.Close()
-    '    w.Write(buffer(3))
-    '    w.Write(buffer(2))
-    '    w.Write(buffer(1))
-    '    w.Write(buffer(0))
-    'End Sub
-
-    'Public Shared Function SwapEndian(ByVal x As Short) As Short
-    '    Dim x_bytes As Byte() = BitConverter.GetBytes(x)
-
-    '    Array.Reverse(x_bytes)
-
-    '    Return BitConverter.ToInt16(x_bytes, 0)
-
-    '    'Dim num As Byte = CByte((x And &HFF))
-    '    'Return CShort((CByte(((x And &HFF00) >> 8)) + (num * &H100)))
-    'End Function
-
     Public Shared Function SwapEndian(ByVal x As Integer) As Integer
         'Dim x As Byte = CByte(y)
         Dim x_bytes As Byte() = BitConverter.GetBytes(x)
@@ -978,86 +797,89 @@ Public Class FifaUtil
         Return CInt(w.BaseStream.Position)
     End Function
 
-    Public Shared Function DEC3NtoFloats_v2(ByVal var32Bit As UInt32) As Single()
-        'https://stackoverflow.com/questions/8935419/how-do-i-unpack-dec3n-udec3-format
-        'https://www.khronos.org/registry/OpenGL/extensions/OES/OES_vertex_type_10_10_10_2.txt
-        'https://www.gamedev.net/forums/topic/642334-float-normals-to-dec3n/
+    'Public Shared Function DEC3NtoFloats_v2(ByVal var32Bit As UInt32) As Single()
+    '    'https://stackoverflow.com/questions/8935419/how-do-i-unpack-dec3n-udec3-format
+    '    'https://www.khronos.org/registry/OpenGL/extensions/OES/OES_vertex_type_10_10_10_2.txt
+    '    'https://www.gamedev.net/forums/topic/642334-float-normals-to-dec3n/
 
-        Dim x_value As Single
-        Dim y_value As Single
-        Dim z_value As Single
-        Dim w_value As Single
+    '    Dim x_value As Single
+    '    Dim y_value As Single
+    '    Dim z_value As Single
+    '    Dim w_value As Single
 
-        'Dim value_test As Integer = GetValueFrom32bit(var32Bit, 0, 2)
-        x_value = GetValueFrom32bit(var32Bit, 0, 10)
-        y_value = GetValueFrom32bit(var32Bit, 10, 10)
-        z_value = GetValueFrom32bit(var32Bit, 20, 10)
-        w_value = GetValueFrom32bit(var32Bit, 30, 2)
-        'x_value = GetValueFrom32bit(var32Bit, 22, 10)
-        'y_value = GetValueFrom32bit(var32Bit, 12, 10)
-        'z_value = GetValueFrom32bit(var32Bit, 2, 10)
-        'w_value = GetValueFrom32bit(var32Bit, 0, 2)
+    '    'Dim value_test As Integer = GetValueFrom32bit(var32Bit, 0, 2)
+    '    x_value = GetValueFrom32bit(var32Bit, 0, 10)
+    '    y_value = GetValueFrom32bit(var32Bit, 10, 10)
+    '    z_value = GetValueFrom32bit(var32Bit, 20, 10)
+    '    w_value = GetValueFrom32bit(var32Bit, 30, 2)
+    '    'x_value = GetValueFrom32bit(var32Bit, 22, 10)
+    '    'y_value = GetValueFrom32bit(var32Bit, 12, 10)
+    '    'z_value = GetValueFrom32bit(var32Bit, 2, 10)
+    '    'w_value = GetValueFrom32bit(var32Bit, 0, 2)
 
-        'If w_value <> 0 Then MsgBox("test")
+    '    'If w_value <> 0 Then MsgBox("test")
 
-        x_value = GetFloatFrom10Bit_v2(x_value) - 1 'GetFloatFrom10Bit(var32Bit >> 22)
-        y_value = GetFloatFrom10Bit_v2(y_value) - 1 'GetFloatFrom10Bit(var32Bit >> 12)
-        z_value = GetFloatFrom10Bit_v2(z_value) - 1 'GetFloatFrom10Bit(var32Bit >> 2)
-        w_value = GetFloatFrom2Bit_v2(w_value)
-        'x = ((2 * (var32Bit >> 22) + 1) And (1024 - 1)) / (1024 - 1)
-        'y = ((2 * (var32Bit >> 12) + 1) And (1024 - 1)) / (1024 - 1)
-        'z = ((2 * (var32Bit >> 2) + 1) And (1024 - 1)) / (1024 - 1)
-        'w = ((2 * (var32Bit) + 1) And (4 - 1)) / (4 - 1)
-        '(2c + 1)/(2^2 - 1)
+    '    x_value = GetFloatFrom10Bit_v2(x_value) - 1 'GetFloatFrom10Bit(var32Bit >> 22)
+    '    y_value = GetFloatFrom10Bit_v2(y_value) - 1 'GetFloatFrom10Bit(var32Bit >> 12)
+    '    z_value = GetFloatFrom10Bit_v2(z_value) - 1 'GetFloatFrom10Bit(var32Bit >> 2)
+    '    w_value = GetFloatFrom2Bit_v2(w_value)
+    '    'x = ((2 * (var32Bit >> 22) + 1) And (1024 - 1)) / (1024 - 1)
+    '    'y = ((2 * (var32Bit >> 12) + 1) And (1024 - 1)) / (1024 - 1)
+    '    'z = ((2 * (var32Bit >> 2) + 1) And (1024 - 1)) / (1024 - 1)
+    '    'w = ((2 * (var32Bit) + 1) And (4 - 1)) / (4 - 1)
+    '    '(2c + 1)/(2^2 - 1)
 
-        Return New Single() {x_value, y_value, z_value, w_value}
-    End Function
+    '    Return New Single() {x_value, y_value, z_value, w_value}
+    'End Function
 
-    Public Shared Function GetFloatFrom10Bit_v2(ByVal var10Bit As UInt32) As Single
-        Return var10Bit / 511 '((2 * var10Bit) + 1) / (1024 - 1)
-    End Function
-    Public Shared Function GetFloatFrom2Bit_v2(ByVal var2Bit As UInt32) As Single
-        Return var2Bit '(2 * var2Bit + 1) / (4 - 1)
-    End Function
-    Public Shared Function FloatsToDEC3N_v2(ByVal X_Value As Single, ByVal Y_Value As Single, ByVal Z_Value As Single) As UInteger
-        'Dim test As Integer = (PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
-        Dim ReturnValue As UInteger = 0
+    'Public Shared Function GetFloatFrom10Bit_v2(ByVal var10Bit As UInt32) As Single
+    '    Return var10Bit / 511 '((2 * var10Bit) + 1) / (1024 - 1)
+    'End Function
+    'Public Shared Function GetFloatFrom2Bit_v2(ByVal var2Bit As UInt32) As Single
+    '    Return var2Bit '(2 * var2Bit + 1) / (4 - 1)
+    'End Function
+    'Public Shared Function FloatsToDEC3N_v2(ByVal X_Value As Single, ByVal Y_Value As Single, ByVal Z_Value As Single) As UInteger
+    '    'Dim test As Integer = (PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
+    '    Dim ReturnValue As UInteger = 0
 
-        ReturnValue = SetValueTo32bit(ReturnValue, PackFloatTo10Bit_v2(X_Value), 0, 10)  '((test) >> 22)
-        ReturnValue = SetValueTo32bit(ReturnValue, PackFloatTo10Bit_v2(Y_Value), 10, 10)  '((test) >> 12)
-        ReturnValue = SetValueTo32bit(ReturnValue, PackFloatTo10Bit_v2(Z_Value), 20, 10)  '((test) >> 2)
-        'ReturnValue = SetValueTo32bit(ReturnValue, PackWFloatTo2Bit(1), 30, 2)
+    '    ReturnValue = SetValueTo32bit(ReturnValue, PackFloatTo10Bit_v2(X_Value), 0, 10)  '((test) >> 22)
+    '    ReturnValue = SetValueTo32bit(ReturnValue, PackFloatTo10Bit_v2(Y_Value), 10, 10)  '((test) >> 12)
+    '    ReturnValue = SetValueTo32bit(ReturnValue, PackFloatTo10Bit_v2(Z_Value), 20, 10)  '((test) >> 2)
+    '    'ReturnValue = SetValueTo32bit(ReturnValue, PackWFloatTo2Bit(1), 30, 2)
 
-        'Dim x_bytes As Byte() = BitConverter.GetBytes(ReturnValue)
+    '    'Dim x_bytes As Byte() = BitConverter.GetBytes(ReturnValue)
 
-        'Array.Reverse(x_bytes)
+    '    'Array.Reverse(x_bytes)
 
-        'ReturnValue = BitConverter.ToUInt32(x_bytes, 0)
+    '    'ReturnValue = BitConverter.ToUInt32(x_bytes, 0)
 
-        Return CInt(ReturnValue)  '(PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
-    End Function
-    Public Shared Function PackFloatTo10Bit_v2(ByVal value As Single) As Integer
-        'value = (CInt(2 * (var10Bit) + 1) And CInt(1024 - 1)) / (1024 - 1)
+    '    Return CInt(ReturnValue)  '(PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
+    'End Function
+    'Public Shared Function PackFloatTo10Bit_v2(ByVal value As Single) As Integer
+    '    'value = (CInt(2 * (var10Bit) + 1) And CInt(1024 - 1)) / (1024 - 1)
 
-        'value = ((2 * var10Bit) + 1) / (1024 - 1)
-        'value * (1024 - 1) = (2 * var10Bit) + 1
-        '(value * (1024 - 1)) - 1 = (2 * var10Bit) 
-
-
-        Return CInt(((CInt(value * (1024 - 1)) Or CInt(512)) - 1) / 2)   '= var10Bit
+    '    'value = ((2 * var10Bit) + 1) / (1024 - 1)
+    '    'value * (1024 - 1) = (2 * var10Bit) + 1
+    '    '(value * (1024 - 1)) - 1 = (2 * var10Bit) 
 
 
-        'If value < 0.0F Then
-        'Return CInt(Math.Round(value * 512.0F))     'normalized uintiger
-        'End If
-        'Return CInt(Math.Round(value * 511.0F))         'normalized intiger
+    '    Return CInt(((CInt(value * (1024 - 1)) Or CInt(512)) - 1) / 2)   '= var10Bit
 
-    End Function
+
+    '    'If value < 0.0F Then
+    '    'Return CInt(Math.Round(value * 512.0F))     'normalized uintiger
+    '    'End If
+    '    'Return CInt(Math.Round(value * 511.0F))         'normalized intiger
+
+    'End Function
     Public Shared Function DEC3NtoFloats(ByVal var32Bit As Int32) As Single()
         'https://stackoverflow.com/questions/8935419/how-do-i-unpack-dec3n-udec3-format
         'https://www.khronos.org/registry/OpenGL/extensions/OES/OES_vertex_type_10_10_10_2.txt
         'https://www.gamedev.net/forums/topic/642334-float-normals-to-dec3n/
 
+        'If var32Bit = 530655232 Then
+        '    MsgBox("test")
+        'End If
         Dim x_value As Single
         Dim y_value As Single
         Dim z_value As Single
@@ -1068,9 +890,30 @@ Public Class FifaUtil
 
         'var32Bit = BitConverter.ToUInt32(x_bytes, 0)
 
-        x_value = (var32Bit And 1023) / 511
-        y_value = (var32Bit >> 10 And 1023) / 511
-        z_value = (var32Bit >> 20 And 1023) / 511
+        x_value = (var32Bit And 1023) '/ 512
+        y_value = (var32Bit >> 10 And 1023) '/ 512
+        z_value = (var32Bit >> 20 And 1023) '/ 512
+
+        If x_value > 511 Then
+            x_value /= 512
+            x_value -= 2
+        Else
+            x_value /= 511
+        End If
+
+        If y_value > 511 Then
+            y_value /= 512
+            y_value -= 2
+        Else
+            y_value /= 511
+        End If
+
+        If z_value > 511 Then
+            z_value /= 512
+            z_value -= 2
+        Else
+            z_value /= 511
+        End If
 
         'x = var32Bit And 1023 'GetFloatFrom10Bit(var32Bit)
         'y = var32Bit And 1023 'GetFloatFrom10Bit(var32Bit >> 10)
@@ -1081,81 +924,126 @@ Public Class FifaUtil
         'w = ((2 * (var32Bit) + 1) And (4 - 1)) / (4 - 1)
         '(2c + 1)/(2^2 - 1)
 
+        'If x_value > 1 Then x_value -= 2
+        'If y_value > 1 Then y_value -= 2
+        'If z_value > 1 Then z_value -= 2
+
         Return New Single() {x_value, y_value, z_value} ', w}
     End Function
 
-    Public Shared Function DEC3NtoFloats_OLD(ByVal var32Bit As UInt32) As Single()
-        'https://stackoverflow.com/questions/8935419/how-do-i-unpack-dec3n-udec3-format
-        'https://www.khronos.org/registry/OpenGL/extensions/OES/OES_vertex_type_10_10_10_2.txt
-        'https://www.gamedev.net/forums/topic/642334-float-normals-to-dec3n/
+    'Public Shared Function DEC3NtoFloats_OLD(ByVal var32Bit As UInt32) As Single()
+    '    'https://stackoverflow.com/questions/8935419/how-do-i-unpack-dec3n-udec3-format
+    '    'https://www.khronos.org/registry/OpenGL/extensions/OES/OES_vertex_type_10_10_10_2.txt
+    '    'https://www.gamedev.net/forums/topic/642334-float-normals-to-dec3n/
 
-        Dim x As Single
-        Dim y As Single
-        Dim z As Single
-        'Dim w As Single
-        'Dim x_bytes As Byte() = BitConverter.GetBytes(var32Bit)
+    '    Dim x_value As Single
+    '    Dim y_value As Single
+    '    Dim z_value As Single
+    '    'Dim w As Single
+    '    'Dim x_bytes As Byte() = BitConverter.GetBytes(var32Bit)
 
-        'Array.Reverse(x_bytes)
+    '    'Array.Reverse(x_bytes)
 
-        'var32Bit = BitConverter.ToUInt32(x_bytes, 0)
+    '    'var32Bit = BitConverter.ToUInt32(x_bytes, 0)
 
-        'x = (var32Bit And 1023) / 1023
-        'y = (var32Bit >> 10 And 1023) / 1023
-        'z = (var32Bit >> 20 And 1023) / 1023
+    '    'x = (var32Bit And 1023) / 1023
+    '    'y = (var32Bit >> 10 And 1023) / 1023
+    '    'z = (var32Bit >> 20 And 1023) / 1023
 
-        x = GetFloatFrom10Bit(var32Bit >> 22)
-        y = GetFloatFrom10Bit(var32Bit >> 12)
-        z = GetFloatFrom10Bit(var32Bit >> 2)
-        'x = ((2 * (var32Bit >> 22) + 1) And (1024 - 1)) / (1024 - 1)
-        'y = ((2 * (var32Bit >> 12) + 1) And (1024 - 1)) / (1024 - 1)
-        'z = ((2 * (var32Bit >> 2) + 1) And (1024 - 1)) / (1024 - 1)
-        'w = ((2 * (var32Bit) + 1) And (4 - 1)) / (4 - 1)
-        '(2c + 1)/(2^2 - 1)
+    '    'x = GetFloatFrom10Bit(var32Bit >> 22)
+    '    'y = GetFloatFrom10Bit(var32Bit >> 12)
+    '    'z = GetFloatFrom10Bit(var32Bit >> 2)
+    '    'x = (2 * ((var32Bit) And (1024 - 1)) + 1) / (1024 - 1)
+    '    'y = (2 * ((var32Bit >> 10) And (1024 - 1)) + 1) / (1024 - 1)
+    '    'z = (2 * ((var32Bit >> 20) And (1024 - 1)) + 1) / (1024 - 1)
+    '    x_value = ((2 * (var32Bit) + 1) And (1024 - 1)) / (1024 - 1)
+    '    y_value = ((2 * (var32Bit >> 10) + 1) And (1024 - 1)) / (1024 - 1)
+    '    z_value = ((2 * (var32Bit >> 20) + 1) And (1024 - 1)) / (1024 - 1)
+    '    'w = ((2 * (var32Bit) + 1) And (4 - 1)) / (4 - 1)
+    '    '(2c + 1)/(2^2 - 1)
+    '    x_value = (var32Bit And 1023) / 511
+    '    y_value = (var32Bit >> 10 And 1023) / 511
+    '    z_value = (var32Bit >> 20 And 1023) / 511
 
-        Return New Single() {x, y, z} ', w}
-    End Function
+    '    x_value = GetValueFrom32bit(var32Bit, 0, 10)  '(var32Bit And 1023) / 511
+    '    y_value = GetValueFrom32bit(var32Bit, 10, 10) '(var32Bit >> 10 And 1023) / 511
+    '    z_value = GetValueFrom32bit(var32Bit, 20, 10) '(var32Bit >> 20 And 1023) / 511
 
-    Public Shared Function GetFloatFrom10Bit(ByVal var10Bit As UInt32) As Single
-        'Return (((var10Bit)) And 511) / (511)
-        'If (((((var10Bit)) And (1024 - 1)) / (1024 - 1)) * 2) - 1 < 0 Then MsgBox(((2 * (var10Bit) + 1) And (1024 - 1)) / (1024 - 1))
-        'Return var10Bit / 511
-        'Return ((((var10Bit)) And (1024 - 1)) / (1024 - 1) * 2) - 1
-        'Return ((2 * (var10Bit) + 1)) / (1024 - 1)
-        'Return (var10Bit And 511) / 511
-        Return (CInt(2 * (var10Bit) + 1) And CInt(1024 - 1)) / (1024 - 1)
 
-    End Function
+    '    Return New Single() {x_value / 511, y_value / 511, z_value / 511} ', w}
+    'End Function
+
+    'Public Shared Function GetFloatFrom10Bit(ByVal var10Bit As UInt32) As Single
+    '    'Return (((var10Bit)) And 511) / (511)
+    '    'If (((((var10Bit)) And (1024 - 1)) / (1024 - 1)) * 2) - 1 < 0 Then MsgBox(((2 * (var10Bit) + 1) And (1024 - 1)) / (1024 - 1))
+    '    'Return var10Bit / 511
+    '    'Return ((((var10Bit)) And (1024 - 1)) / (1024 - 1) * 2) - 1
+    '    'Return ((2 * (var10Bit) + 1)) / (1024 - 1)
+    '    'Return (var10Bit And 511) / 511
+    '    Return (CInt(2 * (var10Bit) + 1) And CInt(1024 - 1)) / (1024 - 1)
+
+    'End Function
 
     Public Shared Function FloatsToDEC3N(ByVal X_Value As Single, ByVal Y_Value As Single, ByVal Z_Value As Single) As UInteger
         'Dim test As Integer = (PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
-        'Dim x As Single = ((test) >> 22)
-        'Dim y As Single = ((test) >> 12)
-        'Dim z As Single = ((test) >> 2)
+        'Dim x As Single = CInt(PackFloatTo10Bit(X_Value))
+        'Dim y As Single = CInt(PackFloatTo10Bit(Y_Value))
+        'Dim z As Single = CInt(PackFloatTo10Bit(Z_Value))
         'Dim test As Integer = ((PackFloatTo10Bit(X_Value)) + (PackFloatTo10Bit(Y_Value) << 10) + (PackFloatTo10Bit(Z_Value) << 20))
         'Dim test_2 As Integer = CInt((PackFloatTo10Bit(X_Value)) Or CInt(PackFloatTo10Bit(Y_Value) << 10) Or CInt(PackFloatTo10Bit(Z_Value) << 20))
         'If test <> test_2 Then
         'MsgBox("test")
         'End If
+        'If X_Value = -1 Then
+        '    X_Value += 0.01
+        'End If
+        'If Y_Value = -1 Then
+        '    Y_Value += 0.01
+        'End If
+        'If Z_Value = -1 Then
+        '    Z_Value += 0.01
+        'End If
+
+
+        'If X_Value <= 0 Then X_Value += 2   'ball_41 - id 41
+        'If Y_Value <= 0 Then Y_Value += 2
+        'If Z_Value <= 0 Then Z_Value += 2
+        'If X_Value > 1 Or Y_Value > 1 Or Z_Value > 1 Then
+        'MsgBox("test")
+        'End If
+
+
+        'X_Value += 2
+        'Y_Value += 2
+        'Z_Value += 2
+
         Return CInt(PackFloatTo10Bit(X_Value)) Or CInt((PackFloatTo10Bit(Y_Value) << 10)) Or CInt((PackFloatTo10Bit(Z_Value) << 20))
         'Return (PackFloatTo10Bit(X_Value)) + (PackFloatTo10Bit(Y_Value) << 10) + (PackFloatTo10Bit(Z_Value) << 20)
         'Return (PackFloatTo10Bit(X_Value + 1)) + (PackFloatTo10Bit(Y_Value + 1) << 10) + (PackFloatTo10Bit(Z_Value + 1) << 20)
     End Function
 
-    Public Shared Function FloatsToDEC3N_OLD(ByVal X_Value As Single, ByVal Y_Value As Single, ByVal Z_Value As Single) As UInteger
-        'Dim test As Integer = (PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
-        'Dim x As Single = ((test) >> 22)
-        'Dim y As Single = ((test) >> 12)
-        'Dim z As Single = ((test) >> 2)
+    'Public Shared Function FloatsToDEC3N_OLD(ByVal X_Value As Single, ByVal Y_Value As Single, ByVal Z_Value As Single) As UInteger
+    '    'Dim test As Integer = (PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
+    '    'Dim x As Single = ((test) >> 22)
+    '    'Dim y As Single = ((test) >> 12)
+    '    'Dim z As Single = ((test) >> 2)
 
-        Return (PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
-    End Function
+    '    Return (PackFloatTo10Bit(X_Value) << 22) + (PackFloatTo10Bit(Y_Value) << 12) + (PackFloatTo10Bit(Z_Value) << 2)
+    'End Function
 
     Public Shared Function PackFloatTo10Bit(ByVal value As Single) As Integer
         If value < 0.0F Then
-            Return CInt(Math.Round(value * 512.0F))     'normalized uintiger
+            Return CInt(Math.Round((value + 2) * 512.0F))     'normalized uintiger
         End If
-        Return CInt(Math.Round(value * 511.0F))         'normalized intiger
 
+
+        Dim returnValue As Integer = CInt(Math.Round(value * 511.0F))         'normalized intiger
+
+        'If returnValue <= 511 Then
+        '    returnValue -= 1
+        'End If
+
+        Return returnValue
     End Function
 
     Public Shared Function PackWFloatTo2Bit(ByVal value As Single) As Integer
@@ -1197,8 +1085,8 @@ Public Class FifaUtil
 
     End Sub
 
-    Public Shared Function WriteSectionTotalSize(ByVal w As FileWriter, ByVal OffsetStart As Long, ByVal OffsetEnd As Long) As UInt32
-        Dim TotalSize As Long = OffsetEnd - OffsetStart
+    Public Shared Function WriteSectionTotalSize(ByVal w As FileWriter, ByVal OffsetStart As Long) As UInt32
+        Dim TotalSize As Long = w.BaseStream.Position - OffsetStart
 
         WriteValue(w, CUInt(TotalSize), OffsetStart)
 
@@ -1274,6 +1162,18 @@ Public Class FifaUtil
         Return Value
     End Function
 
+    Public Shared Function GetValueFrom16bit(Value As UShort, Offset As Byte, Length As Byte) As UShort
+
+        If Offset > 0 Then
+            Value = CUShort(Value) >> Offset
+        End If
+
+        Value = CUShort(Value) And CUShort(((2 ^ (Length)) - 1))    ' 6   65536
+        'Value = (Value) And CUShort(((2 ^ (Length)) - 1))    ' 6   65536
+
+        Return Value  '<< 3
+    End Function
+
     Public Shared Function SetValueTo32bit(TargetValue As UInteger, Value As UInteger, Offset As Byte, Length As Byte) As UInteger
 
         '--clear old value
@@ -1286,6 +1186,149 @@ Public Class FifaUtil
 
         Return TargetValue
     End Function
+
+    Public Shared Function SetValueTo16bit(TargetValue As UShort, Value As UShort, Offset As Byte, Length As Byte) As UShort
+
+        '--clear old value
+        Dim Mask As UShort = 65535 - (((2 ^ Length) - 1) << Offset) ' if n is 3, mask results in 111111111110111
+        TargetValue = TargetValue And Mask
+
+        '--set new value
+        Value = Value << Offset
+        TargetValue = TargetValue Or Value
+
+        Return TargetValue
+    End Function
+
+    Public Shared Function GetIndexStride(ByVal IndexData As List(Of UInteger)) As Byte
+        If IndexData.Max > UShort.MaxValue Then
+            Return 4
+        End If
+
+        Return 2
+    End Function
+
+    Public Shared Function GetVertexStride(ByVal VertexFormat As VertexElement()) As UInteger
+        Dim VStride As UShort = 0
+        For i = 0 To VertexFormat.Count - 1
+            VStride += GetVFormatTypeSize(VertexFormat(i).DataType)
+        Next
+
+        Return VStride
+    End Function
+
+    Public Shared Sub CalcVFormatOffsets(ByRef VertexFormat As VertexElement())
+        For i = 0 To VertexFormat.Count - 1
+            If i = 0 Then
+                VertexFormat(i).Offset = 0
+            Else
+                VertexFormat(i).Offset = VertexFormat(i - 1).Offset
+                VertexFormat(i).Offset += GetVFormatTypeSize(VertexFormat(i - 1).DataType)
+            End If
+        Next
+    End Sub
+
+    Private Shared Function GetVFormatTypeSize(ByVal DataType As Rw.D3D.D3DDECLTYPE) As UShort
+        Select Case DataType
+            Case Rw.D3D.D3DDECLTYPE.FLOAT1
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.FLOAT2
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.FLOAT3
+                Return 12
+            Case Rw.D3D.D3DDECLTYPE.FLOAT4
+                Return 16
+            Case Rw.D3D.D3DDECLTYPE.INT1
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.INT2
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.INT4
+                Return 16
+            Case Rw.D3D.D3DDECLTYPE.UINT1
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UINT2
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.UINT4
+                Return 16
+            Case Rw.D3D.D3DDECLTYPE.INT1N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.INT2N
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.INT4N
+                Return 16
+            Case Rw.D3D.D3DDECLTYPE.UINT1N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UINT2N
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.UINT4N
+                Return 16
+            Case Rw.D3D.D3DDECLTYPE.D3DCOLOR
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UBYTE4
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.BYTE4
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UBYTE4N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.BYTE4N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.SHORT2
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.SHORT4
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.USHORT2
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.USHORT4
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.SHORT2N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.SHORT4N
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.USHORT2N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.USHORT4N
+                Return 8
+            Case Rw.D3D.D3DDECLTYPE.UDEC3
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.DEC3
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UDEC3N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.DEC3N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UDEC4
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.DEC4
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UDEC4N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.DEC4N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UHEND3
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.HEND3
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UHEND3N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.HEND3N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UDHEN3
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.DHEN3
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.UDHEN3N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.DHEN3N
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.FLOAT16_2
+                Return 4
+            Case Rw.D3D.D3DDECLTYPE.FLOAT16_4
+                Return 8
+        End Select
+
+        Return 0
+    End Function
+
 
     ' Fields
     Private Shared c_LanguageHashtable As UInt32() = New UInt32() {0, 1996959894, 3993919788, 2567524794, 124634137, 1886057615, 3915621685, 2657392035, 249268274, 2044508324, 3772115230, 2547177864, 162941995, 2125561021, 3887607047, 2428444049, 498536548, 1789927666, 4089016648, 2227061214, 450548861, 1843258603, 4107580753, 2211677639, 325883990, 1684777152, 4251122042, 2321926636, 335633487, 1661365465, 4195302755, 2366115317, 997073096, 1281953886, 3579855332, 2724688242, 1006888145, 1258607687, 3524101629, 2768942443, 901097722, 1119000684, 3686517206, 2898065728, 853044451, 1172266101, 3705015759, 2882616665, 651767980, 1373503546, 3369554304, 3218104598, 565507253, 1454621731, 3485111705, 3099436303, 671266974, 1594198024, 3322730930, 2970347812, 795835527, 1483230225, 3244367275, 3060149565, 1994146192, 31158534, 2563907772, 4023717930, 1907459465, 112637215, 2680153253, 3904427059, 2013776290, 251722036, 2517215374, 3775830040, 2137656763, 141376813, 2439277719, 3865271297, 1802195444, 476864866, 2238001368, 4066508878, 1812370925, 453092731, 2181625025, 4111451223, 1706088902, 314042704, 2344532202, 4240017532, 1658658271, 366619977, 2362670323, 4224994405, 1303535960, 984961486, 2747007092, 3569037538, 1256170817, 1037604311, 2765210733, 3554079995, 1131014506, 879679996, 2909243462, 3663771856, 1141124467, 855842277, 2852801631, 3708648649, 1342533948, 654459306, 3188396048, 3373015174, 1466479909, 544179635, 3110523913, 3462522015, 1591671054, 702138776, 2966460450, 3352799412, 1504918807, 783551873, 3082640443, 3233442989, 3988292384, 2596254646, 62317068, 1957810842, 3939845945, 2647816111, 81470997, 1943803523, 3814918930, 2489596804, 225274430, 2053790376, 3826175755, 2466906013, 167816743, 2097651377, 4027552580, 2265490386, 503444072, 1762050814, 4150417245, 2154129355, 426522225, 1852507879, 4275313526, 2312317920, 282753626, 1742555852, 4189708143, 2394877945, 397917763, 1622183637, 3604390888, 2714866558, 953729732, 1340076626, 3518719985, 2797360999, 1068828381, 1219638859, 3624741850, 2936675148, 906185462, 1090812512, 3747672003, 2825379669, 829329135, 1181335161, 3412177804, 3160834842, 628085408, 1382605366, 3423369109, 3138078467, 570562233, 1426400815, 3317316542, 2998733608, 733239954, 1555261956, 3268935591, 3050360625, 752459403, 1541320221, 2607071920, 3965973030, 1969922972, 40735498, 2617837225, 3943577151, 1913087877, 83908371, 2512341634, 3803740692, 2075208622, 213261112, 2463272603, 3855990285, 2094854071, 198958881, 2262029012, 4057260610, 1759359992, 534414190, 2176718541, 4139329115, 1873836001, 414664567, 2282248934, 4279200368, 1711684554, 285281116, 2405801727, 4167216745, 1634467795, 376229701, 2685067896, 3608007406, 1308918612, 956543938, 2808555105, 3495958263, 1231636301, 1047427035, 2932959818, 3654703836, 1088359270, 936918000, 2847714899, 3736837829, 1202900863, 817233897, 3183342108, 3401237130, 1404277552, 615818150, 3134207493, 3453421203, 1423857449, 601450431, 3009837614, 3294710456, 1567103746, 711928724, 3020668471, 3272380065, 1510334235, 755167117}

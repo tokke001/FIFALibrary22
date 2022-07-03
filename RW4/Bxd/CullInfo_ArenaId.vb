@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Bxd
     Public Class CullInfo
         'bxd::tCullInfo
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.CULLINFO_ARENAID
         Public Const ALIGNMENT As Integer = 16
 
@@ -50,8 +50,8 @@
             Me.NumBins = Me.V3FatBBoxMins.Length
             Me.NumMeshes = Me.MeshCullInfos.Length
             Me.OffsetV3FatBBoxMins = 32
-            Me.OffsetV3FatBBoxMaxes = Me.OffsetV3FatBBoxMins + (Me.NumMeshes * 16) '176
-            Me.OffsetMeshCullInfos = Me.OffsetV3FatBBoxMaxes + (Me.NumMeshes * 16) '320
+            Me.OffsetV3FatBBoxMaxes = Me.OffsetV3FatBBoxMins + (Me.NumBins * 16) '176
+            Me.OffsetMeshCullInfos = Me.OffsetV3FatBBoxMaxes + (Me.NumBins * 16) '320
 
 
             w.Write(Me.NumBins)

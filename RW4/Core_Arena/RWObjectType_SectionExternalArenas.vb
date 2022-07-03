@@ -60,7 +60,7 @@
         Public Property Unknown_1 As UInteger
         Public Property Unknown_2 As UInteger
         Public Property Unknown_3 As UInteger
-        Public Property Dict As List(Of UInteger)
+        Public Property Dict As New List(Of UInteger)
 
         Public Function GetTypeCode() As Rw.SectionTypeCode
             Return TYPE_CODE

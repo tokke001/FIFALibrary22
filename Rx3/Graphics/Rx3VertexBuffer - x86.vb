@@ -3,23 +3,25 @@ Namespace Rx3
     Partial Public Class VertexBuffer
 
         Public Function SetVertex(ByVal newVertexes As CustomVertex.PositionNormalTextured()) As Boolean
-            Me.NumVertices = newVertexes.Length
+            Me.VertexData.Clear()
 
-            Me.VertexData = New Vertex(Me.NumVertices - 1) {}
             For i = 0 To Me.NumVertices - 1
-                Me.VertexData(i) = New Vertex
-
-                Me.VertexData(i).Positions(0).X = newVertexes(i).X
-                Me.VertexData(i).Positions(0).Y = newVertexes(i).Y
-                Me.VertexData(i).Positions(0).Z = newVertexes(i).Z
-
-                Me.VertexData(i).TextureCoordinates(0).U = newVertexes(i).Tu
-                Me.VertexData(i).TextureCoordinates(0).V = newVertexes(i).Tv
-
-                Me.VertexData(i).Normals(0).Normal_x = newVertexes(i).Nx
-                Me.VertexData(i).Normals(0).Normal_y = newVertexes(i).Ny
-                Me.VertexData(i).Normals(0).Normal_z = newVertexes(i).Nz
-
+                Me.VertexData.Add(New Vertex With {
+                                  .Position = New Position With {
+                                  .X = newVertexes(i).X,
+                                  .Y = newVertexes(i).Y,
+                                  .Z = newVertexes(i).Z
+                                  },
+                                  .TextureCoordinates = New TextureCoordinate() {
+                                  New TextureCoordinate With {
+                                  .U = newVertexes(i).Tu,
+                                  .V = newVertexes(i).Tv}
+                                  },
+                                  .Normal = New Normal With {
+                                  .Normal_x = newVertexes(i).Nx,
+                                  .Normal_y = newVertexes(i).Ny,
+                                  .Normal_z = newVertexes(i).Nz}
+                })
             Next i
             Return True
         End Function

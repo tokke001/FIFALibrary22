@@ -1,4 +1,6 @@
 ﻿
+Imports BCnEncoder.Shared
+
 Public Class FileReader
     Inherits BinaryReader
     ' Methods
@@ -151,14 +153,14 @@ Public Class FileReader
         Return MyBase.ReadUInt64
     End Function
 
-    Public Function Read16BitEncodedSingle() As Single     'ReadFloat16
+    Public Function ReadHalf() As Half     'ReadFloat16
+        Dim m_array As Byte() = MyBase.ReadBytes(2)
         If (Me.m_Endianness = Endian.Big) Then
-            Dim m_array As Byte() = MyBase.ReadBytes(2)
             Array.Reverse(m_array)
-            Return FifaUtil.ConvertToFloat(BitConverter.ToInt16(m_array, 0))
         End If
-        Return FifaUtil.ConvertToFloat(MyBase.ReadInt16)
+        Return Half.ToHalf(m_array, 0)
     End Function
+
     Public Function ReadUIntegers(count As Integer) As UInt32()
         Dim buffer As UInt32() = New UInt32(count - 1) {}
         For i = 0 To count - 1
@@ -166,6 +168,7 @@ Public Class FileReader
         Next
         Return buffer
     End Function
+
     Public Function ReadIntegers(count As Integer) As Int32()
         Dim buffer As Int32() = New Int32(count - 1) {}
         For i = 0 To count - 1

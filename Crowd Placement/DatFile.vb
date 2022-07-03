@@ -105,8 +105,8 @@ Namespace CrowdDat
         Public Function Load(ByVal FileType As CrwdFileType, ByVal r As FileReader) As Boolean
 
             Me.Verts = r.ReadVector3
-            Me.ZRot = r.ReadSingle
-            Me.Color = r.ReadBytes(3)
+            Me.ZRot = r.ReadSingle      'F22: Orientation
+            Me.Color = r.ReadBytes(3)   'F22: SeatColor
 
             If FileType = CrwdFileType.FIFA_14 Then
                 Me.Status = New CrowdStatus(FileType, r)

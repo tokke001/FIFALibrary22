@@ -1,7 +1,12 @@
 ﻿Namespace Rw.Core.Arena
     Public Class ArenaFileHeader
         'class name = rw::core::arena::ArenaFileHeader
-        Public Sub New()
+        Public Sub New(ByVal Endianness As Endian)
+            If Endianness = Endian.Big Then
+                Me.IsBigEndian = True
+            Else
+                Me.IsBigEndian = False
+            End If
 
         End Sub
 
@@ -65,7 +70,7 @@
         End Sub
 
         Public Property MagicNumber As ArenaFileHeaderMagicNumber
-        Public Property IsBigEndian As Boolean 'RWEndianness
+        Public Property IsBigEndian As Boolean = True 'RWEndianness
         Public Property PointerSizeInBits As Byte
         Public Property PointerAlignment As Byte
         Public Property Unused As Byte

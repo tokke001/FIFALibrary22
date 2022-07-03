@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Collision
     Public Class Volume
         'rw::collision::Volume
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWCOBJECTTYPE_VOLUME
         Public Const ALIGNMENT As Integer = 16
 
@@ -160,7 +160,7 @@
         End Sub
 
         Private RwArena As Rw.Core.Arena.Arena
-        Public Property PAgg As RWObject     'pointer to "rw::collision::Aggregate", wich can be found at section RWCObjectType_SimpleMappedArray --> index of RWCObjectType_SimpleMappedArray !!
+        Public Property PAgg As RwObject     'pointer to "rw::collision::Aggregate", wich can be found at section RWCObjectType_SimpleMappedArray --> index of RWCObjectType_SimpleMappedArray !!
     End Class
 
     Public Class SphereSpecificData

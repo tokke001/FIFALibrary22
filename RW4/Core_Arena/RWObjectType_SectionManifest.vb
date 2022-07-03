@@ -37,15 +37,15 @@
                 Dim m_ArenaSection As New ArenaSection(Me.RwArena, r)
                 Select Case m_ArenaSection.TypeCode
                     Case SectionTypeCode.RWOBJECTTYPE_SECTIONTYPES
-                        Me.Sections(i) = New ArenaSectionTypes(m_ArenaSection, Me.RwArena, r)
+                        Me.Sections.Add(New ArenaSectionTypes(m_ArenaSection, Me.RwArena, r))
                     Case SectionTypeCode.RWOBJECTTYPE_SECTIONEXTERNALARENAS
-                        Me.Sections(i) = New ArenaSectionExternalArenas(m_ArenaSection, Me.RwArena, r)
+                        Me.Sections.Add(New ArenaSectionExternalArenas(m_ArenaSection, Me.RwArena, r))
                     Case SectionTypeCode.RWOBJECTTYPE_SECTIONSUBREFERENCES
-                        Me.Sections(i) = New ArenaSectionSubreferences(m_ArenaSection, Me.RwArena, r)
+                        Me.Sections.Add(New ArenaSectionSubreferences(m_ArenaSection, Me.RwArena, r))
                     Case SectionTypeCode.RWOBJECTTYPE_SECTIONATOMS
-                        Me.Sections(i) = New ArenaSectionAtoms(m_ArenaSection, Me.RwArena, r)
+                        Me.Sections.Add(New ArenaSectionAtoms(m_ArenaSection, Me.RwArena, r))
                     Case Else
-                        Me.Sections(i) = Nothing
+                        Me.Sections.Add(Nothing)
                 End Select
 
             Next
@@ -57,7 +57,7 @@
             Dim bytearray As Byte() = New Byte() {}
 
             Me.TypeCode = TYPE_CODE
-            Me.NumEntries = If(Me.Sections Is Nothing, 0, CUInt(Me.Sections.Length)) 'CUInt(Me.Sections.Length)
+            Me.NumEntries = Me.Sections.Count 'If(Me.Sections Is Nothing, 0, CUInt(Me.Sections.Length)) 'CUInt(Me.Sections.Length)
             Me.PntrOffsets = 12
 
             'We will have to rewrite it anyways, so just write padding
@@ -107,7 +107,7 @@
 
         Private Function IndexOf(ByVal m_Type As Rw.SectionTypeCode) As Integer
 
-            For i As Integer = 0 To Sections.Length - 1
+            For i As Integer = 0 To Sections.count - 1
                 If Sections(i).TypeCode = m_Type Then
                     Return i
                 End If
@@ -118,8 +118,8 @@
 
 
         Public Property PntrOffsets As UInteger
-        Public Property Offsets As List(Of UInteger)
-        Private Property Sections As List(Of ArenaSection)
+        Public Property Offsets As UInteger()
+        Private Property Sections As New List(Of ArenaSection)
         Public Property Types As ArenaSectionTypes
             Get
                 Return GetSection(SectionTypeCode.RWOBJECTTYPE_SECTIONTYPES)

@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Graphics
     Public Class EmbeddedMesh
         'rw::graphics::EmbeddedMesh
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_MESH
         Public Const ALIGNMENT As Integer = 4
 

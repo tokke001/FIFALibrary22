@@ -3,7 +3,7 @@
 Namespace Rw.Bxd
     Public Class ChannelCurve
         'bxd::tChannelCurve
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.CHANNELCURVE_ARENAID
         Public Const ALIGNMENT As Integer = 4
 

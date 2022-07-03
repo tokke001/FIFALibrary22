@@ -27,15 +27,6 @@
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
-            'Me.TotalSize = m_Rx3TextureHeader.TotalSize
-            'Me.TextureType = m_Rx3TextureHeader.TextureType
-            'Me.TextureFormat = m_Rx3TextureHeader.TextureFormat
-            'Me.Flags_1_TextureEndian = m_Rx3TextureHeader.Flags_1_TextureEndian
-            'Me.Flags_2 = m_Rx3TextureHeader.Flags_2
-            'Me.Width = m_Rx3TextureHeader.Width
-            'Me.Height = m_Rx3TextureHeader.Height
-            'Me.NumFaces = m_Rx3TextureHeader.NumFaces
-            'Me.NumLevels = m_Rx3TextureHeader.NumLevels
 
             w.Write(Me.TotalSize)
             w.Write(CByte(Me.TextureType))
@@ -51,7 +42,18 @@
 
 
         ' Properties
+        Private m_TotalSize As UInteger
+
+        ''' <summary>
+        ''' Total section size (ReadOnly). </summary>
         Public Property TotalSize As UInteger
+            Get
+                Return m_TotalSize
+            End Get
+            Friend Set
+                m_TotalSize = Value
+            End Set
+        End Property
         Public Property TextureType As ETextureType
         Public Property TextureFormat As TextureFormat
         Public Property Width As UShort

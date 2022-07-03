@@ -8,264 +8,389 @@ Public Class RawImage
 
     'End Sub
     Public Sub New(ByVal width As UInteger, ByVal height As UInteger, ByVal TextureFormat As ETextureFormat, ByVal size As UInteger, ByVal SwapEndian_DxtBlock As Boolean, Optional Tiled360 As Boolean = False)
-        Me.Width = width
-        Me.Height = height
-        Me.TextureFormat = TextureFormat
-        Me.Size = size
+        Me.m_Width = width
+        Me.m_Height = height
+        Me.m_TextureFormat = TextureFormat
+        Me.m_Size = size
         Me.m_SwapEndian_DxtBlock = SwapEndian_DxtBlock
         Me.m_Tiled360 = Tiled360
         Me.m_Bitmap = Nothing
     End Sub
 
     Private Sub CreateBitmap()
-        Dim num2 As Integer
-
         Dim RawDataFixed As Byte() = Me.m_RawData.Clone
         If Me.m_Tiled360 Then
             ' Untile the data
-            RawDataFixed = ConvertToLinearTexture(Me.m_RawData.Clone, Me.Width, Me.Height, Me.TextureFormat)
+            RawDataFixed = ConvertToLinearTexture(Me.m_RawData.Clone, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
         End If
         If Me.m_SwapEndian_DxtBlock Then
-            Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.TextureFormat)
+            Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.m_TextureFormat)
             For x As Integer = 0 To RawDataFixed.Length - 1 Step SwapNumBytes
                 Array.Reverse(RawDataFixed, x, SwapNumBytes)
             Next x
         End If
 
-        If (Me.Width < 1) Then
-            Me.Width = 1
+        If (Me.m_Width < 1) Then
+            Me.m_Width = 1
         End If
-        If (Me.Height < 1) Then
-            Me.Height = 1
+        If (Me.m_Height < 1) Then
+            Me.m_Height = 1
         End If
-        Select Case Me.TextureFormat
-            Case ETextureFormat.DXT1, ETextureFormat.DXT3, ETextureFormat.DXT5, ETextureFormat.ATI2, ETextureFormat.ATI1, ETextureFormat.BC6H_UF16
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format32bppArgb)
+        Select Case Me.m_TextureFormat
+            Case ETextureFormat.BC1, ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC5, ETextureFormat.BC4, ETextureFormat.BC6H_UF16, ETextureFormat.BC7
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadDxtToBitmap(RawDataFixed)
-                Return
-            Case ETextureFormat.A8R8G8B8
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format32bppArgb)
-                Dim rect As New Rectangle(0, 0, Me.m_Bitmap.Width, Me.m_Bitmap.Height)
-                Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
-                Dim destination As IntPtr = bitmapdata.Scan0
-                Dim num As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
-                Marshal.Copy(RawDataFixed, 0, destination, (num * 4))
-                Me.m_Bitmap.UnlockBits(bitmapdata)
-                Return
-            Case ETextureFormat.R8G8B8
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format24bppRgb)
-                Dim rect As New Rectangle(0, 0, Me.m_Bitmap.Width, Me.m_Bitmap.Height)
-                Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
-                Dim destination As IntPtr = bitmapdata.Scan0
-                Dim num As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
-                Marshal.Copy(RawDataFixed, 0, destination, (num * 3))
-                Me.m_Bitmap.UnlockBits(bitmapdata)
-                'Me.m_Bitmap = GraphicUtil.Get32bitBitmap(Me.m_Bitmap)  'convert from 24bbp to 32bbp
-                Return
-            Case ETextureFormat.A4R4G4B4
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format16bppGrayScale) '??
-                Dim rect As New Rectangle(0, 0, Me.m_Bitmap.Width, Me.m_Bitmap.Height)
-                Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
-                Dim destination As IntPtr = bitmapdata.Scan0
-                Dim num As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
-                Marshal.Copy(RawDataFixed, 0, destination, (num * 2))
-                Me.m_Bitmap.UnlockBits(bitmapdata)
-                Return
-            Case ETextureFormat.R5G6B5
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format16bppRgb565)
-                Dim rect As New Rectangle(0, 0, Me.m_Bitmap.Width, Me.m_Bitmap.Height)
-                Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
-                Dim destination As IntPtr = bitmapdata.Scan0
-                Dim num As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
-                Marshal.Copy(RawDataFixed, 0, destination, (num * 2))
-                Me.m_Bitmap.UnlockBits(bitmapdata)
-                'Me.m_Bitmap = GraphicUtil.Get32bitBitmap(Me.m_Bitmap)  'convert  to 32bbp
-                Return
-            Case ETextureFormat.X1R5G5B5
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format16bppArgb1555)
-                Dim rect As New Rectangle(0, 0, Me.m_Bitmap.Width, Me.m_Bitmap.Height)
-                Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
-                Dim destination As IntPtr = bitmapdata.Scan0
-                Dim num As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
-                Marshal.Copy(RawDataFixed, 0, destination, (num * 2))
-                Me.m_Bitmap.UnlockBits(bitmapdata)
-                'Me.m_Bitmap = GraphicUtil.Get32bitBitmap(Me.m_Bitmap)  'convert  to 32bbp
-                Return
-            Case ETextureFormat.GREY8
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format32bppArgb)
-                num2 = 0
-                Dim i As Integer
-                For i = 0 To Me.m_Bitmap.Height - 1
-                    Dim j As Integer
-                    For j = 0 To Me.m_Bitmap.Width - 1
-                        Dim num6 As Integer
-                        Dim num7 As Integer
-                        Dim alpha As Integer = 255
-                        Dim blue As Integer = RawDataFixed(num2)
-                        num7 = RawDataFixed(num2)
-                        num6 = RawDataFixed(num2)
-                        num2 += 1
-                        Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, num6, num7, blue))
-                    Next j
-                Next i
-                Return
-            Case ETextureFormat.GREY8ALFA8
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format32bppArgb)
-                num2 = 0
-                Dim i As Integer
-                For i = 0 To Me.m_Bitmap.Height - 1
-                    Dim j As Integer
-                    For j = 0 To Me.m_Bitmap.Width - 1
-                        Dim num12 As Integer
-                        Dim num13 As Integer
-                        Dim alpha As Integer = RawDataFixed(num2)
-                        num2 += 1
-                        Dim blue As Integer = RawDataFixed(num2)
-                        num13 = RawDataFixed(num2)
-                        num12 = RawDataFixed(num2)
-                        num2 += 1
-                        Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, num12, num13, blue))
-                    Next j
-                Next i
-                Return
-            Case ETextureFormat.A32B32G32R32F
-                Me.m_Bitmap = New Bitmap(Me.Width, Me.Height, PixelFormat.Format32bppArgb)
-                num2 = 0
-                For i = 0 To Me.m_Bitmap.Height - 1
-                    For j = 0 To Me.m_Bitmap.Width - 1
-                        Dim red As Byte() = New Byte(4 - 1) {}
-                        Array.Copy(RawDataFixed, num2, red, 0, 4)
-                        num2 += 4
-                        Dim green As Byte() = New Byte(4 - 1) {}
-                        Array.Copy(RawDataFixed, num2, green, 0, 4)
-                        num2 += 4
-                        Dim blue As Byte() = New Byte(4 - 1) {}
-                        Array.Copy(RawDataFixed, num2, blue, 0, 4)
-                        num2 += 4
-                        Dim alpha As Byte() = New Byte(4 - 1) {}
-                        Array.Copy(RawDataFixed, num2, alpha, 0, 4)
-                        num2 += 4
 
-                        Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(Math.Min(BitConverter.ToSingle(alpha, 0) * 255, 255), Math.Min(BitConverter.ToSingle(red, 0) * 255, 255), Math.Min(BitConverter.ToSingle(green, 0) * 255, 255), Math.Min(BitConverter.ToSingle(blue, 0) * 255, 255)))     'values too big (alpha value 2048 for example) --> need be devided?? https://stackoverflow.com/questions/12839758/why-is-this-128bit-color-format-being-converted-to-32bit
-                    Next j
-                Next i
-                Return
+            Case ETextureFormat.B8G8R8A8
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadB8G8R8A8ToBitmap(RawDataFixed)
 
+            Case ETextureFormat.B8G8R8
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadB8G8R8ToBitmap(RawDataFixed)
+
+            Case ETextureFormat.B4G4R4A4
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadB4G4R4A4ToBitmap(RawDataFixed)
+
+            Case ETextureFormat.B5G6R5
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadB5G6R5ToBitmap(RawDataFixed)
+
+            Case ETextureFormat.B5G5R5A1
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadB5G5R5A1ToBitmap(RawDataFixed)
+
+            Case ETextureFormat.L8
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadL8ToBitmap(RawDataFixed)
+
+            Case ETextureFormat.L8A8
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadL8A8ToBitmap(RawDataFixed)
+
+            Case ETextureFormat.R32G32B32A32Float
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadR32G32B32A32FToBitmap(RawDataFixed)
+
+            Case ETextureFormat.R8G8B8A8
+                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
+                Me.ReadR8G8B8A8ToBitmap(RawDataFixed)
+
+                'Case ETextureFormat.BIT8
+                'Case ETextureFormat.CTX1
 
             Case Else
                 Return
         End Select
     End Sub
 
+    Private Sub ReadR8G8B8A8ToBitmap(RawDataFixed() As Byte)
+        Dim Index As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim red As Integer = RawDataFixed(Index)
+                Index += 1
+                Dim green As Integer = RawDataFixed(Index)
+                Index += 1
+                Dim blue As Integer = RawDataFixed(Index)
+                Index += 1
+                Dim alpha As Integer = RawDataFixed(Index)
+                Index += 1
+
+                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, red, green, blue))
+            Next j
+        Next i
+    End Sub
+
+    Private Sub ReadR32G32B32A32FToBitmap(RawDataFixed() As Byte)
+        Dim f As New MemoryStream(RawDataFixed)
+        Dim r As New FileReader(f, Endian.Little)
+
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim red As Single = Math.Min(r.ReadSingle * 255, 255)
+                Dim green As Single = Math.Min(r.ReadSingle * 255, 255)
+                Dim blue As Single = Math.Min(r.ReadSingle * 255, 255)
+                Dim alpha As Single = Math.Min(r.ReadSingle * 255, 255)
+
+                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, red, green, blue))
+            Next j
+        Next i
+    End Sub
+
+    Private Sub ReadL8A8ToBitmap(RawDataFixed() As Byte)
+        Dim Index As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim Lum As Integer = RawDataFixed(Index)
+                Index += 1
+                Dim alpha As Integer = RawDataFixed(Index)
+                Index += 1
+
+                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, Lum, Lum, Lum))
+            Next j
+        Next i
+    End Sub
+
+    Private Sub ReadL8ToBitmap(RawDataFixed() As Byte)
+        Dim Index As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim Lum As Integer = RawDataFixed(Index)
+                Index += 1
+                Dim alpha As Integer = 255
+
+                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, Lum, Lum, Lum))
+            Next j
+        Next i
+    End Sub
+
+    Private Sub ReadB5G5R5A1ToBitmap(RawDataFixed() As Byte)
+        Dim f As New MemoryStream(RawDataFixed)
+        Dim r As New FileReader(f, Endian.Little)
+
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim Value As UShort = r.ReadUInt16
+
+                Dim blue As Integer = (FifaUtil.GetValueFrom16bit(Value, 0, 5) / 31) * 255
+                Dim green As Integer = (FifaUtil.GetValueFrom16bit(Value, 5, 5) / 31) * 255
+                Dim red As Integer = (FifaUtil.GetValueFrom16bit(Value, 10, 5) / 31) * 255
+                Dim alpha As Integer = FifaUtil.GetValueFrom16bit(Value, 15, 1) * 255
+
+                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, red, green, blue))
+            Next j
+        Next i
+    End Sub
+
+    Private Sub ReadB5G6R5ToBitmap(RawDataFixed() As Byte)
+        Dim f As New MemoryStream(RawDataFixed)
+        Dim r As New FileReader(f, Endian.Little)
+
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim Value As UShort = r.ReadUInt16
+
+                Dim blue As Integer = (FifaUtil.GetValueFrom16bit(Value, 0, 5) / 31) * 255
+                Dim green As Integer = (FifaUtil.GetValueFrom16bit(Value, 5, 6) / 63) * 255
+                Dim red As Integer = (FifaUtil.GetValueFrom16bit(Value, 11, 5) / 31) * 255
+                Dim alpha As Integer = 255
+
+                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, red, green, blue))
+            Next j
+        Next i
+    End Sub
+
+    Private Sub ReadB4G4R4A4ToBitmap(RawDataFixed() As Byte)
+        Dim f As New MemoryStream(RawDataFixed)
+        Dim r As New FileReader(f, Endian.Little)
+
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim Value As UShort = r.ReadUInt16
+
+                Dim blue As Integer = (FifaUtil.GetValueFrom16bit(Value, 0, 4) / 15) * 255
+                Dim green As Integer = (FifaUtil.GetValueFrom16bit(Value, 4, 4) / 15) * 255
+                Dim red As Integer = (FifaUtil.GetValueFrom16bit(Value, 8, 4) / 15) * 255
+                Dim alpha As Integer = (FifaUtil.GetValueFrom16bit(Value, 12, 4) / 15) * 255
+
+                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, red, green, blue))
+            Next j
+        Next i
+    End Sub
+
+    Private Sub ReadB8G8R8ToBitmap(RawDataFixed() As Byte)
+        Dim Index As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim blue As Integer = RawDataFixed(Index)
+                Index += 1
+                Dim green As Integer = RawDataFixed(Index)
+                Index += 1
+                Dim red As Integer = RawDataFixed(Index)
+                Index += 1
+                Dim alpha As Integer = 255
+
+                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, red, green, blue))
+            Next j
+        Next i
+    End Sub
+
+    Private Sub ReadB8G8R8A8ToBitmap(RawDataFixed() As Byte)
+        Dim rect As New Rectangle(0, 0, Me.m_Bitmap.Width, Me.m_Bitmap.Height)
+        Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
+        Dim destination As IntPtr = bitmapdata.Scan0
+        Dim num As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
+        Marshal.Copy(RawDataFixed, 0, destination, (num * 4))
+        Me.m_Bitmap.UnlockBits(bitmapdata)
+    End Sub
+
     Private Sub CreateRawData()
-        If (Me.Width < 1) Then
-            Me.Width = 1
+        If (Me.m_Width < 1) Then
+            Me.m_Width = 1
         End If
-        If (Me.Height < 1) Then
-            Me.Height = 1
+        If (Me.m_Height < 1) Then
+            Me.m_Height = 1
         End If
-        Select Case Me.TextureFormat
-            Case ETextureFormat.DXT1, ETextureFormat.DXT3, ETextureFormat.DXT5, ETextureFormat.ATI2, ETextureFormat.ATI1, ETextureFormat.BC6H_UF16
+        If GraphicUtil.GetTextureSize(Me.m_Bitmap.Width, Me.m_Bitmap.Height, Me.m_TextureFormat) > Me.m_RawData.Length Then
+            Exit Sub
+        End If
+        If (Me.m_Bitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
+            Me.m_Bitmap = GraphicUtil.Get32bitBitmap(Me.m_Bitmap)
+        End If
+        Select Case Me.m_TextureFormat
+            Case ETextureFormat.BC1, ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC5, ETextureFormat.BC4, ETextureFormat.BC6H_UF16, ETextureFormat.BC7
                 Me.WriteBitmapToDxt()
-                Return
-            Case ETextureFormat.A8R8G8B8
-                Me.WriteBitmapToA8R8G8B8()
-                Return
-            Case ETextureFormat.R8G8B8
-                Me.WriteBitmapToR8G8B8()
-                Return
-                'Case ETextureFormat.A4R4G4B4
-                'Me.WriteBitmapToA4R4G4B4()
-                'Return
-                'Case ETextureFormat.R5G6B5
-                'Me.WriteBitmapToR5G6B5()
-                'Return
-                'Case ETextureFormat.X1R5G5B5
-            Case ETextureFormat.GREY8
-                Me.WriteBitmapToGrey8()
-                Return
-            Case ETextureFormat.GREY8ALFA8
-                Me.WriteBitmapToGrey8Alfa8()
-                Exit Select
-                'Case (ETextureFormat.GREY8 Or ETextureFormat.DXT5)
-                'Exit Select
-            Case ETextureFormat.A32B32G32R32F
-                Me.WriteBitmapToA32B32G32R32F()
-                Exit Select
+
+            Case ETextureFormat.B8G8R8A8
+                Me.WriteBitmapToB8G8R8A8()
+
+            Case ETextureFormat.B8G8R8
+                Me.WriteBitmapToB8G8R8()
+
+            Case ETextureFormat.B4G4R4A4
+                Me.WriteBitmapToB4G4R4A4()
+
+            Case ETextureFormat.B5G6R5
+                Me.WriteBitmapToB5G6R5()
+
+            Case ETextureFormat.B5G5R5A1
+                Me.WriteBitmapToB5G5R5A1()
+
+            Case ETextureFormat.L8
+                Me.WriteBitmapToL8()
+
+            Case ETextureFormat.L8A8
+                Me.WriteBitmapToL8A8()
+
+            Case ETextureFormat.R32G32B32A32Float
+                Me.WriteBitmapToR32G32B32A32F()
+
+            Case ETextureFormat.R8G8B8A8
+                Me.WriteBitmapToR8G8B8A8()
+
+                'Case ETextureFormat.BIT8
+                'Case ETextureFormat.CTX1
+
             Case Else
                 Return
         End Select
     End Sub
 
     Public Function Load(ByVal r As FileReader) As Boolean
-        'Dim size As Integer = Me.Size
-        'If (Me.TextureFormat = ETextureFormat.A8R8G8B8) Then
-        'Size = ((Me.Width * Me.Height) * 4)
+        'Dim size As Integer = Me.m_Size
+        'If (Me._TextureFormat = ETextureFormat.A8R8G8B8) Then
+        'Size = ((Me._Width * Me._Height) * 4)
         'End If
-        Me.m_RawData = r.ReadBytes(Me.Size)
+        Me.m_RawData = r.ReadBytes(Me.m_Size)
 
         Me.NeedToSaveRawData = False
         Return True
     End Function
 
     Private Sub ReadDxtToBitmap(ByVal RawDataFixed As Byte())
-        'Dim RawData_2 As Byte() = RawData
-        Dim block As New DxtBlock(CInt(Me.TextureFormat), Me.m_SwapEndian_DxtBlock)
-        Dim input As New MemoryStream(RawDataFixed)
-        Dim br As New FileReader(input, Endian.Little)
-        Dim rect As New Rectangle(0, 0, Me.Width, Me.Height)
-        Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
-        Dim destination As IntPtr = bitmapdata.Scan0
-        Dim length As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
-        Dim source As Integer() = New Integer(length - 1) {}
-        Dim i As Integer
-        For i = 0 To (Me.m_Bitmap.Height \ 4) - 1
-            Dim j As Integer
-            For j = 0 To (Me.m_Bitmap.Width \ 4) - 1
-                block.Load(br)
-                Dim index As Integer = ((i * 4) * Me.m_Bitmap.Width)
-                index = (index + (j * 4))
-                source(index) = block.Colors(0, 0).ToArgb
-                source((index + 1)) = block.Colors(1, 0).ToArgb
-                source((index + 2)) = block.Colors(2, 0).ToArgb
-                source((index + 3)) = block.Colors(3, 0).ToArgb
-                index = (index + Me.m_Bitmap.Width)
-                source(index) = block.Colors(0, 1).ToArgb
-                source((index + 1)) = block.Colors(1, 1).ToArgb
-                source((index + 2)) = block.Colors(2, 1).ToArgb
-                source((index + 3)) = block.Colors(3, 1).ToArgb
-                index = (index + Me.m_Bitmap.Width)
-                source(index) = block.Colors(0, 2).ToArgb
-                source((index + 1)) = block.Colors(1, 2).ToArgb
-                source((index + 2)) = block.Colors(2, 2).ToArgb
-                source((index + 3)) = block.Colors(3, 2).ToArgb
-                index = (index + Me.m_Bitmap.Width)
-                source(index) = block.Colors(0, 3).ToArgb
-                source((index + 1)) = block.Colors(1, 3).ToArgb
-                source((index + 2)) = block.Colors(2, 3).ToArgb
-                source((index + 3)) = block.Colors(3, 3).ToArgb
-            Next j
-        Next i
-        Marshal.Copy(source, 0, destination, length)
-        Me.m_Bitmap.UnlockBits(bitmapdata)
-        source = Nothing
-        br.Close()
-        input.Close()
+        Dim decoder As New BCnEncoder.Decoder.BcDecoder()
+        Dim Format As BCnEncoder.Shared.CompressionFormat = GetBCnEncoderFormat(Me.m_TextureFormat)
+        'decoder.InputOptions.ddsBc1ExpectAlpha = False
+        'decoder.OutputOptions.redAsLuminance = False
+        decoder.OutputOptions.blueRecalculate = True
+
+        Me.m_Bitmap = decoder.DecodeRawData(RawDataFixed, Me.m_Width, Me.m_Height, Format)
     End Sub
+
+    'Private Sub ReadDxtToBitmap_OLD(ByVal RawDataFixed As Byte())
+    '    Dim rect As New Rectangle(0, 0, Me._Width, Me._Height)
+    '    Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
+    '    Dim destination As IntPtr = bitmapdata.Scan0
+    '    'Dim length As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
+
+    '    Dim decoder As New BCnEncoder.Decoder.BcDecoder()
+    '    Dim Format As BCnEncoder.Shared.CompressionFormat = GetBCnEncoderFormat(Me._TextureFormat)
+    '    'decoder.InputOptions.ddsBc1ExpectAlpha = False
+    '    'decoder.OutputOptions.redAsLuminance = False
+    '    'Dim source As BCnEncoder.Shared.ColorRgba32() = decoder.DecodeRaw(RawDataFixed, Me._Width, Me._Height, Format)
+    '    'Dim Source_bytes As Byte() = New Byte((source.Length * 4) - 1) {}
+
+    '    'For i = 0 To source.Length - 1
+
+    '    '    If Format = BCnEncoder.Shared.CompressionFormat.Bc5 Then
+    '    '        'https://github.com/Nominom/BCnEncoder.NET/issues/59
+    '    '        'https://forums.unrealengine.com/t/the-math-behind-combining-bc5-normals/365189
+    '    '        'Dim test = Math.Sqrt(1 - (Math.Sqrt(m_R ) + Math.Sqrt(m_G ))) 
+    '    '        source(i).b = 255
+    '    '    End If
+
+    '    '    Source_bytes(i * 4) = source(i).b
+    '    '    Source_bytes((i * 4) + 1) = source(i).g
+    '    '    Source_bytes((i * 4) + 2) = source(i).r
+    '    '    Source_bytes((i * 4) + 3) = source(i).a
+    '    'Next
+
+    '    'Marshal.Copy(Source_bytes, 0, destination, source.Length)
+
+
+    '    Dim source As Byte() = decoder.DecodeRawData(RawDataFixed, Me._Width, Me._Height, Format)
+    '    For i = 0 To source.Length - 1 Step 4
+    '        Dim m_R As Byte = source(i)
+    '        Dim m_G As Byte = source(i + 1)
+    '        Dim m_B As Byte = source(i + 2)
+    '        'Dim alpha As Byte = source(i + 3)
+
+    '        If Format = BCnEncoder.Shared.CompressionFormat.BC5 Then
+    '            'https://github.com/Nominom/BCnEncoder.NET/issues/59
+    '            'https://forums.unrealengine.com/t/the-math-behind-combining-bc5-normals/365189
+    '            'Dim test = Math.Sqrt(1 - (Math.Sqrt(m_R ) + Math.Sqrt(m_G ))) 
+    '            m_B = 255
+    '        End If
+
+    '        source(i) = m_B
+    '        'source(i + 1) = m_G
+    '        source(i + 2) = m_R
+    '        'source(i) = alpha
+    '    Next
+
+    '    Marshal.Copy(source, 0, destination, source.Length)
+    '    Me.m_Bitmap.UnlockBits(bitmapdata)
+
+    'End Sub
+
+    Private Function GetBCnEncoderFormat(ByVal m_TextureFormat As ETextureFormat) As BCnEncoder.Shared.CompressionFormat
+        Select Case m_TextureFormat
+            Case ETextureFormat.BC1
+                Return BCnEncoder.Shared.CompressionFormat.BC1WithAlpha
+                'Case ETextureFormat.BC1WithAlpha
+                'Return BCnEncoder.Shared.CompressionFormat.BC1WithAlpha
+            Case ETextureFormat.BC2
+                Return BCnEncoder.Shared.CompressionFormat.BC2
+            Case ETextureFormat.BC3
+                Return BCnEncoder.Shared.CompressionFormat.BC3
+            Case ETextureFormat.BC4
+                Return BCnEncoder.Shared.CompressionFormat.BC4
+            Case ETextureFormat.BC5
+                Return BCnEncoder.Shared.CompressionFormat.BC5
+            Case ETextureFormat.BC6H_UF16
+                Return BCnEncoder.Shared.CompressionFormat.BC6  '--> currently not supported by BCnEncoder !
+            Case ETextureFormat.BC7
+                Return BCnEncoder.Shared.CompressionFormat.BC7
+        End Select
+
+        Return Nothing
+    End Function
 
     Public Function Save(ByVal SwapEndian_DxtBlock As Boolean, ByVal w As FileWriter) As Boolean
 
         If Me.NeedToSaveRawData Then    '1 - when new bitmap added, rawdata need be created
-            'Dim size As Integer = Me.Size
-            'If (Me.TextureFormat = ETextureFormat.A8R8G8B8) Then
-            'size = ((Me.Width * Me.Height) * 4)
+            'Dim size As Integer = Me.m_Size
+            'If (Me._TextureFormat = ETextureFormat.A8R8G8B8) Then
+            'size = ((Me._Width * Me._Height) * 4)
             'End If
-            Me.m_RawData = New Byte(Me.Size - 1) {}
+            Me.m_RawData = New Byte(Me.m_Size - 1) {}
 
             Me.CreateRawData()  '2 - this is always little endian
 
             If SwapEndian_DxtBlock Then    '3 - if big endian needed -> swap !
-                Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.TextureFormat)
+                Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.m_TextureFormat)
                 For x As Integer = 0 To Me.m_RawData.Length - 1 Step SwapNumBytes
                     Array.Reverse(Me.m_RawData, x, SwapNumBytes)
                 Next x
@@ -274,7 +399,7 @@ Public Class RawImage
             Me.NeedToSaveRawData = False
         Else    'when no rawdata update needed, but endian formats (source vs request) are different
             If Me.m_SwapEndian_DxtBlock <> SwapEndian_DxtBlock Then
-                Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.TextureFormat)
+                Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.m_TextureFormat)
                 For x As Integer = 0 To Me.m_RawData.Length - 1 Step SwapNumBytes
                     Array.Reverse(Me.m_RawData, x, SwapNumBytes)
                 Next x
@@ -287,226 +412,163 @@ Public Class RawImage
         Return True
     End Function
 
-    Private Sub WriteBitmapToA8R8G8B8()
-        If (((Me.m_Bitmap.Height * Me.m_Bitmap.Width) * 4) <= Me.m_RawData.Length) Then
-            Dim num As Integer = 0
-            Dim i As Integer
-            For i = 0 To Me.m_Bitmap.Height - 1
-                Dim j As Integer
-                For j = 0 To Me.m_Bitmap.Width - 1
-                    Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
-                    Dim b As Byte = pixel.B
-                    Dim g As Byte = pixel.G
-                    Dim r As Byte = pixel.R
-                    Dim a As Byte = pixel.A
-                    Me.m_RawData(num) = b
-                    num += 1
-                    Me.m_RawData(num) = g
-                    num += 1
-                    Me.m_RawData(num) = r
-                    num += 1
-                    Me.m_RawData(num) = a
-                    num += 1
-                Next j
-            Next i
-        End If
+    Private Sub WriteBitmapToB8G8R8A8()
+        Dim num As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
+
+                Me.m_RawData(num) = pixel.B
+                num += 1
+                Me.m_RawData(num) = pixel.G
+                num += 1
+                Me.m_RawData(num) = pixel.R
+                num += 1
+                Me.m_RawData(num) = pixel.A
+                num += 1
+            Next j
+        Next i
     End Sub
 
-    Private Sub WriteBitmapToR8G8B8()
-        If (((Me.m_Bitmap.Height * Me.m_Bitmap.Width) * 3) <= Me.m_RawData.Length) Then
-            Dim num As Integer = 0
-            Dim i As Integer
-            For i = 0 To Me.m_Bitmap.Height - 1
-                Dim j As Integer
-                For j = 0 To Me.m_Bitmap.Width - 1
-                    Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
-                    Dim b As Byte = pixel.B
-                    Dim g As Byte = pixel.G
-                    Dim r As Byte = pixel.R
-                    Me.m_RawData(num) = b
-                    num += 1
-                    Me.m_RawData(num) = g
-                    num += 1
-                    Me.m_RawData(num) = r
-                    num += 1
-                Next j
-            Next i
-        End If
+    Private Sub WriteBitmapToR8G8B8A8()
+        Dim num As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
+
+                Me.m_RawData(num) = pixel.R
+                num += 1
+                Me.m_RawData(num) = pixel.G
+                num += 1
+                Me.m_RawData(num) = pixel.B
+                num += 1
+                Me.m_RawData(num) = pixel.A
+                num += 1
+            Next j
+        Next i
     End Sub
 
-    Private Sub WriteBitmapToA4R4G4B4() 'not tested https://forum.unity.com/threads/understanding-argb4444-bytes-format.459057/
-        If (((Me.m_Bitmap.Height * Me.m_Bitmap.Width) * 2) <= Me.m_RawData.Length) Then
-            Dim num As Integer = 0
-            Dim i As Integer
-            For i = 0 To Me.m_Bitmap.Height - 1
-                Dim j As Integer
-                For j = 0 To Me.m_Bitmap.Width - 1
-                    Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
-
-                    Dim r4 As Integer = (pixel.R >> 4)
-                    Dim g4 As Integer = (pixel.G >> 4)
-                    Dim b4 As Integer = (pixel.B >> 4)
-                    Dim a4 As Integer = (pixel.A >> 4)
-                    Me.m_RawData(num) = CByte((g4 << 4) Or b4)
-                    num += 1
-                    Me.m_RawData(num) = CByte((a4 << 4) Or r4)
-                    num += 1
-
-                Next j
-            Next i
-        End If
+    Private Sub WriteBitmapToB8G8R8()
+        Dim num As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
+                Dim b As Byte = pixel.B
+                Dim g As Byte = pixel.G
+                Dim r As Byte = pixel.R
+                Me.m_RawData(num) = b
+                num += 1
+                Me.m_RawData(num) = g
+                num += 1
+                Me.m_RawData(num) = r
+                num += 1
+            Next j
+        Next i
     End Sub
 
-    Private Sub WriteBitmapToR5G6B5() 'not tested   https://forum.unity.com/threads/understanding-argb4444-bytes-format.459057/
-        If (((Me.m_Bitmap.Height * Me.m_Bitmap.Width) * 2) <= Me.m_RawData.Length) Then
-            Dim num As Integer = 0
-            Dim i As Integer
-            For i = 0 To Me.m_Bitmap.Height - 1
-                Dim j As Integer
-                For j = 0 To Me.m_Bitmap.Width - 1
-                    Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
+    Private Sub WriteBitmapToB4G4R4A4()
+        Dim output As New MemoryStream(Me.m_RawData) ', 0, 0)
+        Dim w As New FileWriter(output, Endian.Little)
 
-                    Dim r As Integer = pixel.R
-                    Dim g As Integer = pixel.G
-                    Dim b As Integer = pixel.B
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim Value As UShort = 0
+                Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
 
-                    'int rgb = (b << 10) | (g << 10) | (r << 5);
-                    'int rgb = (r << 16) | (g << 8) | (b);
-                    'int rgb = (r << 5) | (g << 6) | (b << 5);
-                    'int rgb = r | (g << 8) | (b << 16);
-                    'int rgb = (r << 11) | (g << 5) | b;
-                    'int rgb = (r >> 5) | (g >> 6) | (b >> 5);
-                    Dim rgb As Integer = (CByte(CByte(r) >> 3) << 11) Or (CByte(CByte(g) >> 2) << 5) Or (CByte(b) >> 3)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.B / 255) * 15, 0, 4)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.G / 255) * 15, 4, 4)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.R / 255) * 15, 8, 4)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.A / 255) * 15, 12, 4)
 
-                    Me.m_RawData(num) = CByte(rgb)
-                    num += 1
-                    Me.m_RawData(num) = CByte(rgb >> 8)
-                    num += 1
-
-                Next j
-            Next i
-        End If
-
+                w.Write(Value)
+            Next j
+        Next i
     End Sub
 
-    Private Sub WriteBitmapToA32B32G32R32F()    '128-bit float format using 32 bits for the each channel (alpha, blue, green, red)
-        If (((Me.m_Bitmap.Height * Me.m_Bitmap.Width) * 16) <= Me.m_RawData.Length) Then
-            Dim num As Integer = 0
-            Dim i As Integer
-            For i = 0 To Me.m_Bitmap.Height - 1
-                Dim j As Integer
-                For j = 0 To Me.m_Bitmap.Width - 1
-                    Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
-                    Dim r As Byte = pixel.R
-                    Dim g As Byte = pixel.G
-                    Dim b As Byte = pixel.B
-                    Dim a As Byte = pixel.A
-                    Me.m_RawData.CopyTo(BitConverter.GetBytes(CSng(r)), num)
-                    num += 4
-                    Me.m_RawData.CopyTo(BitConverter.GetBytes(CSng(g)), num)
-                    num += 4
-                    Me.m_RawData.CopyTo(BitConverter.GetBytes(CSng(b)), num)
-                    num += 4
-                    Me.m_RawData.CopyTo(BitConverter.GetBytes(CSng(a)), num)
-                    num += 4
-                Next j
-            Next i
-        End If
+    Private Sub WriteBitmapToB5G6R5()
+        Dim output As New MemoryStream(Me.m_RawData) ', 0, 0)
+        Dim w As New FileWriter(output, Endian.Little)
+
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim Value As UShort = 0
+                Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
+
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.B / 255) * 31, 0, 5)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.G / 255) * 63, 5, 6)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.R / 255) * 31, 11, 5)
+
+                w.Write(CUShort(Value))
+            Next j
+        Next i
     End Sub
+
+    Private Sub WriteBitmapToB5G5R5A1()
+        Dim output As New MemoryStream(Me.m_RawData) ', 0, 0)
+        Dim w As New FileWriter(output, Endian.Little)
+
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim Value As UShort = 0
+                Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
+
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.B / 255) * 31, 0, 5)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.G / 255) * 31, 5, 5)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.R / 255) * 31, 10, 5)
+                Value = FifaUtil.SetValueTo16bit(Value, (pixel.A / 255), 15, 1)
+
+                w.Write(Value)
+            Next j
+        Next i
+    End Sub
+
+    Private Sub WriteBitmapToR32G32B32A32F()    '128-bit float format using 32 bits for the each channel (alpha, blue, green, red)
+        Dim output As New MemoryStream(Me.m_RawData) ', 0, 0)
+        Dim w As New FileWriter(output, Endian.Little)
+
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
+
+                w.Write(CSng(pixel.R / 255))
+                w.Write(CSng(pixel.G / 255))
+                w.Write(CSng(pixel.B / 255))
+                w.Write(CSng(pixel.A / 255))
+            Next j
+        Next i
+    End Sub
+
     Private Sub WriteBitmapToDxt()
-        Dim output As New MemoryStream(Me.m_RawData)
-        Dim bw As New FileWriter(output, Endian.Little)
-        'Dim block As New FifaLibrary.DxtBlock(CInt(Me.TextureFormat))   'use external FifaLibrary16.dll because of errors
-        Dim block As New DxtBlock(CInt(Me.TextureFormat), Me.m_SwapEndian_DxtBlock)
-        Dim num As Integer = ((Me.m_Bitmap.Height + 3) \ 4)
-        Dim num2 As Integer = ((Me.m_Bitmap.Width + 3) \ 4)
-        If ((Me.m_Bitmap.Height < 4) OrElse (Me.m_Bitmap.Width < 4)) Then
-            block.Colors(0, 0) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(0, 1) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(0, 2) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(0, 3) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(1, 0) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(1, 1) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(1, 2) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(1, 3) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(2, 0) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(2, 1) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(2, 2) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(2, 3) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(3, 0) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(3, 1) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(3, 2) = Color.FromArgb(0, 128, 128, 128)
-            block.Colors(3, 3) = Color.FromArgb(0, 128, 128, 128)
-            Dim i As Integer
-            For i = 0 To Me.m_Bitmap.Width - 1
-                Dim j As Integer
-                For j = 0 To Me.m_Bitmap.Height - 1
-                    If (((i >= 0) AndAlso (j >= 0)) AndAlso ((i < 4) AndAlso (j < 4))) Then
-                        block.Colors(i, j) = Me.m_Bitmap.GetPixel(i, j)
-                    End If
-                Next j
-            Next i
-            block.Save(bw)
-        Else
-            Dim i As Integer
-            For i = 0 To num - 1
-                Dim num6 As Integer = (i * 4)
-                Dim j As Integer
-                For j = 0 To num2 - 1
-                    Dim num8 As Integer = (j * 4)
-                    block.Colors(0, 0) = Me.m_Bitmap.GetPixel((num8 + 0), (num6 + 0))
-                    block.Colors(0, 1) = Me.m_Bitmap.GetPixel((num8 + 0), (num6 + 1))
-                    block.Colors(0, 2) = Me.m_Bitmap.GetPixel((num8 + 0), (num6 + 2))
-                    block.Colors(0, 3) = Me.m_Bitmap.GetPixel((num8 + 0), (num6 + 3))
-                    block.Colors(1, 0) = Me.m_Bitmap.GetPixel((num8 + 1), (num6 + 0))
-                    block.Colors(1, 1) = Me.m_Bitmap.GetPixel((num8 + 1), (num6 + 1))
-                    block.Colors(1, 2) = Me.m_Bitmap.GetPixel((num8 + 1), (num6 + 2))
-                    block.Colors(1, 3) = Me.m_Bitmap.GetPixel((num8 + 1), (num6 + 3))
-                    block.Colors(2, 0) = Me.m_Bitmap.GetPixel((num8 + 2), (num6 + 0))
-                    block.Colors(2, 1) = Me.m_Bitmap.GetPixel((num8 + 2), (num6 + 1))
-                    block.Colors(2, 2) = Me.m_Bitmap.GetPixel((num8 + 2), (num6 + 2))
-                    block.Colors(2, 3) = Me.m_Bitmap.GetPixel((num8 + 2), (num6 + 3))
-                    block.Colors(3, 0) = Me.m_Bitmap.GetPixel((num8 + 3), (num6 + 0))
-                    block.Colors(3, 1) = Me.m_Bitmap.GetPixel((num8 + 3), (num6 + 1))
-                    block.Colors(3, 2) = Me.m_Bitmap.GetPixel((num8 + 3), (num6 + 2))
-                    block.Colors(3, 3) = Me.m_Bitmap.GetPixel((num8 + 3), (num6 + 3))
-                    block.Save(bw)
-                Next j
-            Next i
-        End If
-        bw.Close()
-        output.Close()
+        Dim Encoder As New BCnEncoder.Encoder.BcEncoder()
+        Encoder.OutputOptions.quality = BCnEncoder.Encoder.CompressionQuality.BestQuality
+        Encoder.OutputOptions.format = GetBCnEncoderFormat(Me.m_TextureFormat)
+        'Encoder.InputOptions.luminanceAsRed = True
+        Me.m_RawData = Encoder.EncodeToRawBytes(Me.m_Bitmap, Me.m_Width, Me.m_Height, Me.m_Width, Me.m_Height)
+
     End Sub
 
-
-    Private Sub WriteBitmapToGrey8()
-        If ((Me.m_Bitmap.Height * Me.m_Bitmap.Width) <= Me.m_RawData.Length) Then
-            Dim num As Integer = 0
-            Dim i As Integer
-            For i = 0 To Me.m_Bitmap.Height - 1
-                Dim j As Integer
-                For j = 0 To Me.m_Bitmap.Width - 1
-                    Dim b As Byte = Me.m_Bitmap.GetPixel(j, i).B
-                    Me.m_RawData(num) = b
-                    num += 1
-                Next j
-            Next i
-        End If
+    Private Sub WriteBitmapToL8()
+        Dim num As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim b As Byte = Me.m_Bitmap.GetPixel(j, i).B
+                Me.m_RawData(num) = b
+                num += 1
+            Next j
+        Next i
     End Sub
 
-    Private Sub WriteBitmapToGrey8Alfa8()
-        If (((Me.m_Bitmap.Height * Me.m_Bitmap.Width) * 4) <= Me.m_RawData.Length) Then
-            Dim num As Integer = 0
-            Dim i As Integer
-            For i = 0 To Me.m_Bitmap.Height - 1
-                Dim j As Integer
-                For j = 0 To Me.m_Bitmap.Width - 1
-                    Dim b As Byte = Me.m_Bitmap.GetPixel(j, i).B
-                    Me.m_RawData(num) = b
-                    num += 1
-                Next j
-            Next i
-        End If
+    Private Sub WriteBitmapToL8A8()
+        Dim num As Integer = 0
+        For i = 0 To Me.m_Bitmap.Height - 1
+            For j = 0 To Me.m_Bitmap.Width - 1
+                Dim pixel As Color = Me.m_Bitmap.GetPixel(j, i)
+                Me.m_RawData(num) = pixel.B
+                num += 1
+                Me.m_RawData(num) = pixel.A
+                num += 1
+            Next j
+        Next i
     End Sub
 
     Private Function ConvertToLinearTexture(ByVal data As Byte(), ByVal m_width As Integer, ByVal m_height As Integer, ByVal m_TextureFormat As ETextureFormat) As Byte()
@@ -516,34 +578,38 @@ Public Class RawImage
         Dim texelPitch As Integer
 
         Select Case m_TextureFormat
-            Case ETextureFormat.DXT1, ETextureFormat.ATI1
+            Case ETextureFormat.BC1, ETextureFormat.BC4
                 blockSize = 4
                 texelPitch = 8
-            Case ETextureFormat.DXT3, ETextureFormat.DXT5, ETextureFormat.ATI2
+            Case ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC5
                 'Return destData 'gives bugs sometimes
                 blockSize = 4
                 texelPitch = 16
-            Case ETextureFormat.A8R8G8B8
+            Case ETextureFormat.B8G8R8A8
                 blockSize = 1
                 texelPitch = 4
-            Case ETextureFormat.GREY8
+            Case ETextureFormat.L8
                 blockSize = 1
                 texelPitch = 1
-            Case ETextureFormat.GREY8ALFA8  'no samples found, experimental
+            Case ETextureFormat.L8A8  'no samples found, experimental
                 blockSize = 1
                 texelPitch = 2
-            Case ETextureFormat.R8G8B8  'no samples found, experimental
+            Case ETextureFormat.B8G8R8  'no samples found, experimental
                 blockSize = 1
                 texelPitch = 2
-            Case ETextureFormat.R5G6B5, ETextureFormat.A4R4G4B4  'no samples found, experimental
+            Case ETextureFormat.B5G6R5, ETextureFormat.B4G4R4A4  'no samples found, experimental
                 blockSize = 2
                 texelPitch = 2
 
-            Case ETextureFormat.A32B32G32R32F
+            Case ETextureFormat.R32G32B32A32Float
                 blockSize = 1
                 texelPitch = 16
 
             Case ETextureFormat.BC6H_UF16
+                blockSize = 4
+                texelPitch = 16
+
+            Case ETextureFormat.BC7
                 blockSize = 4
                 texelPitch = 16
 
@@ -581,31 +647,34 @@ Public Class RawImage
         Dim texelPitch As Integer
 
         Select Case texture
-            Case ETextureFormat.DXT1, ETextureFormat.ATI1
+            Case ETextureFormat.BC1, ETextureFormat.BC4
                 blockSize = 4
                 texelPitch = 8
-            Case ETextureFormat.DXT3, ETextureFormat.DXT5, ETextureFormat.ATI2
+            Case ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC5
                 blockSize = 4
                 texelPitch = 16
-            Case ETextureFormat.A8R8G8B8
+            Case ETextureFormat.B8G8R8A8
                 blockSize = 1
                 texelPitch = 4
-            Case ETextureFormat.GREY8
+            Case ETextureFormat.L8
                 blockSize = 1
                 texelPitch = 1
-            Case ETextureFormat.GREY8ALFA8  'no samples found, experimental
+            Case ETextureFormat.L8A8  'no samples found, experimental
                 blockSize = 1
                 texelPitch = 2
-            Case ETextureFormat.R8G8B8  'no samples found, experimental
+            Case ETextureFormat.B8G8R8  'no samples found, experimental
                 blockSize = 1
                 texelPitch = 2
-            Case ETextureFormat.R5G6B5, ETextureFormat.A4R4G4B4  'no samples found, experimental
+            Case ETextureFormat.B5G6R5, ETextureFormat.B4G4R4A4  'no samples found, experimental
                 blockSize = 2
                 texelPitch = 2
-            Case ETextureFormat.A32B32G32R32F
+            Case ETextureFormat.R32G32B32A32Float
                 blockSize = 1
                 texelPitch = 16
             Case ETextureFormat.BC6H_UF16
+                blockSize = 4
+                texelPitch = 16
+            Case ETextureFormat.BC7
                 blockSize = 4
                 texelPitch = 16
             Case Else
@@ -672,17 +741,19 @@ Public Class RawImage
         Dim SwapNumBytes As Integer = 2
 
         Select Case TextureFormat
-            Case ETextureFormat.DXT1, ETextureFormat.ATI1, ETextureFormat.DXT3, ETextureFormat.DXT5, ETextureFormat.ATI2
+            Case ETextureFormat.BC1, ETextureFormat.BC4, ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC5
                 SwapNumBytes = 2
-            Case ETextureFormat.A8R8G8B8, ETextureFormat.R8G8B8
+            Case ETextureFormat.B8G8R8A8, ETextureFormat.B8G8R8
                 SwapNumBytes = 4
-            Case ETextureFormat.GREY8, ETextureFormat.GREY8ALFA8
+            Case ETextureFormat.L8
                 SwapNumBytes = 1
-            Case ETextureFormat.R5G6B5, ETextureFormat.A4R4G4B4
+            Case ETextureFormat.B5G6R5, ETextureFormat.B4G4R4A4, ETextureFormat.L8A8
                 SwapNumBytes = 2
-            Case ETextureFormat.A32B32G32R32F
+            Case ETextureFormat.R32G32B32A32Float
                 SwapNumBytes = 16
             Case ETextureFormat.BC6H_UF16
+                SwapNumBytes = 2
+            Case ETextureFormat.BC7
                 SwapNumBytes = 2
         End Select
 
@@ -692,7 +763,7 @@ Public Class RawImage
     Friend Sub SetEndianFormat(ByVal BigEndian As Boolean)
 
         If Me.m_SwapEndian_DxtBlock <> BigEndian Then
-            Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.TextureFormat)
+            Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.m_TextureFormat)
             If SwapNumBytes > 1 Then
                 For x As Integer = 0 To m_RawData.Length - 1 Step SwapNumBytes
                     Array.Reverse(Me.m_RawData, x, SwapNumBytes)
@@ -707,23 +778,23 @@ Public Class RawImage
 
             If Tiled360 = True Then
                 ' tile the data
-                Me.m_RawData = ConvertFromLinearTexture(Me.m_RawData, Me.Width, Me.Height, Me.TextureFormat)
+                Me.m_RawData = ConvertFromLinearTexture(Me.m_RawData, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
             ElseIf Tiled360 = False Then
                 ' Untile the data
-                Me.m_RawData = ConvertToLinearTexture(Me.m_RawData, Me.Width, Me.Height, Me.TextureFormat)
+                Me.m_RawData = ConvertToLinearTexture(Me.m_RawData, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
             End If
 
             Me.m_Tiled360 = Tiled360
         End If
     End Sub
 
-    Public Function GetRawData(ByVal BigEndian As Boolean, Optional ByVal Tiled360 As Boolean = False) As Byte()
+    Private Function GetRawData(ByVal BigEndian As Boolean, Optional ByVal Tiled360 As Boolean = False) As Byte()
         Dim RawDataFixed As Byte() '= Nothing '= Me.m_RawData '.Clone
         Dim Current_Tiled360 As Boolean = Me.m_Tiled360
         Dim Current_SwapEndian_DxtBlock As Boolean = Me.m_SwapEndian_DxtBlock
 
         If Me.NeedToSaveRawData Then    '1 - when new bitmap added, rawdata need be created
-            Me.m_RawData = New Byte(Me.Size - 1) {}
+            Me.m_RawData = New Byte(Me.m_Size - 1) {}
             Me.CreateRawData()  '2 - this is always untiled / little endian
             RawDataFixed = Me.m_RawData.Clone
             Current_Tiled360 = False
@@ -733,14 +804,14 @@ Public Class RawImage
             If Current_Tiled360 <> Tiled360 Then
                 If Tiled360 = True Then
                     ' tile the data
-                    Me.m_RawData = ConvertFromLinearTexture(Me.m_RawData, Me.Width, Me.Height, Me.TextureFormat)
+                    Me.m_RawData = ConvertFromLinearTexture(Me.m_RawData, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
                 ElseIf Tiled360 = False Then
                     ' Untile the data
-                    Me.m_RawData = ConvertToLinearTexture(Me.m_RawData, Me.Width, Me.Height, Me.TextureFormat)
+                    Me.m_RawData = ConvertToLinearTexture(Me.m_RawData, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
                 End If
             End If
             If Current_SwapEndian_DxtBlock <> BigEndian Then
-                Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.TextureFormat)
+                Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.m_TextureFormat)
                 For x As Integer = 0 To Me.m_RawData.Length - 1 Step SwapNumBytes
                     Array.Reverse(Me.m_RawData, x, SwapNumBytes)
                 Next x
@@ -756,14 +827,14 @@ Public Class RawImage
         If Current_Tiled360 <> Tiled360 Then
             If Tiled360 = True Then
                 ' tile the data
-                RawDataFixed = ConvertFromLinearTexture(RawDataFixed, Me.Width, Me.Height, Me.TextureFormat)
+                RawDataFixed = ConvertFromLinearTexture(RawDataFixed, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
             ElseIf Tiled360 = False Then
                 ' Untile the data
-                RawDataFixed = ConvertToLinearTexture(RawDataFixed, Me.Width, Me.Height, Me.TextureFormat)
+                RawDataFixed = ConvertToLinearTexture(RawDataFixed, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
             End If
         End If
         If Current_SwapEndian_DxtBlock <> BigEndian Then
-            Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.TextureFormat)
+            Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.m_TextureFormat)
             For x As Integer = 0 To RawDataFixed.Length - 1 Step SwapNumBytes
                 Array.Reverse(RawDataFixed, x, SwapNumBytes)
             Next x
@@ -771,19 +842,19 @@ Public Class RawImage
 
         Return RawDataFixed
     End Function
-    Public Sub SetRawData(ByVal Data As Byte(), ByVal BigEndian As Boolean, Optional ByVal Tiled360 As Boolean = False)
+    Private Sub SetRawData(ByVal Data As Byte(), ByVal BigEndian As Boolean, Optional ByVal Tiled360 As Boolean = False)
         Me.NeedToSaveRawData = False
         If Me.m_Tiled360 <> Tiled360 Then
             If Tiled360 = True Then
                 ' tile the data
-                Data = ConvertFromLinearTexture(Data, Me.Width, Me.Height, Me.TextureFormat)
+                Data = ConvertFromLinearTexture(Data, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
             ElseIf Tiled360 = False Then
                 ' Untile the data
-                Data = ConvertToLinearTexture(Data, Me.Width, Me.Height, Me.TextureFormat)
+                Data = ConvertToLinearTexture(Data, Me.m_Width, Me.m_Height, Me.m_TextureFormat)
             End If
         End If
         If Me.m_SwapEndian_DxtBlock <> BigEndian Then
-            Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.TextureFormat)
+            Dim SwapNumBytes As Integer = GetSwapNumBytes(Me.m_TextureFormat)
             For x As Integer = 0 To Data.Length - 1 Step SwapNumBytes
                 Array.Reverse(Data, x, SwapNumBytes)
             Next x
@@ -805,25 +876,61 @@ Public Class RawImage
         End Set
     End Property
 
-    Friend Property RawData As Byte()
+    Public Property RawData(ByVal BigEndian As Boolean, Optional ByVal Tiled360 As Boolean = False) As Byte()
         Get
-            Return Me.m_RawData
+            Return GetRawData(BigEndian, Tiled360)
         End Get
         Set
-            Me.m_RawData = Value
+            SetRawData(Value, BigEndian, Tiled360)
         End Set
     End Property
 
-    ' Fields
-    Private m_Bitmap As Bitmap
-    Protected Width As UInteger
-    Protected Height As UInteger
-    Protected TextureFormat As ETextureFormat
-    Protected NeedToSaveRawData As Boolean
-    Protected Size As UInteger
+    Public Property Width As UInteger
+        Get
+            Return m_Width
+        End Get
+        Private Set
+            m_Width = Value
+        End Set
+    End Property
 
+    Public Property Height As UInteger
+        Get
+            Return m_Height
+        End Get
+        Private Set
+            m_Height = Value
+        End Set
+    End Property
+
+    Public Property TextureFormat As ETextureFormat
+        Get
+            Return m_TextureFormat
+        End Get
+        Private Set
+            m_TextureFormat = Value
+        End Set
+    End Property
+
+    Protected Property Size As UInteger
+        Get
+            Return m_Size
+        End Get
+        Set
+            m_Size = Value
+        End Set
+    End Property
+
+    Protected NeedToSaveRawData As Boolean
+
+    ' Fields
     Private m_SwapEndian_DxtBlock As Boolean  'DxtBlock - Endian Format : always little endian, unless some (xbox WC10 game, ..)
     Private m_Tiled360 As Boolean
+    Private m_Bitmap As Bitmap
     Private m_RawData As Byte()
+    Private m_Height As UInteger
+    Private m_Width As UInteger
+    Private m_TextureFormat As ETextureFormat
+    Private m_Size As UInteger
 End Class
 

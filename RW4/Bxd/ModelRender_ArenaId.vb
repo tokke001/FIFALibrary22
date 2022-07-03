@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Bxd
     Public Class RenderModel
         'bxd::tRenderModel
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.MODELRENDER_ARENAID
         Public Const ALIGNMENT As Integer = 4
 
@@ -90,6 +90,7 @@
             w.Write(Me.NumRenderObjects)
 
             '-- write with wrong offsets
+            Dim PointerOffsets As Long = w.BaseStream.Position
             For i = 0 To Me.NumRenderObjects - 1
                 w.Write(CInt(0))
             Next
@@ -100,6 +101,7 @@
 
             Dim EndOffset As Long = w.BaseStream.Position
             '-- write again with correct offsets
+            w.BaseStream.Position = PointerOffsets
             For i = 0 To Me.NumRenderObjects - 1
                 w.Write(Me.RenderObjects(i).Offset)
             Next
@@ -131,7 +133,7 @@
         'End Sub
         Public Sub New(ByVal BaseOffset As Long, ByVal RwArena As Rw.Core.Arena.Arena, ByVal r As FileReader)
             Me.RwArena = RwArena
-            Me.Offset = r.ReadUInt32
+            Me.Offset = r.ReadUInt32    '120
             Dim m_NextOffset As Long = r.BaseStream.Position
             r.BaseStream.Position = BaseOffset + Me.Offset
             Me.Load(r)
@@ -140,9 +142,16 @@
 
         Public Sub Load(ByVal r As FileReader)
 
-            Me.BBox = New BBox(r)  'm_v3Min and m_v3Max
+            Dim TestPFxRenderableSimple As Integer = r.ReadInt32
+            If (TestPFxRenderableSimple >= 0 And TestPFxRenderableSimple <= Me.RwArena.Sections.NumObjects) AndAlso (Me.RwArena.Sections.GetObject(TestPFxRenderableSimple).GetType = GetType(EA.FxShader.FxRenderableSimple)) Then
+                Me.BBox = Nothing       '--> not present at UEFA 2006-07 game !
+                Me.PFxRenderableSimple = CType(Me.RwArena.Sections.GetObject(TestPFxRenderableSimple), EA.FxShader.FxRenderableSimple)    'index of SectIndex_HEF0004FxRenderableSimple
+            Else
+                r.BaseStream.Position -= 4
+                Me.BBox = New BBox(r)  'm_v3Min and m_v3Max    
+                Me.PFxRenderableSimple = CType(Me.RwArena.Sections.GetObject(r.ReadInt32), EA.FxShader.FxRenderableSimple)    'index of SectIndex_HEF0004FxRenderableSimple
+            End If
 
-            Me.PFxRenderableSimple = CType(Me.RwArena.Sections.GetObject(r.ReadInt32), EA.FxShader.FxRenderableSimple)    'index of SectIndex_HEF0004FxRenderableSimple
             Me.PFxMaterial = CType(Me.RwArena.Sections.GetObject(r.ReadInt32), EA.FxShader.FxMaterial)            'index of SectIndex_HEF0005FxMaterial
             Me.PMeshCullInfo = r.ReadInt32 'CType(Me.RwArena.Sections.GetObject(r.ReadInt32), MeshCullInfo)          '--> always "00 80", followed with an index wich is refer to sectionmanifest.ArenaSectionSubreferences.records -->  "bxd::tMeshCullInfo" 
             'Console.Error.WriteLine("PMeshCullInfo = " & Me.PMeshCullInfo)
@@ -151,7 +160,9 @@
         Public Sub Save(ByVal BaseOffset As Long, ByVal w As FileWriter)
             Me.Offset = w.BaseStream.Position - BaseOffset
 
-            Me.BBox.Save(w)
+            If Me.BBox IsNot Nothing Then   '--> not present at UEFA 2006-07 game !
+                Me.BBox.Save(w)
+            End If
 
             w.Write(Me.RwArena.Sections.IndexOf(Me.PFxRenderableSimple))
             w.Write(Me.RwArena.Sections.IndexOf(Me.PFxMaterial))
@@ -161,7 +172,7 @@
 
         Private RwArena As Rw.Core.Arena.Arena
         Public Property Offset As UInteger
-        Public Property BBox As New BBox   '2xVector4 (min, max)
+        Public Property BBox As BBox = Nothing   '2xVector4 (min, max)
         Public Property PFxRenderableSimple As EA.FxShader.FxRenderableSimple        'section index of EA_FxShader_FxRenderableSimple ( &HEF0004)
         Public Property PFxMaterial As EA.FxShader.FxMaterial      'section index of EA_FxShader_FxMaterial ( &HEF0005)
         Public Property PMeshCullInfo As Integer 'MeshCullInfo       '--> always "00 80", followed with an index wich is refer to sectionmanifest.ArenaSectionSubreferences.records -->  "bxd::tMeshCullInfo" 

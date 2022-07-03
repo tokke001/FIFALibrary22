@@ -1,290 +1,163 @@
-﻿Imports FIFALibrary22.Dds.DDS_HEADER
-Imports FIFALibrary22.Dds.DDS_HEADER_DXT10
-Imports FIFALibrary22.Dds.DDS_PIXELFORMAT
+﻿Imports System.Drawing
+Imports BCnEncoder.Shared
 
 Namespace Dds
-    Public Class DDSUtil
+    Public Class DdsUtil
 
-        Public Shared Function GetDds(ByVal RawImages As RawImage()(), ByVal TextureType As ETextureType, ByVal TextureFormat As ETextureFormat, ByVal m_Width As UInteger, ByVal m_Height As UInteger) As DDSFile
-            Dim NumFaces As UShort = RawImages.Length
-            Dim NumLevels As UShort = RawImages(0).Length
+        Public Shared Function GetDds(ByVal RawImages As RawImage()()) As DdsFile ', ByVal TextureType As ETextureType, ByVal TextureFormat As ETextureFormat, ByVal m_Width As UInteger, ByVal m_Height As UInteger) As DdsFile
+            Dim PreferDxt10Header As Boolean = False
 
-            Dim m_DdsFile As New DDSFile
+            Dim output As DdsFile
 
-            m_DdsFile.TextureFormat = TextureFormat
+            Dim DxgiFormat As DXGI_FORMAT = RawImages(0)(0).TextureFormat.ToDxgiFormat
+            Dim dxt10Header As DdsHeaderDxt10 = Nothing
+            Dim Header As DdsHeader = DdsHeader.InitializeDx10Header(RawImages(0)(0).Width, RawImages(0)(0).Height, DxgiFormat, PreferDxt10Header, dxt10Header)
 
-            m_DdsFile.DdsHeader.dwSize = 124
+            output = New DdsFile(Header, dxt10Header)
 
-            m_DdsFile.DdsHeader.dwFlags = GetDdsHeaderFlags(TextureType, TextureFormat, NumFaces, NumLevels)
+            Dim NumFaces As UInteger = RawImages.Length
+            Dim NumMipMaps As UInteger = RawImages(0).Length
+            Dim TotalSize As UInteger = 0
 
-            m_DdsFile.DdsHeader.dwHeight = m_Height
-            m_DdsFile.DdsHeader.dwWidth = m_Width
+            For f = 0 To NumFaces - 1
+                output.Faces.Add(New DdsFace(RawImages(f)(0).Width, RawImages(f)(0).Height, RawImages(f)(0).RawData(False).Length, CInt(NumMipMaps)))
+                For mip = 0 To RawImages(f).Length - 1
+                    Dim encoded As Byte() = RawImages(f)(mip).RawData(False)
+                    output.Faces(f).MipMaps(mip) = New DdsMipMap(encoded, RawImages(f)(mip).Width, RawImages(f)(mip).Height)
+                    TotalSize += encoded.Length
+                Next
 
-            m_DdsFile.DdsHeader.dwPitchOrLinearSize = GetPitchOrLinearSize(m_DdsFile.DdsHeader.dwFlags, m_Width, m_Height, TextureFormat)
+            Next
 
-            m_DdsFile.DdsHeader.dwDepth = GetDepth(m_DdsFile.DdsHeader.dwFlags, NumFaces)               'Depth of a volume texture (in pixels), otherwise unused.
-            m_DdsFile.DdsHeader.dwMipMapCount = GetMipMapCount(m_DdsFile.DdsHeader.dwFlags, NumLevels)  'Number of mipmap levels, otherwise unused.
+            output.Header.dwDepth = NumFaces
+            output.Header.dwMipMapCount = NumMipMaps
+            'If numMipMaps > 1 Then
+            '    output.Header.dwCaps = output.Header.dwCaps Or HeaderCaps.DDSCAPS_COMPLEX Or HeaderCaps.DDSCAPS_MIPMAP
+            'End If
 
-            m_DdsFile.DdsHeader.dwReserved1 = New Integer(11 - 1) {}
-
-            '-- Create PixelFormat header
-            m_DdsFile.DdsHeader.ddspf = GetDdsPixelformat(TextureFormat)
-
-            m_DdsFile.DdsHeader.dwCaps = GetDdsHeaderCaps(TextureType, NumFaces, NumLevels)
-            m_DdsFile.DdsHeader.dwCaps2 = GetDdsHeaderCaps2(TextureType, NumFaces)     'for volume/cube textures
-            m_DdsFile.DdsHeader.dwCaps3 = 0     'unused
-            m_DdsFile.DdsHeader.dwCaps4 = 0     'unused
-            m_DdsFile.DdsHeader.dwReserved2 = 0     'unused
-
-            '-- DdsHeader_DX10 (if needed)
-            If m_DdsFile.IsDX10 Then
-                m_DdsFile.DdsHeader_DX10 = GetDX10Header(TextureType, TextureFormat, NumFaces)
+            If NumFaces > 1 Or NumMipMaps > 1 Then  'Or (TextureType = ETextureType.TEXTURE_CUBEMAP Or TextureType = ETextureType.TEXTURE_VOLUME)
+                output.Header.dwCaps = output.Header.dwCaps Or HeaderCaps.DDSCAPS_COMPLEX
+                If NumMipMaps > 1 Then
+                    output.Header.dwCaps = output.Header.dwCaps Or HeaderCaps.DDSCAPS_MIPMAP
+                End If
             End If
 
-            'create rawimage-data
-            m_DdsFile.RawImages = New RawImage(NumFaces - 1)() {}
-            For f = 0 To m_DdsFile.RawImages.Length - 1
-                Dim size As Integer = GraphicUtil.GetTextureSize(m_DdsFile.DdsHeader.dwWidth, m_DdsFile.DdsHeader.dwHeight, TextureFormat) '((((Me.dwWidth / 4) * Me.dwHeight) / 4) * &H10)
-                Dim width As Integer = m_DdsFile.DdsHeader.dwWidth
-                Dim height As Integer = m_DdsFile.DdsHeader.dwHeight
+            If NumFaces > 1 Then
+                If NumFaces = 6 Then
+                    output.Header.dwCaps2 = HeaderCaps2.DDSCAPS2_CUBEMAP
+                    output.Header.dwCaps2 = output.Header.dwCaps2 Or HeaderCaps2.DDSCAPS2_CUBEMAP_NEGATIVEX Or HeaderCaps2.DDSCAPS2_CUBEMAP_NEGATIVEY Or HeaderCaps2.DDSCAPS2_CUBEMAP_NEGATIVEZ Or HeaderCaps2.DDSCAPS2_CUBEMAP_POSITIVEX Or HeaderCaps2.DDSCAPS2_CUBEMAP_POSITIVEY Or HeaderCaps2.DDSCAPS2_CUBEMAP_POSITIVEZ
 
-                m_DdsFile.RawImages(f) = New RawImage(NumLevels - 1) {}
-                For i = 0 To m_DdsFile.RawImages(f).Length - 1
-                    m_DdsFile.RawImages(f)(i) = New RawImage(width, height, TextureFormat, size, False)
-                    m_DdsFile.RawImages(f)(i).SetRawData(RawImages(f)(i).GetRawData(False), False) 'dds always little endian
-                    width = (width \ 2)
-                    height = (height \ 2)
-                    size = GraphicUtil.GetTextureSize(width, height, TextureFormat)  '(size / 4)
+                Else
+                    output.Header.dwCaps2 = HeaderCaps2.DDSCAPS2_VOLUME
+                End If
+            End If
+
+            If (output.Header.dwFlags And HeaderFlags.DDSD_LINEARSIZE) <> 0 Then
+                output.Header.dwPitchOrLinearSize = TotalSize 'CUInt(Math.Truncate(textureData.TotalSize))
+            End If
+
+
+            Return output
+        End Function
+
+        Public Shared Function GetRawImages(FileDds As BCnEncoder.Shared.DdsFile) As RawImage()()
+            Dim Output As RawImage()() = New RawImage(FileDds.Faces.Count - 1)() {}
+            Dim TextureFormat As ETextureFormat = If(FileDds.Header.ddsPixelFormat.IsDxt10Format, FileDds.Dxt10Header.dxgiFormat.ToETextureFormat, FileDds.Header.ddsPixelFormat.DxgiFormat.ToETextureFormat)
+
+            For f = 0 To Output.Length - 1
+                Output(f) = New RawImage(FileDds.Faces(f).MipMaps.Length - 1) {}
+                For mip = 0 To Output(f).Length - 1
+                    Dim Width As UInteger = FileDds.Faces(f).MipMaps(mip).Width
+                    Dim Height As UInteger = FileDds.Faces(f).MipMaps(mip).Height
+                    Dim Size As UInteger = FileDds.Faces(f).MipMaps(mip).Data.Length
+                    Dim SwapEndian_DxtBlock As Boolean = False
+                    Output(f)(mip) = New RawImage(Width, Height, TextureFormat, Size, SwapEndian_DxtBlock) 'With {}
+                    Output(f)(mip).RawData(SwapEndian_DxtBlock) = FileDds.Faces(f).MipMaps(mip).Data
+                Next
+            Next
+
+            Return Output
+        End Function
+
+        Public Shared Function GetBitmapFromDds(FileDds As BCnEncoder.Shared.DdsFile) As Bitmap
+            Dim Output As RawImage '= New RawImage(FileDds.Faces.Count)() {}
+
+            Dim Width As UInteger = FileDds.Faces(0).MipMaps(0).Width
+            Dim Height As UInteger = FileDds.Faces(0).MipMaps(0).Height
+            Dim TextureFormat As ETextureFormat = If(FileDds.Header.ddsPixelFormat.IsDxt10Format, FileDds.Dxt10Header.dxgiFormat.ToETextureFormat, FileDds.Header.ddsPixelFormat.DxgiFormat.ToETextureFormat)
+            Dim Size As UInteger = FileDds.Faces(0).MipMaps(0).Data.Length
+            Dim SwapEndian_DxtBlock As Boolean = False
+            Output = New RawImage(Width, Height, TextureFormat, Size, SwapEndian_DxtBlock) 'With {}
+            Output.RawData(SwapEndian_DxtBlock) = FileDds.Faces(0).MipMaps(0).Data
+
+            Return Output.Bitmap
+        End Function
+
+        Public Shared Function GetBitmapsFromDds(FileDds As BCnEncoder.Shared.DdsFile) As Bitmap()
+            Dim Output As Bitmap() = New Bitmap(FileDds.Faces.Count - 1) {}
+
+            For f = 0 To Output.Length - 1
+                Dim Width As UInteger = FileDds.Faces(f).MipMaps(0).Width
+                Dim Height As UInteger = FileDds.Faces(f).MipMaps(0).Height
+                Dim TextureFormat As ETextureFormat = If(FileDds.Header.ddsPixelFormat.IsDxt10Format, FileDds.Dxt10Header.dxgiFormat.ToETextureFormat, FileDds.Header.ddsPixelFormat.DxgiFormat.ToETextureFormat)
+                Dim Size As UInteger = FileDds.Faces(f).MipMaps(0).Data.Length
+                Dim SwapEndian_DxtBlock As Boolean = False
+                Dim m_RawImage As New RawImage(Width, Height, TextureFormat, Size, SwapEndian_DxtBlock) 'With {}
+                m_RawImage.RawData(SwapEndian_DxtBlock) = FileDds.Faces(f).MipMaps(0).Data
+
+                Output(f) = m_RawImage.Bitmap
+            Next
+
+            Return Output
+        End Function
+
+        Public Shared Function SetBitmapToDds(ByVal FileDds As DdsFile, ByVal Bitmap As Bitmap) As DdsFile   '2D - Keep Formats from Ddsfile
+            Return SetBitmapsToDds(New Bitmap() {Bitmap}, If(FileDds.Header.ddsPixelFormat.IsDxt10Format, FileDds.Dxt10Header.dxgiFormat.ToETextureFormat, FileDds.Header.ddsPixelFormat.DxgiFormat.ToETextureFormat), FileDds.Faces(0).MipMaps.Length)
+        End Function
+
+        Public Shared Function SetBitmapToDds(ByVal Bitmap As Bitmap, ByVal TextureFormat As ETextureFormat, ByVal NumMips As UShort) As DdsFile   '2D
+            Return SetBitmapsToDds(New Bitmap() {Bitmap}, TextureFormat, NumMips)
+        End Function
+
+        Public Shared Function SetBitmapsToDds(ByVal FileDds As DdsFile, ByVal Bitmaps As Bitmap()) As DdsFile   'cubic - Keep Formats from Ddsfile
+            Return SetBitmapsToDds(Bitmaps, If(FileDds.Header.ddsPixelFormat.IsDxt10Format, FileDds.Dxt10Header.dxgiFormat.ToETextureFormat, FileDds.Header.ddsPixelFormat.DxgiFormat.ToETextureFormat), FileDds.Faces(0).MipMaps.Length)
+        End Function
+
+        Public Shared Function SetBitmapsToDds(ByVal Bitmaps As Bitmap(), ByVal TextureFormat As ETextureFormat, ByVal NumMips As UShort) As DdsFile   'cubic
+            Dim m_RawImages As RawImage()() = New RawImage(Bitmaps.Length - 1)() {} '
+
+            For f = 0 To m_RawImages.Length - 1
+                Dim Width As UInteger = Bitmaps(f).Width
+                Dim Height As UInteger = Bitmaps(f).Height
+                Dim SwapEndian_DxtBlock As Boolean = False
+                Dim srcBitmap As Bitmap = Bitmaps(f)
+
+                m_RawImages(f) = New RawImage(NumMips - 1) {}
+
+                For i = 0 To m_RawImages(f).Length - 1
+                    Dim size As Integer = GraphicUtil.GetTextureSize(Width, Height, TextureFormat)
+
+                    m_RawImages(f)(i) = New RawImage(Width, Height, TextureFormat, size, SwapEndian_DxtBlock)
+                    m_RawImages(f)(i).Bitmap = srcBitmap
+
+                    srcBitmap = GraphicUtil.ReduceBitmap(srcBitmap)
+                    Width = (Width \ 2)
+                    Height = (Height \ 2)
                 Next i
             Next f
-            Return m_DdsFile
+
+            Return GetDds(m_RawImages)
         End Function
 
-        Private Shared Function GetDdsHeaderFlags(ByVal TextureType As ETextureType, ByVal TextureFormat As ETextureFormat, ByVal NumFaces As UShort, ByVal NumLevels As UShort) As DdsHeaderFlags
-            Dim dwFlags As DdsHeaderFlags = DdsHeaderFlags.DDSD_CAPS Or DdsHeaderFlags.DDSD_HEIGHT Or DdsHeaderFlags.DDSD_WIDTH Or DdsHeaderFlags.DDSD_PIXELFORMAT
+        Private Shared Function GetFaceSize(ByVal RawMipMaps As RawImage()) As UInteger
+            Dim SizeInBytes As UInteger = 0
+            For mip = 0 To RawMipMaps.Length - 1
+                SizeInBytes += RawMipMaps(mip).RawData(False).Length
+            Next
 
-            Select Case TextureFormat
-                Case ETextureFormat.DXT1, ETextureFormat.DXT3, ETextureFormat.DXT5, ETextureFormat.ATI1, ETextureFormat.ATI2, ETextureFormat.BC6H_UF16    'compressed formats : linearsize
-                    dwFlags = dwFlags Or DdsHeaderFlags.DDSD_LINEARSIZE
-                Case Else   'uncompressed formats : pitch
-                    dwFlags = dwFlags Or DdsHeaderFlags.DDSD_PITCH
-            End Select
-            If (NumFaces > 1 Or TextureType = ETextureType.TEXTURE_VOLUME) And Not TextureType = ETextureType.TEXTURE_CUBEMAP Then
-                dwFlags = dwFlags Or DdsHeaderFlags.DDSD_DEPTH
-            End If
-            If NumLevels > 1 Then
-                dwFlags = dwFlags Or DdsHeaderFlags.DDSD_MIPMAPCOUNT
-            End If
-
-            Return dwFlags
+            Return SizeInBytes
         End Function
 
-        Private Shared Function GetPitchOrLinearSize(ByVal m_DdsHeaderFlags As DdsHeaderFlags, ByVal m_Width As UInteger, ByVal m_Height As UInteger, ByVal TextureFormat As ETextureFormat) As Integer
-            If m_DdsHeaderFlags.HasFlag(DdsHeaderFlags.DDSD_LINEARSIZE) Then     'the total number of bytes in the top level texture for a compressed texture.
-                Return GraphicUtil.GetTextureSize(m_Width, m_Height, TextureFormat)
-            ElseIf m_DdsHeaderFlags.HasFlag(DdsHeaderFlags.DDSD_PITCH) Then      'The pitch or number of bytes per scan line in an uncompressed texture
-                Return GraphicUtil.GetTexturePitch(m_Width, TextureFormat)
-            End If
-
-            Return 0
-        End Function
-
-        Private Shared Function GetDepth(ByVal m_DdsHeaderFlags As DdsHeaderFlags, ByVal num As UInteger) As Integer
-            If m_DdsHeaderFlags.HasFlag(DdsHeaderFlags.DDSD_DEPTH) And num > 1 Then
-                Return num
-            End If
-
-            Return 0
-        End Function
-
-        Private Shared Function GetMipMapCount(ByVal m_DdsHeaderFlags As DdsHeaderFlags, ByVal num As UInteger) As Integer
-            If m_DdsHeaderFlags.HasFlag(DdsHeaderFlags.DDSD_MIPMAPCOUNT) And num > 1 Then
-                Return num
-            End If
-
-            Return 0
-        End Function
-        Public Shared Function GetDdsPixelformat(ByVal TextureFormat As ETextureFormat) As DDS_PIXELFORMAT
-            Dim ddspf As New DDS_PIXELFORMAT
-
-            ddspf.dwSize = 32
-            Select Case TextureFormat
-                Case ETextureFormat.DXT1
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_FOURCC
-                    ddspf.dwFourCC = "DXT1"
-                    ddspf.dwRGBBitCount = 0
-                    ddspf.dwRBitMask = 0
-                    ddspf.dwGBitMask = 0
-                    ddspf.dwBBitMask = 0
-                    ddspf.dwABitMask = 0
-                Case ETextureFormat.DXT3
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_FOURCC
-                    ddspf.dwFourCC = "DXT3"
-                    ddspf.dwRGBBitCount = 0
-                    ddspf.dwRBitMask = 0
-                    ddspf.dwGBitMask = 0
-                    ddspf.dwBBitMask = 0
-                    ddspf.dwABitMask = 0
-                Case ETextureFormat.DXT5
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_FOURCC
-                    ddspf.dwFourCC = "DXT5"
-                    ddspf.dwRGBBitCount = 0
-                    ddspf.dwRBitMask = 0
-                    ddspf.dwGBitMask = 0
-                    ddspf.dwBBitMask = 0
-                    ddspf.dwABitMask = 0
-                Case ETextureFormat.A8R8G8B8
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_RGB Or DdsPixelformatFlags.DDPF_ALPHAPIXELS 'FifaUtil.SwapEndian(&H41000000)
-                    ddspf.dwFourCC = ""
-                    ddspf.dwRGBBitCount = 32
-                    ddspf.dwRBitMask = FifaUtil.SwapEndian(&HFF00)
-                    ddspf.dwGBitMask = FifaUtil.SwapEndian(&HFF0000)
-                    ddspf.dwBBitMask = FifaUtil.SwapEndian(&HFF000000)
-                    ddspf.dwABitMask = FifaUtil.SwapEndian(&HFF)
-                Case ETextureFormat.GREY8
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_LUMINANCE 'FifaUtil.SwapEndian(&H200)
-                    ddspf.dwFourCC = ""
-                    ddspf.dwRGBBitCount = 8
-                    ddspf.dwRBitMask = FifaUtil.SwapEndian(&HFF000000)
-                    ddspf.dwGBitMask = FifaUtil.SwapEndian(&HFF000000)
-                    ddspf.dwBBitMask = FifaUtil.SwapEndian(&HFF000000)
-                    ddspf.dwABitMask = 0
-                Case ETextureFormat.GREY8ALFA8
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_LUMINANCE Or DdsPixelformatFlags.DDPF_ALPHAPIXELS  ' FifaUtil.SwapEndian(&H1000200)
-                    ddspf.dwFourCC = ""
-                    ddspf.dwRGBBitCount = 16
-                    ddspf.dwRBitMask = FifaUtil.SwapEndian(&HFF000000)
-                    ddspf.dwGBitMask = FifaUtil.SwapEndian(&HFF000000)
-                    ddspf.dwBBitMask = FifaUtil.SwapEndian(&HFF000000)
-                    ddspf.dwABitMask = FifaUtil.SwapEndian(&HFF0000)
-                Case ETextureFormat.ATI2
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_FOURCC
-                    ddspf.dwFourCC = "ATI2"
-                    ddspf.dwRGBBitCount = 0
-                    ddspf.dwRBitMask = 0
-                    ddspf.dwGBitMask = 0
-                    ddspf.dwBBitMask = 0
-                    ddspf.dwABitMask = 0
-                Case ETextureFormat.ATI1
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_FOURCC
-                    ddspf.dwFourCC = "ATI1"
-                    ddspf.dwRGBBitCount = 0
-                    ddspf.dwRBitMask = 0
-                    ddspf.dwGBitMask = 0
-                    ddspf.dwBBitMask = 0
-                    ddspf.dwABitMask = 0
-                Case ETextureFormat.A4R4G4B4
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_RGB Or DdsPixelformatFlags.DDPF_ALPHAPIXELS    'FifaUtil.SwapEndian(&H41000000)
-                    ddspf.dwFourCC = ""
-                    ddspf.dwRGBBitCount = 16
-                    ddspf.dwRBitMask = FifaUtil.SwapEndian(&HF0000)
-                    ddspf.dwGBitMask = FifaUtil.SwapEndian(&HF0000000)
-                    ddspf.dwBBitMask = FifaUtil.SwapEndian(&HF000000)
-                    ddspf.dwABitMask = FifaUtil.SwapEndian(&HF00000)
-                Case ETextureFormat.R5G6B5
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_RGB    ' FifaUtil.SwapEndian(&H40000000)
-                    ddspf.dwFourCC = ""
-                    ddspf.dwRGBBitCount = 16
-                    ddspf.dwRBitMask = FifaUtil.SwapEndian(&HF80000)
-                    ddspf.dwGBitMask = FifaUtil.SwapEndian(&HE0070000)
-                    ddspf.dwBBitMask = FifaUtil.SwapEndian(&H1F000000)
-                    ddspf.dwABitMask = FifaUtil.SwapEndian(&H0)
-                Case ETextureFormat.X1R5G5B5
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_RGB Or DdsPixelformatFlags.DDPF_ALPHAPIXELS    ' FifaUtil.SwapEndian(&H41000000)
-                    ddspf.dwFourCC = ""
-                    ddspf.dwRGBBitCount = 16
-                    ddspf.dwRBitMask = FifaUtil.SwapEndian(&H7C0000)
-                    ddspf.dwGBitMask = FifaUtil.SwapEndian(&HE0030000)
-                    ddspf.dwBBitMask = FifaUtil.SwapEndian(&H1F000000)
-                    ddspf.dwABitMask = FifaUtil.SwapEndian(&H800000)
-                Case ETextureFormat.RGBA
-                    Exit Select
-                Case ETextureFormat.BIT8
-                    Exit Select
-                Case ETextureFormat.R8G8B8
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_RGB    ' FifaUtil.SwapEndian(&H40000000)
-                    ddspf.dwFourCC = ""
-                    ddspf.dwRGBBitCount = 24
-                    ddspf.dwRBitMask = FifaUtil.SwapEndian(&HFF00)
-                    ddspf.dwGBitMask = FifaUtil.SwapEndian(&HFF0000)
-                    ddspf.dwBBitMask = FifaUtil.SwapEndian(&HFF000000)
-                    ddspf.dwABitMask = FifaUtil.SwapEndian(&H0)
-                Case ETextureFormat.CTX1
-                    Exit Select
-                Case ETextureFormat.A32B32G32R32F
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_FOURCC 'FifaUtil.SwapEndian(&H4000000)
-                    ddspf.dwFourCC = Chr(116) & Chr(0) & Chr(0) & Chr(0) 'FifaUtil.SwapEndian(&H74000000) '"DX10"
-                    ddspf.dwRGBBitCount = 0 '128
-                    ddspf.dwRBitMask = 0
-                    ddspf.dwGBitMask = 0
-                    ddspf.dwBBitMask = 0
-                    ddspf.dwABitMask = 0
-                Case ETextureFormat.BC6H_UF16
-                    ddspf.dwFlags = DdsPixelformatFlags.DDPF_FOURCC 'FifaUtil.SwapEndian(&H4000000)
-                    ddspf.dwFourCC = "DX10" 'FifaUtil.SwapEndian(&H74000000) '"DX10"
-                    ddspf.dwRGBBitCount = 0 '128
-                    ddspf.dwRBitMask = 0
-                    ddspf.dwGBitMask = 0
-                    ddspf.dwBBitMask = 0
-                    ddspf.dwABitMask = 0
-            End Select
-
-            Return ddspf
-        End Function
-
-        Public Shared Function GetDdsHeaderCaps(ByVal TextureType As ETextureType, ByVal NumFaces As UShort, ByVal NumLevels As UShort) As DdsHeaderCaps
-            Dim dwCaps As DdsHeaderCaps = DdsHeaderCaps.DDSCAPS_TEXTURE
-
-            If NumFaces > 1 Or NumLevels > 1 Or (TextureType = ETextureType.TEXTURE_CUBEMAP Or TextureType = ETextureType.TEXTURE_VOLUME) Then
-                dwCaps = dwCaps Or DdsHeaderCaps.DDSCAPS_COMPLEX
-                If NumLevels > 1 Then
-                    dwCaps = dwCaps Or DdsHeaderCaps.DDSCAPS_MIPMAP
-                End If
-            End If
-
-            Return dwCaps
-        End Function
-
-        Public Shared Function GetDdsHeaderCaps2(ByVal TextureType As ETextureType, ByVal NumFaces As UShort) As DdsHeaderCaps2
-            Dim dwCaps2 As DdsHeaderCaps2 = 0
-
-            If TextureType = ETextureType.TEXTURE_CUBEMAP Then
-                dwCaps2 = DdsHeaderCaps2.DDSCAPS2_CUBEMAP
-                dwCaps2 = dwCaps2 Or DdsHeaderCaps2.DDSCAPS2_CUBEMAP_NEGATIVEX Or DdsHeaderCaps2.DDSCAPS2_CUBEMAP_NEGATIVEY Or DdsHeaderCaps2.DDSCAPS2_CUBEMAP_NEGATIVEZ Or DdsHeaderCaps2.DDSCAPS2_CUBEMAP_POSITIVEX Or DdsHeaderCaps2.DDSCAPS2_CUBEMAP_POSITIVEY Or DdsHeaderCaps2.DDSCAPS2_CUBEMAP_POSITIVEZ
-                'DDSCAPS2_CUBEMAP, and one or more of DSCAPS2_CUBEMAP_POSITIVEX/Y/Z and/or DDSCAPS2_CUBEMAP_NEGATIVEX/Y/Z should be set.
-                'The faces are written in the order: positive x, negative x, positive y, negative y, positive z, negative z, with any missing faces omitted.
-                'Each face is written with its main image, followed by any mipmap levels.
-            Else
-                If NumFaces > 1 Or TextureType = ETextureType.TEXTURE_VOLUME Then
-                    dwCaps2 = DdsHeaderCaps2.DDSCAPS2_VOLUME
-                End If
-            End If
-
-            Return dwCaps2
-        End Function
-        Public Shared Function GetDX10Header(ByVal TextureType As ETextureType, ByVal TextureFormat As ETextureFormat, ByVal NumFaces As UShort) As DDS_HEADER_DXT10
-            Dim DdsHeader_DX10 As New DDS_HEADER_DXT10
-
-            Select Case TextureFormat
-                Case ETextureFormat.A32B32G32R32F
-                    DdsHeader_DX10.dxgiFormat = DXGI_FORMAT.DXGI_FORMAT_R32G32B32A32_FLOAT
-                Case ETextureFormat.BC6H_UF16
-                    DdsHeader_DX10.dxgiFormat = DXGI_FORMAT.DXGI_FORMAT_BC6H_UF16
-
-            End Select
-
-            DdsHeader_DX10.resourceDimension = D3D10_RESOURCE_DIMENSION.D3D10_RESOURCE_DIMENSION_TEXTURE2D
-            If TextureType = ETextureType.TEXTURE_CUBEMAP Then
-                DdsHeader_DX10.miscFlag = D3D10_RESOURCE_MISC.DDS_RESOURCE_MISC_TEXTURECUBE
-                DdsHeader_DX10.arraySize = NumFaces  'For a 2D texture that is also a cube-map texture, this number represents the number of cubes.
-            Else
-                DdsHeader_DX10.miscFlag = 0
-                DdsHeader_DX10.arraySize = 1  'For a 2D texture that is also a cube-map texture, this number represents the number of cubes.
-            End If
-            DdsHeader_DX10.miscFlags2 = D3D10_ALPHA_MODE.DDS_ALPHA_MODE_UNKNOWN   '0
-
-            Return DdsHeader_DX10
-        End Function
 
     End Class
 End Namespace

@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Bxd
     Public Class Camera        'euro08 "stadium_167_3_container_0.rx2" "stadium_167_4_container_0.rx2"
         'bxd::tCamera
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.CAMERA_ARENAID
         Public Const ALIGNMENT As Integer = 16
 

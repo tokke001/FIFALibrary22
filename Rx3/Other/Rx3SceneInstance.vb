@@ -4,12 +4,12 @@
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.SCENE_INSTANCE
         Public Const ALIGNMENT As Integer = 16
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section)
-            MyBase.New(Rx3File)
+        Public Sub New()
+            MyBase.New
         End Sub
 
-        Public Sub New(ByVal Rx3File As Rx3FileRx3Section, ByVal r As FileReader)
-            MyBase.New(Rx3File)
+        Public Sub New(ByVal r As FileReader)
+            MyBase.New
             Me.Load(r)
         End Sub
 
@@ -28,21 +28,17 @@
 
             Me.BBox = New BBox(r)   '2x Vector4 (min, max)
 
-            Me.NumMeshes = r.ReadUInt32
+            Dim m_NumMeshes As UInteger = r.ReadUInt32
             Me.Unknown_3 = r.ReadInt32
 
-            Me.MeshDescriptor = New SceneInstanceMeshDescriptor(Me.NumMeshes - 1) {}
-            For i = 0 To Me.NumMeshes - 1
+            Me.MeshDescriptor = New SceneInstanceMeshDescriptor(m_NumMeshes - 1) {}
+            For i = 0 To m_NumMeshes - 1
                 Me.MeshDescriptor(i) = New SceneInstanceMeshDescriptor
             Next i
 
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
-            Dim BaseOffset As Long = w.BaseStream.Position
-            Me.NumMeshes = Me.MeshDescriptor.Length
-
-
             w.Write(Me.TotalSize)
             w.Write(CUInt(Me.Status))
             w.Write(Me.Unknown_1)
@@ -63,19 +59,44 @@
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, BaseOffset, w.BaseStream.Position)
+            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
 
 
+        Private m_TotalSize As UInteger
+
+        ''' <summary>
+        ''' Total section size (ReadOnly). </summary>
         Public Property TotalSize As UInteger
+            Get
+                Return m_TotalSize
+            End Get
+            Private Set
+                m_TotalSize = Value
+            End Set
+        End Property
+        ''' <summary>
+        ''' Status of the Scene instance. </summary>
         Public Property Status As EStatus   '1 if used, 0 if unused (according to FIFA 15 3D importer/exporter; I didn't see files with '0' yet)
         Public Property Unknown_1 As Integer    'always -1
         Public Property Unknown_2 As Integer    'always 0
+        ''' <summary>
+        ''' Identity matrix. </summary>
         Public Property TransformMatrix As Matrix4x4 'usually an identity matrix
+        ''' <summary>
+        ''' Bounding Box with 2 Vector4 (min, max). </summary>
         Public Property BBox As New BBox   'Vector4 (min, max)
-        Public Property NumMeshes As UInteger
+        ''' <summary>
+        ''' Returns the number of Meshes (ReadOnly). </summary>
+        Public ReadOnly Property NumMeshes As UInteger
+            Get
+                Return If(MeshDescriptor?.Count, 0)
+            End Get
+        End Property
         Public Property Unknown_3 As Integer    'always -1
+        ''' <summary>
+        ''' Gets/Sets the Mesh Descriptors. </summary>
         Public Property MeshDescriptor As SceneInstanceMeshDescriptor()
 
         Public Enum EStatus As UInteger
@@ -105,8 +126,14 @@
             w.Write(Me.MeshIndex)
             w.Write(Me.MaterialIndex)
         End Sub
+        ''' <summary>
+        ''' Bounding Box of the mesh, 2 Vector4 (min, max). </summary>
         Public Property BBox As BBox   'bounding box of the mesh
+        ''' <summary>
+        ''' Index for the vertex buffer and index buffer (starts with 0). </summary>
         Public Property MeshIndex As UInteger   'starts with 0, index for vertex buffer and index buffer
+        ''' <summary>
+        ''' Index for material (starts with 0). </summary>
         Public Property MaterialIndex As UInteger   'starts with 0, index for material
     End Class
 

@@ -1,7 +1,7 @@
 ﻿Namespace Rw.Collision
     Public Class SimpleMappedArray
         'rw::collision::SimpleMappedArray
-        Inherits RWObject
+        Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWCOBJECTTYPE_SIMPLEMAPPEDARRAY
         Public Const ALIGNMENT As Integer = 16
 
