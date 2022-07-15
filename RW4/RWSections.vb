@@ -678,7 +678,12 @@ Namespace Rw
 
         Private Function GetObjectFromMemory(Of T As RwObject)(ByRef m_Object As T) As T
             If m_Object Is Nothing Then
-                m_Object = Me.GetObjects(Of T)(0)
+                Dim m_Objects As List(Of T) = Me.GetObjects(Of T)
+                If m_Objects.Count > 0 Then
+                    m_Object = Me.GetObjects(Of T)(0)
+                Else
+                    m_Object = Nothing
+                End If
             End If
 
             Return m_Object
