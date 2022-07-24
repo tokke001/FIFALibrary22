@@ -92,8 +92,22 @@
 
         End Sub
 
+        Public Function CalcNumTagBits(ByVal NumVolumes As UInteger) As Integer
+            Dim NumTagBits As Integer = 0
+            Do
+                If 2 ^ NumTagBits > NumVolumes Then
+                    Return NumTagBits
+                Else
+                    NumTagBits += 1
+                End If
+            Loop
+
+        End Function
+
         Public Property AABBox As AABBoxTemplate    'same values as at section "ModelCollision_ArenaId" (&HEB0004)
         Public Property VTable As UInteger     '(0) = 184 or 232 or 36 ..., (3) = 4 or 6 or 7             usually "3092885764" (B8 59 B1 04), or "3092902406" (B8 59 F2 06), 3092897798 
+        ''' <summary>
+        ''' Number of bits in tag field of cache block. Use function CalcNumTagBits to calculate this. </summary>
         Public Property NumTagBits As UInteger           '"5" or "6" , "10" ,3, 4,11
         Public Property NumVolumes As UInteger       'Number of arrays
         Public Property Pad As UInteger           'always "0", padding

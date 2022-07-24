@@ -153,13 +153,13 @@
                 Case SectionHash.ANIMATION_SKIN 'Bone Matrices   
                     Return New AnimationSkin(r)
 
-                Case SectionHash.COLLISION_TRI_MESH
+                Case SectionHash.COLLISION_TRI_MESH 'F14
                     Return New CollisionTriMesh(r)
 
                 Case SectionHash.HOTSPOT '(ex. kit positions) 
                     Return New HotSpot(r)
 
-                Case SectionHash.COLLISION
+                Case SectionHash.COLLISION      'F12
                     Return New Collision(r)
 
                     '----- SECTIONS since FIFA 15 -----

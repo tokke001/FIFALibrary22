@@ -20,7 +20,7 @@
             Dim m_NumVertices = r.ReadUInt32
             Me.VertexStride = r.ReadUInt32
             Me.VertexEndianness = r.ReadByte    '0 = Big endian, 1=little (FIFA 11: always big, little not supported !)
-            Me.Padding = r.ReadBytes(3)
+            Me.Pad = r.ReadBytes(3)
 
             Dim m_CurrentEndianness = r.Endianness                  'Get File Endian
             r.Endianness = GetFileEndianness(Me.VertexEndianness)   'Set Vertex Endian
@@ -49,7 +49,7 @@
             w.Write(Me.NumVertices)
             w.Write(Me.VertexStride)
             w.Write(CByte(Me.VertexEndianness))
-            w.Write(Me.Padding)
+            w.Write(Me.Pad)
 
             Dim m_CurrentEndianness = w.Endianness                  'Get File Endian
             w.Endianness = GetFileEndianness(Me.VertexEndianness)   'Set Vertex Endian
@@ -99,7 +99,7 @@
         Public Property VertexEndianness As EVertexEndian
         ''' <summary>
         ''' Empty 0-values. </summary>
-        Public Property Padding As Byte() = New Byte(3 - 1) {}
+        Public Property Pad As Byte() = New Byte(3 - 1) {}
 
         Private m_VertexElements As VertexElement()
 

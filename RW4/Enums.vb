@@ -556,7 +556,7 @@
     End Enum
 
 
-    Public Module TextureFormatHelpers
+    Public Module TextureFormatExtensions
         <System.Runtime.CompilerServices.Extension>
         Public Function ToETextureFormat(ByVal Format As Rw.SurfaceFormat) As ETextureFormat ', ByVal DefaultRx3Format As ETextureFormat) 
 

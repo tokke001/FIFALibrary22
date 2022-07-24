@@ -160,8 +160,8 @@ Public Class Rx2File
                         .NumMipLevels = Me.Sections.Rasters(i).NumMipLevels,
                         .TotalSize = 0
                         }
-                m_texture.Header.Flags_1_TextureEndian = Rx3.TextureHeader.ETextureEndian.TEXTURE_ENDIAN_LITTLE    '1 for little endian, 3 for big endian (image RAW data)
-                m_texture.Header.Flags_2 = 0    'always 0
+                m_texture.Header.DataFormat = Rx3.TextureHeader.EDataFormat.eLinear    ' little endian (image RAW data)
+                m_texture.Header.Pad = 0    'always 0
                 m_texture.TextureFaces = New Rx3.TextureFace(m_texture.Header.NumFaces - 1) {}
                 Dim width As Integer = m_texture.Header.Width
                 Dim height As Integer = m_texture.Header.Height
@@ -210,7 +210,7 @@ Public Class Rx2File
                         .VertexStride = Me.Sections.VertexBuffers(i).VertexStride,
                         .VertexData = Me.Sections.VertexBuffers(i).GetVertexData,
                         .VertexEndianness = Rx3.VertexBuffer.EVertexEndian.Big_Endian,
-                        .Padding = New Byte(3 - 1) {0, 0, 0}
+                        .Pad = New Byte(3 - 1) {0, 0, 0}
                     })
             Next
         End If

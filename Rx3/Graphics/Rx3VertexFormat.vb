@@ -20,8 +20,7 @@ Namespace Rx3
 
             Me.TotalSize = r.ReadUInt32
             Dim m_VertexFormatSize As UInteger = r.ReadUInt32
-            Me.Padding(0) = r.ReadUInt32
-            Me.Padding(1) = r.ReadUInt32
+            Me.Pad = r.ReadBytes(8)
 
             Dim m_StrVertexFormat As String() = Split(CStr(r.ReadChars(m_VertexFormatSize - 1)), " ") 'dont read last char (null-terminator)
 
@@ -37,8 +36,7 @@ Namespace Rx3
 
             w.Write(Me.TotalSize)
             w.Write(Me.VertexFormatSize)
-            w.Write(Me.Padding(0))
-            w.Write(Me.Padding(1))
+            w.Write(Me.Pad)
 
             For i = 0 To Me.Elements.Length - 1
 
@@ -91,7 +89,7 @@ Namespace Rx3
         End Property
         ''' <summary>
         ''' Empty 0-values. </summary>
-        Public Property Padding As UInteger() = New UInteger(2 - 1) {}   '{ 0, 0 }, maybe padding
+        Public Property Pad As Byte() = New Byte(8 - 1) {}   '{ 0, 0 }, maybe padding
         ''' <summary>
         ''' Gets/Sets the VertexFormat Elements. </summary>
         Public Property Elements As Element()

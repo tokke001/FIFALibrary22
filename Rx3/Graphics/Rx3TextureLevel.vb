@@ -43,8 +43,8 @@
         End Sub
 
         ' Fields
-        Public Property Pitch As UInteger
-        Public Property Lines As UInteger
+        Public Property Pitch As UInteger   'dataStride;     // stride of data
+        Public Property Lines As UInteger   'dataHeight;     // data height (blocks)
         Public Property Padding As UInteger
 
     End Class

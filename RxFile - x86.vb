@@ -4,7 +4,7 @@ Imports System.Windows.Forms
 'http://www.soccergaming.com/index.php?threads/rx3-file-format-research-thread.6467750/
 'http://www.soccergaming.com/index.php?threads/fifa-11-pc-file-formats-resarch-renderware-4-5-assets.6468020/
 
-Partial Public Class Rx3HybridFile
+Partial Public Class RxFile
 
     Public Function CreateXFiles(ByVal baseFileName As String) As Boolean
         If (Me.Rx3Section.Sections.IndexBuffers.Count = 0) Then

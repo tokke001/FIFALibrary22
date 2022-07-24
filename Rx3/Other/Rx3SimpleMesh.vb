@@ -20,8 +20,8 @@
             Me.Unknown_2 = r.ReadUInt16
             Me.Unknown_3 = r.ReadUInt16
 
-            Me.Padding(0) = r.ReadUInt32
-            Me.Padding(1) = r.ReadUInt32
+            Me.Pad(0) = r.ReadUInt32
+            Me.Pad(1) = r.ReadUInt32
 
         End Sub
 
@@ -32,8 +32,8 @@
             w.Write(Me.Unknown_2)
             w.Write(Me.Unknown_3)
 
-            w.Write(Me.Padding(0))
-            w.Write(Me.Padding(1))
+            w.Write(Me.Pad(0))
+            w.Write(Me.Pad(1))
 
             FifaUtil.WriteAlignment(w, ALIGNMENT)
         End Sub
@@ -52,7 +52,7 @@
         Public Property Unknown_3 As UShort
         ''' <summary>
         ''' Empty 0-values. </summary>
-        Public Property Padding As UInteger() = New UInteger(2 - 1) {}
+        Public Property Pad As UInteger() = New UInteger(2 - 1) {}
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash
             Return TYPE_CODE

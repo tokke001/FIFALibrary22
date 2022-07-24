@@ -3,7 +3,7 @@
 'http://www.soccergaming.com/index.php?threads/rx3-file-format-research-thread.6467750/
 'http://www.soccergaming.com/index.php?threads/fifa-11-pc-file-formats-resarch-renderware-4-5-assets.6468020/
 
-Partial Public Class Rx3HybridFile
+Public Class Rx3HybridFile
     Inherits RxFile
     Public Sub New()
         MyBase.New
@@ -98,7 +98,7 @@ Partial Public Class Rx3HybridFile
         Return FileOut_Rx2
     End Function
 
-    Public Function ToRx3KitFile(ByVal Rx3FileEndianness As Endian, Optional TextureEndianness As Rx3.TextureHeader.ETextureEndian = Rx3.TextureHeader.ETextureEndian.TEXTURE_ENDIAN_LITTLE) As Rx3File
+    Public Function ToRx3KitFile(ByVal Rx3FileEndianness As Endian, Optional TextureEndianIsBig As Boolean = False) As Rx3File
         If Me.NumTextures > 0 And Me.Rw4Section.Sections.HotSpot IsNot Nothing Then
             Dim FileOut_Rx3 As New Rx3File(Rx3FileEndianness)
 
@@ -108,7 +108,7 @@ Partial Public Class Rx3HybridFile
             ' - Textures
             For i = 0 To Me.Rx3Section.Sections.Textures.Count - 1
                 Dim m_Rx3Texture As Rx3.Texture = Me.Rx3Section.Sections.Textures(i)
-                m_Rx3Texture.SetTextureEndian(TextureEndianness)
+                m_Rx3Texture.SetTextureEndian(TextureEndianIsBig)
 
                 FileOut_Rx3.Sections.AddObject(m_Rx3Texture)
             Next

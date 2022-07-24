@@ -103,7 +103,10 @@ Namespace Rw.Graphics
                 m_RawImages(f) = l_RawImages(f).ToArray
             Next
             '--
-            Return DdsUtil.GetDds(m_RawImages) ', Me.D3d.Format.Dimension, GraphicUtil.GetEFromRWTextureFormat(Me.D3d.Format.TextureFormat), Me.D3d.Format.Width, Me.D3d.Format.Height)
+            Dim m_DdsFile As New DdsFile
+            Dim PreferDx10Header As Boolean = False
+            m_DdsFile.FromRawImages(m_RawImages, PreferDx10Header)
+            Return m_DdsFile
         End Function
 
         Public Function GetKtx() As KtxFile
@@ -160,16 +163,15 @@ Namespace Rw.Graphics
         End Function
 
         Public Function SetDds(ByVal DdsFile As DdsFile, Optional KeepRx3TextureFormat As Boolean = False) As Boolean
-            Dim m_RawImages As RawImage()() = DdsUtil.GetRawImages(DdsFile)
-            Return SetRawImages(KeepRx3TextureFormat, m_RawImages)
+            Return SetRawImages(DdsFile.ToRawImages, KeepRx3TextureFormat)
         End Function
 
         Public Function SetKtx(ByVal KtxFile As KtxFile, Optional KeepRx3TextureFormat As Boolean = False) As Boolean
             Dim m_RawImages As RawImage()() = KtxUtil.GetRawImages(KtxFile)
-            Return SetRawImages(KeepRx3TextureFormat, m_RawImages)
+            Return SetRawImages(m_RawImages, KeepRx3TextureFormat)
         End Function
 
-        Private Function SetRawImages(KeepRx3TextureFormat As Boolean, m_RawImages As RawImage()()) As Boolean
+        Private Function SetRawImages(m_RawImages As RawImage()(), KeepRx3TextureFormat As Boolean) As Boolean
             'Me.Rx3TextureHeader.Flags_1_TextureEndian = Rx3.TextureHeader.ETextureEndian.TEXTURE_ENDIAN_LITTLE     '1
             Me.D3d.Format.Width = m_RawImages(0)(0).Width
             Me.D3d.Format.Height = m_RawImages(0)(0).Height

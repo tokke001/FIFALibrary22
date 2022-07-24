@@ -7,7 +7,7 @@ Imports Microsoft.DirectX.Direct3D
 'http://www.soccergaming.com/index.php?threads/rx3-file-format-research-thread.6467750/
 'http://www.soccergaming.com/index.php?threads/fifa-11-pc-file-formats-resarch-renderware-4-5-assets.6468020/
 
-Public Class RxFile
+Partial Public Class RxFile
 
     Public Sub New()
     End Sub

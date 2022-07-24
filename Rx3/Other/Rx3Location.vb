@@ -18,16 +18,8 @@ Namespace Rx3
         Public Sub Load(ByVal r As FileReader)
 
             Me.TotalSize = r.ReadUInt32
-            Me.Position = New Vector3 With {
-                .X = r.ReadSingle,
-                .Y = r.ReadSingle,
-                .Z = r.ReadSingle
-                }
-            Me.Rotation = New Vector3 With {
-                .X = r.ReadSingle,
-                .Y = r.ReadSingle,
-                .Z = r.ReadSingle
-                }
+            Me.Position = r.ReadVector3
+            Me.Rotation = r.ReadVector3
             Me.Unknown = r.ReadUInt32
 
         End Sub
@@ -35,36 +27,32 @@ Namespace Rx3
         Public Sub Save(ByVal w As FileWriter)
 
             w.Write(Me.TotalSize)
-            w.Write(Me.Position.X)
-            w.Write(Me.Position.Y)
-            w.Write(Me.Position.Z)
+            w.Write(Me.Position)
 
-            w.Write(Me.Rotation.X)
-            w.Write(Me.Rotation.Y)
-            w.Write(Me.Rotation.Z)
+            w.Write(Me.Rotation)
             w.Write(Me.Unknown)
 
             'Padding
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 
             'Get & Write totalsize
-            Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
+            'Me.TotalSize = FifaUtil.WriteSectionTotalSize(w, MyBase.SectionInfo.Offset)
 
         End Sub
 
 
-        Private m_TotalSize As UInteger
+        'Private m_TotalSize As UInteger = 32
 
         ''' <summary>
-        ''' Total section size (ReadOnly). </summary>
-        Public Property TotalSize As UInteger
-            Get
-                Return m_TotalSize
-            End Get
-            Private Set
-                m_TotalSize = Value
-            End Set
-        End Property
+        ''' Total section size. </summary>
+        Public Property TotalSize As UInteger = 32  'at Rx3b files (FIFA 12/13) this isnt the section size: is unknown large value !
+        '    Get
+        '        Return m_TotalSize
+        '    End Get
+        '    Private Set
+        '        m_TotalSize = Value
+        '    End Set
+        'End Property
         ''' <summary>
         ''' Gets/Sets the Position X/Y/Z values. </summary>
         Public Property Position As Vector3

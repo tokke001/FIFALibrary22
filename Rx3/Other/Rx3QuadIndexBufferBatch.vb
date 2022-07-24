@@ -16,9 +16,7 @@
         Public Sub Load(ByVal r As FileReader)
 
             Dim m_NumQIndexBuffers = r.ReadUInt32
-            Me.Unknown(0) = r.ReadUInt32
-            Me.Unknown(1) = r.ReadUInt32
-            Me.Unknown(2) = r.ReadUInt32
+            Me.Pad = r.ReadBytes(12)
 
             Me.QIndexBufferHeaders = New QuadIndexBufferHeader(m_NumQIndexBuffers - 1) {}
             For i = 0 To m_NumQIndexBuffers - 1
@@ -29,9 +27,7 @@
 
         Public Sub Save(ByVal Rx3QIndexBuffers As List(Of QuadIndexBuffer), ByVal w As FileWriter)
             w.Write(If(Rx3QIndexBuffers?.Count, 0))
-            w.Write(Me.Unknown(0))
-            w.Write(Me.Unknown(1))
-            w.Write(Me.Unknown(2))
+            w.Write(Me.Pad)
 
             Me.QIndexBufferHeaders = New QuadIndexBufferHeader(Rx3QIndexBuffers.Count - 1) {}
             For i = 0 To Rx3QIndexBuffers.Count - 1
@@ -54,7 +50,7 @@
         Public Property QIndexBufferHeaders As QuadIndexBufferHeader()
         ''' <summary>
         ''' Empty 0-values. </summary>
-        Public Property Unknown As UInteger() = New UInteger(3 - 1) {}
+        Public Property Pad As Byte() = New Byte(12 - 1) {}   ' padding (0)
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash
             Return TYPE_CODE

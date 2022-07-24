@@ -17,9 +17,7 @@
         Public Sub Load(ByVal r As FileReader)
 
             Dim m_NumIndexbuffers = r.ReadUInt32
-            Me.Unknown(0) = r.ReadUInt32                       'usually: = 0
-            Me.Unknown(1) = r.ReadUInt32                       'usually: = 0
-            Me.Unknown(2) = r.ReadUInt32                       'usually: = 0
+            Me.Pad = r.ReadBytes(12)
 
             Me.IndexBufferHeaders = New IndexBufferHeader(m_NumIndexbuffers - 1) {}
             For i = 0 To m_NumIndexbuffers - 1
@@ -30,9 +28,7 @@
 
         Public Sub Save(ByVal Rx3IndexBuffers As List(Of IndexBuffer), ByVal w As FileWriter)
             w.Write(If(Rx3IndexBuffers?.Count, 0))
-            w.Write(Me.Unknown(0))
-            w.Write(Me.Unknown(1))
-            w.Write(Me.Unknown(2))
+            w.Write(Me.Pad)
 
             Me.IndexBufferHeaders = New IndexBufferHeader(Rx3IndexBuffers.Count - 1) {}
             For i = 0 To Rx3IndexBuffers.Count - 1
@@ -56,7 +52,7 @@
         Public Property IndexBufferHeaders As IndexBufferHeader()
         ''' <summary>
         ''' Empty 0-values. </summary>
-        Public Property Unknown As UInteger() = New UInteger(3 - 1) {}
+        Public Property Pad As Byte() = New Byte(12 - 1) {}   ' padding (0)
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash
             Return TYPE_CODE

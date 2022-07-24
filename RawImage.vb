@@ -283,6 +283,10 @@ Public Class RawImage
         'If (Me._TextureFormat = ETextureFormat.A8R8G8B8) Then
         'Size = ((Me._Width * Me._Height) * 4)
         'End If
+        If Me.m_Height <= 1 Or Me.Width <= 1 Then
+            If Me.m_Height <= 1 Then Me.m_Height = 1
+            If Me.Width <= 1 Then Me.Width = 1
+        End If
         Me.m_RawData = r.ReadBytes(Me.m_Size)
 
         Me.NeedToSaveRawData = False

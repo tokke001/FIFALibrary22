@@ -84,9 +84,9 @@ End Enum
 
 Public Enum ETextureType As Byte
 
-    'TEXTURE_1D = 0     'not confirmed at FIFA?
+    TEXTURE_1D = 0
     TEXTURE_2D = 1
-    'TEXTURE_3D = 2     'not confirmed at FIFA?
+    TEXTURE_3D = 2
     TEXTURE_CUBEMAP = 3     'texture consists of 6 faces
     TEXTURE_VOLUME = 4      'texture consists of multiple layers
 

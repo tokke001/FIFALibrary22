@@ -14,11 +14,6 @@
         End Sub
 
         Public Sub Load(ByVal r As FileReader)
-            'Dim Me_MatrixTransform As MatrixTransform
-            'Dim Me_MatrixBBox As BBox
-            'Dim Me_MeshDescriptor As BBox
-
-
             Me.TotalSize = r.ReadUInt32
             Me.Status = r.ReadUInt32
             Me.Unknown_1 = r.ReadInt32
@@ -28,14 +23,15 @@
 
             Me.BBox = New BBox(r)   '2x Vector4 (min, max)
 
-            Dim m_NumMeshes As UInteger = r.ReadUInt32
-            Me.Unknown_3 = r.ReadInt32
+            If Me.Status = EStatus.Used Then
+                Dim m_NumMeshes As UInteger = r.ReadUInt32
+                Me.Unknown_3 = r.ReadInt32
 
-            Me.MeshDescriptor = New SceneInstanceMeshDescriptor(m_NumMeshes - 1) {}
-            For i = 0 To m_NumMeshes - 1
-                Me.MeshDescriptor(i) = New SceneInstanceMeshDescriptor
-            Next i
-
+                Me.MeshDescriptor = New SceneInstanceMeshDescriptor(m_NumMeshes - 1) {}
+                For i = 0 To m_NumMeshes - 1
+                    Me.MeshDescriptor(i) = New SceneInstanceMeshDescriptor(r)
+                Next i
+            End If
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
@@ -48,13 +44,14 @@
 
             Me.BBox.Save(w)
 
-            w.Write(Me.NumMeshes)
-            w.Write(Me.Unknown_3)
+            If Me.Status = EStatus.Used Then
+                w.Write(Me.NumMeshes)
+                w.Write(Me.Unknown_3)
 
-            For i = 0 To Me.NumMeshes - 1
-                Me.MeshDescriptor(i).Save(w)
-            Next i
-
+                For i = 0 To Me.NumMeshes - 1
+                    Me.MeshDescriptor(i).Save(w)
+                Next i
+            End If
             'Padding
             FifaUtil.WriteAlignment(w, ALIGNMENT)
 

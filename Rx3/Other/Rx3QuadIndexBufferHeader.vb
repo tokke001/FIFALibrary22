@@ -18,14 +18,14 @@
             Me.TotalSize = r.ReadUInt32
             Me.NumIndices_FileLoad = r.ReadUInt32
             Me.IndexStride_FileLoad = r.ReadByte
-            Me.Padding = r.ReadBytes(7)
+            Me.Pad = r.ReadBytes(7)
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
             w.Write(Me.TotalSize)
             w.Write(Me.NumIndices)
             w.Write(Me.IndexStride)
-            w.Write(Me.Padding)
+            w.Write(Me.Pad)
         End Sub
 
         Private m_IndexData As List(Of UInteger)
@@ -77,8 +77,8 @@
             End Get
         End Property
         ''' <summary>
-        ''' Unused values. </summary>
-        Public Property Padding As Byte() = New Byte(7 - 1) {}
+        ''' Empty 0-values. </summary>
+        Public Property Pad As Byte() = New Byte(7 - 1) {}
 
     End Class
 End Namespace

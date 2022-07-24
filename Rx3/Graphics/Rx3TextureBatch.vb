@@ -16,7 +16,7 @@
         Public Sub Load(ByVal r As FileReader)
 
             Me.NumTextures = r.ReadUInt32
-            Me.Unknown = r.ReadBytes(12)
+            Me.Pad = r.ReadBytes(12)
 
             Me.TextureHeaders = New TextureHeader(Me.NumTextures - 1) {}
             For i = 0 To Me.NumTextures - 1
@@ -29,7 +29,7 @@
             Me.NumTextures = m_Rx3Textures.Count
 
             w.Write(Me.NumTextures)
-            w.Write(Me.Unknown)
+            w.Write(Me.Pad)
 
             Me.TextureHeaders = New TextureHeader(Me.NumTextures - 1) {}
             For i = 0 To Me.NumTextures - 1
@@ -44,7 +44,9 @@
         ' Properties
         Public Property NumTextures As UInteger
         Public Property TextureHeaders As TextureHeader()
-        Public Property Unknown As Byte() = New Byte(12 - 1) {}   'maybe padding (0)
+        ''' <summary>
+        ''' Empty 0-values. </summary>
+        Public Property Pad As Byte() = New Byte(12 - 1) {}
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash
             Return TYPE_CODE

@@ -34,7 +34,7 @@
             Me.Signature = r.ReadUInt32
             Me.Offset = r.ReadUInt32
             Me.Size = r.ReadUInt32
-            Me.Unknown = r.ReadUInt32  'maybe: padding
+            Me.Pad = r.ReadUInt32
 
         End Sub
 
@@ -43,7 +43,7 @@
             w.Write(Me.Signature)
             w.Write(Me.Offset)
             w.Write(Me.Size)
-            w.Write(Me.Unknown)
+            w.Write(Me.Pad)
 
         End Sub
 
@@ -76,7 +76,7 @@
         End Property
         ''' <summary>
         ''' Empty 0-value. </summary>
-        Public Property Unknown As UInteger = 0
+        Public Property Pad As UInteger = 0
 
     End Class
 

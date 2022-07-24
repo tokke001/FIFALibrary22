@@ -17,8 +17,7 @@
 
             Me.TotalSize = r.ReadUInt32
             Dim m_NumBones As UInteger = r.ReadUInt32
-            Me.Unknown(0) = r.ReadUInt32
-            Me.Unknown(1) = r.ReadUInt32
+            Me.Pad = r.ReadBytes(8)
 
             For i = 0 To m_NumBones - 1
                 Dim pose As New BonePose(r)
@@ -31,13 +30,11 @@
 
             w.Write(Me.TotalSize)
             w.Write(Me.NumBones)
-            w.Write(Me.Unknown(0))
-            w.Write(Me.Unknown(1))
+            w.Write(Me.Pad)
 
             For i = 0 To Me.NumBones - 1
                 Me.BoneMatrices(i).Save(w)
             Next i
-
 
             'Padding   'usually not needed: already fits oke
             FifaUtil.WriteAlignment(w, ALIGNMENT)
@@ -97,7 +94,7 @@
         End Property
         ''' <summary>
         ''' Empty 0-values. </summary>
-        Public Property Unknown As UInteger() = New UInteger(2 - 1) {}   ' maybe padding
+        Public Property Pad As Byte() = New Byte(8 - 1) {}    'always 0, padding
         ''' <summary>
         ''' Number of BoneMatrices (ReadOnly). </summary>
         Public ReadOnly Property NumBones As UInteger

@@ -17,8 +17,7 @@
 
             Me.TotalSize = r.ReadUInt32
             Me.NumUsedBones = r.ReadByte
-
-            Me.Padding = r.ReadBytes(11)    '0 : padding
+            Me.Pad = r.ReadBytes(11)    '0 : padding
 
             Me.ReservedSize = (Me.TotalSize - 16) \ 2
             Me.UsedBones = r.ReadBytes(Me.ReservedSize)
@@ -58,7 +57,7 @@
             w.Write(Me.TotalSize)
             w.Write(Me.NumUsedBones)
 
-            w.Write(Me.Padding)
+            w.Write(Me.Pad)
 
             w.Write(Me.UsedBones)
             w.Write(m_UsedBonesPositions)
@@ -229,7 +228,7 @@
         End Property
         ''' <summary>
         ''' Empty 0-values. </summary>
-        Public Property Padding As Byte() = New Byte(11 - 1) {}
+        Public Property Pad As Byte() = New Byte(11 - 1) {}
         ''' <summary>
         ''' Number of used bones (ReadOnly). </summary>
         Public Property NumUsedBones As Byte

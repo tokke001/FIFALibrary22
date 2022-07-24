@@ -17,8 +17,7 @@
 
             Me.TotalSize = r.ReadUInt32
             Me.NumNames = r.ReadUInt32
-            Me.Unknown_1 = r.ReadUInt32
-            Me.Unknown_2 = r.ReadUInt32
+            Me.Pad = r.ReadBytes(8)
 
             ReDim Me.Names(Me.NumNames - 1)
             For i = 0 To Me.NumNames - 1
@@ -36,8 +35,7 @@
 
             w.Write(Me.TotalSize)
             w.Write(Me.NumNames)
-            w.Write(Me.Unknown_1)
-            w.Write(Me.Unknown_2)
+            w.Write(Me.Pad)
 
             For i = 0 To Me.NumNames - 1
                 w.Write(CUInt(Me.Names(i).m_Type))
@@ -126,8 +124,7 @@
             End Set
         End Property
         Public Property NumNames As UInteger
-        Public Property Unknown_1 As UInteger
-        Public Property Unknown_2 As UInteger
+        Public Property Pad As Byte() = New Byte(8 - 1) {}
         Public Property Names As NameTableEntry()
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash

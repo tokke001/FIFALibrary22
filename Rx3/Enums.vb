@@ -97,7 +97,7 @@
         B8G8R8 = 127
     End Enum
 
-    Public Module TextureFormatHelpers
+    Public Module TextureFormatExtensions
         <System.Runtime.CompilerServices.Extension>
         Public Function ToETextureFormat(ByVal Format As Rx3.TextureFormat) As ETextureFormat
             Select Case Format

@@ -17,8 +17,7 @@
 
             Me.TotalSize = r.ReadUInt32
             Dim m_NumBones = r.ReadUInt32
-            Me.Unknown(0) = r.ReadUInt32
-            Me.Unknown(1) = r.ReadUInt32
+            Me.Pad = r.ReadBytes(8)
 
             Me.SkeletonBoneInfo = New SkeletonBoneInfo(m_NumBones - 1) {}
             For i = 0 To m_NumBones - 1
@@ -34,8 +33,7 @@
         Public Sub Save(ByVal w As FileWriter)
             w.Write(Me.TotalSize)
             w.Write(Me.NumBones)
-            w.Write(Me.Unknown(0))
-            w.Write(Me.Unknown(1))
+            w.Write(Me.Pad)
 
             For i = 0 To Me.NumBones - 1
                 w.Write(Me.SkeletonBoneInfo(i).Parent)
@@ -99,7 +97,7 @@
         End Property
         ''' <summary>
         ''' Empty 0-values. </summary>
-        Public Property Unknown As UInteger() = New UInteger(2 - 1) {}   '{ 0, 0 }, maybe padding
+        Public Property Pad As Byte() = New Byte(8 - 1) {}    'always 0, padding
         ''' <summary>
         ''' The Skeleton bone-infos. </summary>
         Public Property SkeletonBoneInfo As SkeletonBoneInfo()
