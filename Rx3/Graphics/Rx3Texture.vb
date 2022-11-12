@@ -42,7 +42,9 @@ Namespace Rx3
             For f = 0 To m_RawImages.Length - 1
                 m_RawImages(f) = Me.TextureFaces(f).TextureLevels
             Next
-            Return KtxUtil.GetKtx(m_RawImages) ', Me.Header.TextureType, GraphicUtil.GetEFromRx3TextureFormat(Me.Header.TextureFormat), Me.Header.Width, Me.Header.Height)
+            Dim m_KtxFile As New KtxFile
+            m_KtxFile.FromRawImages(m_RawImages)
+            Return m_KtxFile
         End Function
 
         Public Sub Load(ByVal r As FileReader)
@@ -104,7 +106,7 @@ Namespace Rx3
         End Sub
 
         Public Function SetBitmap(ByVal Bitmap As Bitmap) As Boolean
-            Dim TextureFormat As ETextureFormat = Me.Header.TextureFormat.ToETextureFormat
+            Dim TextureFormat As TextureFormat = Me.Header.TextureFormat
             Dim NumLevels As UShort = Me.Header.NumMipLevels
 
             Me.SetBitmap(Bitmap, TextureFormat, NumLevels)
@@ -145,8 +147,7 @@ Namespace Rx3
         End Function
 
         Public Function SetKtx(ByVal KtxFile As KtxFile, Optional KeepRx3TextureFormat As Boolean = False) As Boolean
-            Dim m_RawImages As RawImage()() = KtxUtil.GetRawImages(KtxFile)
-            Return SetRawImages(m_RawImages, KeepRx3TextureFormat)
+            Return SetRawImages(KtxFile.ToRawImages, KeepRx3TextureFormat)
         End Function
 
         Private Function SetRawImages(m_RawImages As RawImage()(), KeepRx3TextureFormat As Boolean) As Boolean

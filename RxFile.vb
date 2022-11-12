@@ -1,5 +1,6 @@
 ﻿Imports System.Drawing
 Imports BCnEncoder.Shared
+Imports FIFALibrary22.Rw.Collision
 Imports FIFALibrary22.Rw.Core.Arena
 Imports FIFALibrary22.Rx3
 Imports Microsoft.DirectX.Direct3D
@@ -31,19 +32,19 @@ Partial Public Class RxFile
     Public Overridable Function Load(ByVal r As FileReader) As Boolean
         Me.FileSize = r.BaseStream.Length
 
-        Dim str As New String(r.ReadChars(4))
+        Dim Str As Integer = r.ReadInt32
         r.BaseStream.Position = r.BaseStream.Position - 4
-        If (str.Contains("RW4")) Then   'FIFA 11
+        If (Str = &H34575289) Then   'FIFA 11
             Me.Rw4Section = New Arena(r)
             r.BaseStream.Position = Me.Rw4Section.ResourceDescriptor.BaseResourceDescriptors(0).Size
 
             If r.BaseStream.Position + 4 <= r.BaseStream.Length - 1 Then
-                str = New String(r.ReadChars(4))
+                Str = r.ReadInt32
                 r.BaseStream.Position = r.BaseStream.Position - 4
             End If
         End If
 
-        If (str.StartsWith("RX3")) Then
+        If (Str = &H6C335852) Or (Str = &H62335852) Or (Str = &H5258336C) Or (Str = &H52583362) Then
             Me.Rx3Section = New Rx3.Rx3File(Me.Rw4Section, r)
         End If
 
@@ -60,7 +61,6 @@ Partial Public Class RxFile
     End Function
 
     Public Overridable Function Save(ByVal w As FileWriter) As Boolean
-
         '1 - RW4 Section (if present)
         If Me.Rw4Section IsNot Nothing Then
             If Me.Rx3Section Is Nothing Then
@@ -119,6 +119,25 @@ Partial Public Class RxFile
         End If
     End Sub
 
+    Public Property Bitmaps(ByVal Index As UInteger) As Bitmap
+        Get
+            If Me.Rx3Section IsNot Nothing Then
+                Return Me.Rx3Section.Bitmaps(Index)
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Return Me.Rw4Section.Bitmaps(Index)
+            Else
+                Return Nothing ' New List(Of Bitmap)
+            End If
+        End Get
+        Set
+            If Me.Rx3Section IsNot Nothing Then
+                Me.Rx3Section.Bitmaps(Index) = Value
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Me.Rw4Section.Bitmaps(Index) = Value
+            End If
+        End Set
+    End Property
+
     Public Property Bitmaps As List(Of Bitmap)
         Get
             If Me.Rx3Section IsNot Nothing Then
@@ -134,6 +153,25 @@ Partial Public Class RxFile
                 Me.Rx3Section.Bitmaps = Value
             ElseIf Me.Rw4Section IsNot Nothing Then
                 Me.Rw4Section.Bitmaps = Value
+            End If
+        End Set
+    End Property
+
+    Public Property DdsTextures(ByVal Index As UInteger) As DdsFile
+        Get
+            If Me.Rx3Section IsNot Nothing Then
+                Return Me.Rx3Section.DdsTextures(Index)
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Return Me.Rw4Section.DdsTextures(Index)
+            Else
+                Return Nothing ' New List(Of DdsFile)
+            End If
+        End Get
+        Set
+            If Me.Rx3Section IsNot Nothing Then
+                Me.Rx3Section.DdsTextures(Index) = Value
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Me.Rw4Section.DdsTextures(Index) = Value
             End If
         End Set
     End Property
@@ -157,6 +195,25 @@ Partial Public Class RxFile
         End Set
     End Property
 
+    Public Property KtxTextures(ByVal Index As UInteger) As KtxFile
+        Get
+            If Me.Rx3Section IsNot Nothing Then
+                Return Me.Rx3Section.KtxTextures(Index)
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Return Me.Rw4Section.KtxTextures(Index)
+            Else
+                Return Nothing ' New List(Of DdsFile)
+            End If
+        End Get
+        Set
+            If Me.Rx3Section IsNot Nothing Then
+                Me.Rx3Section.KtxTextures(Index) = Value
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Me.Rw4Section.KtxTextures(Index) = Value
+            End If
+        End Set
+    End Property
+
     Public Property KtxTextures As List(Of KtxFile)
         Get
             If Me.Rx3Section IsNot Nothing Then
@@ -172,6 +229,25 @@ Partial Public Class RxFile
                 Me.Rx3Section.KtxTextures = Value
             ElseIf Me.Rw4Section IsNot Nothing Then
                 Me.Rw4Section.KtxTextures = Value
+            End If
+        End Set
+    End Property
+
+    Public Property VertexStreams(ByVal Index As UInteger) As List(Of Vertex)
+        Get
+            If Me.Rx3Section IsNot Nothing Then
+                Return Me.Rx3Section.VertexStreams(Index)
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Return Me.Rw4Section.VertexStreams(Index)
+            Else
+                Return Nothing ' New List(Of List(Of Vertex))
+            End If
+        End Get
+        Set
+            If Me.Rx3Section IsNot Nothing Then
+                Me.Rx3Section.VertexStreams(Index) = Value
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Me.Rw4Section.VertexStreams(Index) = Value
             End If
         End Set
     End Property
@@ -195,6 +271,25 @@ Partial Public Class RxFile
         End Set
     End Property
 
+    Public Property IndexStreams(ByVal Index As UInteger) As List(Of UInteger)
+        Get
+            If Me.Rx3Section IsNot Nothing Then
+                Return Me.Rx3Section.IndexStreams(Index)
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Return Me.Rw4Section.IndexStreams(Index)
+            Else
+                Return Nothing ' New List(Of List(Of UInteger))
+            End If
+        End Get
+        Set
+            If Me.Rx3Section IsNot Nothing Then
+                Me.Rx3Section.IndexStreams(Index) = Value
+            ElseIf Me.Rw4Section IsNot Nothing Then
+                Me.Rw4Section.IndexStreams(Index) = Value
+            End If
+        End Set
+    End Property
+
     Public Property IndexStreams As List(Of List(Of UInteger))
         Get
             If Me.Rx3Section IsNot Nothing Then
@@ -214,21 +309,21 @@ Partial Public Class RxFile
         End Set
     End Property
 
-    Public Property PrimitiveTypes(ByVal MeshIndex As UInteger) As PrimitiveType
+    Public Property PrimitiveTypes(ByVal Index As UInteger) As PrimitiveType
         Get
             If Me.Rw4Section IsNot Nothing Then 'AndAlso Me.RW4Section.Sections.FxRenderableSimples IsNot Nothing Then
-                Return Me.Rw4Section.PrimitiveTypes(MeshIndex)
+                Return Me.Rw4Section.PrimitiveTypes(Index)
             ElseIf Me.Rx3Section IsNot Nothing Then
-                Return Me.Rx3Section.PrimitiveTypes(MeshIndex)
+                Return Me.Rx3Section.PrimitiveTypes(Index)
             Else
                 Return Nothing
             End If
         End Get
         Set
             If Me.Rw4Section IsNot Nothing Then 'AndAlso Me.RW4Section.Sections.FxRenderableSimples IsNot Nothing Then
-                Me.Rw4Section.PrimitiveTypes(MeshIndex) = Value
+                Me.Rw4Section.PrimitiveTypes(Index) = Value
             ElseIf Me.Rx3Section IsNot Nothing Then
-                Me.Rx3Section.PrimitiveTypes(MeshIndex) = Value
+                Me.Rx3Section.PrimitiveTypes(Index) = Value
             End If
         End Set
     End Property
@@ -252,12 +347,12 @@ Partial Public Class RxFile
         End Set
     End Property
 
-    Public Property VertexFormats(ByVal MeshIndex As UInteger) As VertexElement()
+    Public Property VertexFormats(ByVal Index As UInteger) As VertexElement()
         Get
             If Me.Rw4Section IsNot Nothing Then
-                Return Me.Rw4Section.VertexFormats(MeshIndex)
+                Return Me.Rw4Section.VertexFormats(Index)
             ElseIf Me.Rx3Section IsNot Nothing Then
-                Return Me.Rx3Section.VertexFormats(MeshIndex)
+                Return Me.Rx3Section.VertexFormats(Index)
             Else
                 Return Nothing
             End If
@@ -265,9 +360,9 @@ Partial Public Class RxFile
         End Get
         Set
             If Me.Rw4Section IsNot Nothing Then
-                Me.Rw4Section.VertexFormats(MeshIndex) = Value
+                Me.Rw4Section.VertexFormats(Index) = Value
             ElseIf Me.Rx3Section IsNot Nothing Then
-                Me.Rx3Section.VertexFormats(MeshIndex) = Value
+                Me.Rx3Section.VertexFormats(Index) = Value
             End If
         End Set
     End Property
@@ -366,6 +461,25 @@ Partial Public Class RxFile
 
             Return 0
         End Get
+    End Property
+
+    Public Property BoneMatrices(ByVal Index As UInteger) As List(Of BonePose)
+        Get
+            If Me.Rw4Section IsNot Nothing Then
+                Return Me.Rw4Section.BoneMatrices(Index)
+            ElseIf Me.Rx3Section IsNot Nothing Then
+                Return Me.Rx3Section.BoneMatrices(Index)
+            Else
+                Return Nothing
+            End If
+        End Get
+        Set
+            If Me.Rw4Section IsNot Nothing Then
+                Me.Rw4Section.BoneMatrices(Index) = Value
+            ElseIf Me.Rx3Section IsNot Nothing Then
+                Me.Rx3Section.BoneMatrices(Index) = Value
+            End If
+        End Set
     End Property
 
     Public Property BoneMatrices As List(Of List(Of BonePose))

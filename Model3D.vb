@@ -9,12 +9,21 @@ Public Class Model3D
     Public Sub New()
     End Sub
 
+    Public Sub New(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType)
+        Me.Initialize(IndexStream, VertexStream, PrimitiveType)
+    End Sub
+
     Public Sub New(ByVal indexArray As Rx3.IndexBuffer, ByVal vertexArray As Rx3.VertexBuffer, ByVal PrimitiveType As PrimitiveType)
-        Me.Initialize(indexArray, vertexArray, PrimitiveType)
+        Me.Initialize(indexArray.IndexData, vertexArray.VertexData, PrimitiveType)
+    End Sub
+
+    Public Sub New(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType, ByVal textureBitmap As Bitmap)
+        Me.Initialize(IndexStream, VertexStream, PrimitiveType)
+        Me.m_TextureBitmap = textureBitmap
     End Sub
 
     Public Sub New(ByVal indexArray As Rx3.IndexBuffer, ByVal vertexArray As Rx3.VertexBuffer, ByVal PrimitiveType As PrimitiveType, ByVal textureBitmap As Bitmap)
-        Me.Initialize(indexArray, vertexArray, PrimitiveType)
+        Me.Initialize(indexArray.IndexData, vertexArray.VertexData, PrimitiveType)
         Me.m_TextureBitmap = textureBitmap
     End Sub
 
@@ -46,7 +55,7 @@ Public Class Model3D
 
     Public Function Clone() As Model3D
         Dim modeld1 As Model3D = DirectCast(MyBase.MemberwiseClone, Model3D)
-        modeld1.m_Index = DirectCast(Me.m_Index.Clone, Short())
+        modeld1.m_Index = DirectCast(Me.m_Index.Clone, UShort())
         modeld1.m_IndexStream = DirectCast(Me.m_IndexStream.ToArray.Clone, List(Of UInteger))
         modeld1.m_Vertex = DirectCast(Me.m_Vertex.Clone, PositionNormalTextured())
         Return modeld1
@@ -80,10 +89,10 @@ Public Class Model3D
         Next j
     End Sub
 
-    Public Sub Initialize(ByVal indexArray As Rx3.IndexBuffer, ByVal vertexArray As Rx3.VertexBuffer, ByVal PrimitiveType As PrimitiveType)
-        Me.SetVertexArray(vertexArray)
-        Me.SetIndexArray(indexArray, PrimitiveType)
-        Me.ComputeNormals()
+    Public Sub Initialize(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType)
+        Me.SetVertexStreams(VertexStream)
+        Me.SetIndexArray(IndexStream, PrimitiveType)
+        'Me.ComputeNormals()
     End Sub
 
     Public Sub MakeCloser()
@@ -158,7 +167,7 @@ Public Class Model3D
                 Me.m_Index(num8) = 0
             Next num8
         Else
-            Array.Resize(Of Short)(Me.m_Index, (nFaces * 3))
+            Array.Resize(Of UShort)(Me.m_Index, (nFaces * 3))
         End If
         Me.m_NFaces = nFaces
         Dim n As Integer
@@ -443,11 +452,11 @@ Public Class Model3D
         stream.Close()
     End Sub
 
-    Private Sub SetIndexArray(ByVal indexArray As Rx3.IndexBuffer, ByVal PrimitiveType As PrimitiveType)
-        Me.m_NIndex = indexArray.Header.NumIndices
+    Private Sub SetIndexArray(ByVal IndexStream As List(Of UInteger), ByVal PrimitiveType As PrimitiveType)
+        Me.m_NIndex = IndexStream.Count
         Me.m_NOriginalIndex = Me.m_NIndex
-        Me.m_IndexStream = indexArray.IndexData
-        Me.m_NFaces = indexArray.GetNumFaces(PrimitiveType) 'indexArray.NumFaces
+        Me.m_IndexStream = IndexStream
+        Me.m_NFaces = GetNumFaces(IndexStream, PrimitiveType) 'indexArray.NumFaces
         'Me.m_IsTriangleList = indexArray.IsTriangleList
         Me.m_PrimitiveType = PrimitiveType
 
@@ -461,7 +470,7 @@ Public Class Model3D
 
         If Me.m_PrimitiveType = PrimitiveType.TriangleList Then 'Not Me.m_IsTriangleList Then
 
-            Me.m_Index = New Short(Me.m_NIndex - 1) {}
+            Me.m_Index = New UShort(Me.m_NIndex - 1) {}
             For i = 0 To Me.m_NIndex - 1
                 Me.m_Index(i) = Me.m_IndexStream(i)
             Next i
@@ -474,7 +483,7 @@ Public Class Model3D
             'Loop
         ElseIf Me.m_PrimitiveType = PrimitiveType.TriangleFan Then
 
-            Me.m_Index = New Short((Me.m_NFaces * 3) - 1) {}
+            Me.m_Index = New UShort((Me.m_NFaces * 3) - 1) {}
             Dim num2 As Integer = 0
             Dim num3 As Integer = 0 'If((Rx3IndexArray.TriangleListType = ETriangleListType.InvertOdd), 1, 0)
             Dim index As Integer = 0
@@ -511,7 +520,7 @@ Public Class Model3D
 
         Else
 
-            Me.m_Index = New Short(Me.m_NIndex - 1) {}
+            Me.m_Index = New UShort(Me.m_NIndex - 1) {}
             For i = 0 To Me.m_NIndex - 1
                 Me.m_Index(i) = Me.m_IndexStream(i)
             Next i
@@ -519,20 +528,47 @@ Public Class Model3D
         End If
     End Sub
 
-    Private Sub SetVertexArray(ByVal vertexArray As Rx3.VertexBuffer)
-        Me.m_NVertex = vertexArray.NumVertices
+    Private Sub SetVertexStreams(ByVal VertexStream As List(Of Vertex))
+        Me.m_NVertex = VertexStream.Count
         Me.m_NOriginalVertex = Me.m_NVertex
         Me.m_Vertex = New PositionNormalTextured(Me.m_NVertex - 1) {}
         Dim i As Integer
         For i = 0 To Me.m_NVertex - 1
-            Me.m_Vertex(i).X = vertexArray.VertexData(i).Position.X
-            Me.m_Vertex(i).Y = vertexArray.VertexData(i).Position.Y
-            Me.m_Vertex(i).Z = vertexArray.VertexData(i).Position.Z
-            Me.m_Vertex(i).Tu = vertexArray.VertexData(i).TextureCoordinates(0).U
-            Me.m_Vertex(i).Tv = vertexArray.VertexData(i).TextureCoordinates(0).V
+            Me.m_Vertex(i).X = VertexStream(i).Position.X
+            Me.m_Vertex(i).Y = VertexStream(i).Position.Y
+            Me.m_Vertex(i).Z = VertexStream(i).Position.Z
+            Me.m_Vertex(i).Tu = VertexStream(i).TextureCoordinates(0).U
+            Me.m_Vertex(i).Tv = VertexStream(i).TextureCoordinates(0).V
+            If VertexStream(i).Normal IsNot Nothing Then
+                Me.m_Vertex(i).Nx = VertexStream(i).Normal.Normal_x
+                Me.m_Vertex(i).Ny = VertexStream(i).Normal.Normal_y
+                Me.m_Vertex(i).Nz = VertexStream(i).Normal.Normal_z
+            End If
         Next i
     End Sub
 
+    Public Function GetNumFaces(IndexStream As List(Of UInteger), ByVal m_PrimitiveType As PrimitiveType) As Integer
+        Dim NumFaces As Integer = 0
+
+        'https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dprimitivetype
+        If m_PrimitiveType = PrimitiveType.TriangleList Then
+            NumFaces = (IndexStream.Count \ 3)
+
+        ElseIf m_PrimitiveType = PrimitiveType.TriangleFan Then
+            NumFaces = 0
+            For i = 0 To (IndexStream.Count - 2) - 1
+                Dim num8 As Short = IndexStream(i)
+                Dim num9 As Short = IndexStream((i + 1))
+                Dim num10 As Short = IndexStream((i + 2))
+                If ((num8 <> num9) AndAlso ((num9 <> num10) AndAlso (num8 <> num10))) Then
+                    NumFaces += 1
+                End If
+            Next i
+
+        End If
+
+        Return NumFaces
+    End Function
 
     ' Properties
     Public Property TextureFileName As String
@@ -571,7 +607,7 @@ Public Class Model3D
         End Get
     End Property
 
-    Public ReadOnly Property Index As Short()
+    Public ReadOnly Property Index As UShort()
         Get
             Return Me.m_Index
         End Get
@@ -593,7 +629,7 @@ Public Class Model3D
     Private m_NOriginalIndex As Integer
     'Private m_IsTriangleList As Boolean
     Private m_Vertex As PositionNormalTextured()
-    Private m_Index As Short()
+    Private m_Index As UShort()
     Private m_IndexStream As List(Of UInteger) 'UShort()
     Private m_NFaces As Integer
 

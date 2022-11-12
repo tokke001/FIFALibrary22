@@ -1,4 +1,5 @@
 ﻿Imports System.Drawing
+Imports System.Reflection
 Imports BCnEncoder.Shared
 Imports FIFALibrary22.Rw.Core.Arena
 
@@ -249,6 +250,21 @@ Namespace Rx3
             Return True
         End Function
 
+        Public Property Bitmaps(ByVal Index As UInteger) As Bitmap
+            Get
+                If Me.Sections.Textures IsNot Nothing AndAlso Me.Sections.Textures(Index) IsNot Nothing Then
+                    Return Me.Sections.Textures(Index).GetBitmap
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.Textures IsNot Nothing AndAlso Me.Sections.Textures(Index) IsNot Nothing Then
+                    Me.Sections.Textures(Index).SetBitmap(Value)
+                End If
+            End Set
+        End Property
+
         Public Property Bitmaps As List(Of Bitmap)
             Get
                 Dim BitmapArray As New List(Of Bitmap)
@@ -264,6 +280,21 @@ Namespace Rx3
                         Me.Sections.Textures(i).SetBitmap(Value(i))
                     End If
                 Next i
+            End Set
+        End Property
+
+        Public Property DdsTextures(ByVal Index As UInteger) As DdsFile
+            Get
+                If Me.Sections.Textures IsNot Nothing AndAlso Me.Sections.Textures(Index) IsNot Nothing Then
+                    Return Me.Sections.Textures(Index).GetDds
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.Textures IsNot Nothing AndAlso Me.Sections.Textures(Index) IsNot Nothing Then
+                    Me.Sections.Textures(Index).SetDds(Value)
+                End If
             End Set
         End Property
 
@@ -285,6 +316,21 @@ Namespace Rx3
             End Set
         End Property
 
+        Public Property KtxTextures(ByVal Index As UInteger) As KtxFile
+            Get
+                If Me.Sections.Textures IsNot Nothing AndAlso Me.Sections.Textures(Index) IsNot Nothing Then
+                    Return Me.Sections.Textures(Index).GetKtx
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.Textures IsNot Nothing AndAlso Me.Sections.Textures(Index) IsNot Nothing Then
+                    Me.Sections.Textures(Index).SetKtx(Value)
+                End If
+            End Set
+        End Property
+
         Public Property KtxTextures As List(Of KtxFile)
             Get
                 Dim KtxArray As New List(Of KtxFile)
@@ -300,6 +346,21 @@ Namespace Rx3
                         Me.Sections.Textures(i).SetKtx(Value(i))
                     End If
                 Next i
+            End Set
+        End Property
+
+        Public Property VertexStreams(ByVal Index As UInteger) As List(Of Vertex)
+            Get
+                If Me.Sections.VertexBuffers IsNot Nothing AndAlso Me.Sections.VertexBuffers(Index) IsNot Nothing Then
+                    Return Me.Sections.VertexBuffers(Index).VertexData
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.VertexBuffers IsNot Nothing AndAlso Me.Sections.VertexBuffers(Index) IsNot Nothing Then
+                    Me.Sections.VertexBuffers(Index).VertexData = Value
+                End If
             End Set
         End Property
 
@@ -321,6 +382,21 @@ Namespace Rx3
             End Set
         End Property
 
+        Public Property IndexStreams(ByVal Index As UInteger) As List(Of UInteger)
+            Get
+                If Me.Sections.IndexBuffers IsNot Nothing AndAlso Me.Sections.IndexBuffers(Index) IsNot Nothing Then
+                    Return Me.Sections.IndexBuffers(Index).IndexData
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.IndexBuffers IsNot Nothing AndAlso Me.Sections.IndexBuffers(Index) IsNot Nothing Then
+                    Me.Sections.IndexBuffers(Index).IndexData = Value
+                End If
+            End Set
+        End Property
+
         Public Property IndexStreams As List(Of List(Of UInteger))
             Get
                 Dim IndexArray As New List(Of List(Of UInteger))
@@ -338,54 +414,54 @@ Namespace Rx3
                 Next i
             End Set
         End Property
-        Public Property PrimitiveTypes(ByVal MeshIndex As UInteger) As Microsoft.DirectX.Direct3D.PrimitiveType
+
+        Public Property PrimitiveTypes(ByVal Index As UInteger) As Microsoft.DirectX.Direct3D.PrimitiveType
             Get
-                If Me.Sections.SimpleMeshes IsNot Nothing AndAlso Me.Sections.SimpleMeshes(MeshIndex) IsNot Nothing Then
-                    Return Me.Sections.SimpleMeshes(MeshIndex).PrimitiveType
+                If Me.Sections.SimpleMeshes IsNot Nothing AndAlso Me.Sections.SimpleMeshes(Index) IsNot Nothing Then
+                    Return Me.Sections.SimpleMeshes(Index).PrimitiveType
                 End If
 
                 Return Nothing
             End Get
             Set
-                If Me.Sections.SimpleMeshes IsNot Nothing AndAlso Me.Sections.SimpleMeshes(MeshIndex) IsNot Nothing Then
-                    Me.Sections.SimpleMeshes(MeshIndex).PrimitiveType = Value
+                If Me.Sections.SimpleMeshes IsNot Nothing AndAlso Me.Sections.SimpleMeshes(Index) IsNot Nothing Then
+                    Me.Sections.SimpleMeshes(Index).PrimitiveType = Value
                 End If
             End Set
         End Property
+
         Public Property PrimitiveTypes As List(Of Microsoft.DirectX.Direct3D.PrimitiveType)
             Get
-                If Me.Sections.SimpleMeshes IsNot Nothing Then
-                    Dim Result As New List(Of Microsoft.DirectX.Direct3D.PrimitiveType)
-                    For i = 0 To Me.Sections.SimpleMeshes.Count - 1
-                        Result.Add(Me.Sections.SimpleMeshes(i).PrimitiveType)
-                    Next
+                Dim Result As New List(Of Microsoft.DirectX.Direct3D.PrimitiveType)
+                For i = 0 To Me.Sections.SimpleMeshes.Count - 1
+                    Result.Add(Me.Sections.SimpleMeshes(i).PrimitiveType)
+                Next
 
-                    Return Result
+                Return Result
+            End Get
+            Set
+                Dim num As Integer = If((Value.Count < Me.Sections.SimpleMeshes.Count), Value.Count, Me.Sections.SimpleMeshes.Count)
+                For i = 0 To num - 1
+                    If i <= Value.Count - 1 Then '(Value(i) IsNot Nothing) Then
+                        Me.Sections.SimpleMeshes(i).PrimitiveType = Value(i)
+                    End If
+                Next i
+            End Set
+        End Property
+
+        Public Property VertexFormats(ByVal Index As UInteger) As VertexElement()
+            Get
+                If Me.Sections.VertexFormats IsNot Nothing AndAlso Me.Sections.VertexFormats(Index) IsNot Nothing Then
+                    Return Me.Sections.VertexFormats(Index).Elements
                 End If
 
                 Return Nothing
             End Get
             Set
-                If Me.Sections.SimpleMeshes IsNot Nothing AndAlso Me.Sections.SimpleMeshes.Count = Value.Count Then
-                    For i = 0 To Me.Sections.SimpleMeshes.Count - 1
-                        Me.Sections.SimpleMeshes(i).PrimitiveType = Value(i)
-                    Next i
-                End If
-            End Set
-        End Property
-
-        Public Property VertexFormats(ByVal MeshIndex As UInteger) As VertexElement()
-            Get
-                'If Me.Sections.VertexFormats IsNot Nothing AndAlso Me.Sections.VertexFormats(MeshIndex) IsNot Nothing Then
-                Return Me.Sections.VertexFormats(MeshIndex).Elements
-                'End If
-
-            End Get
-            Set
-                If Me.Sections.VertexFormats IsNot Nothing AndAlso Me.Sections.VertexFormats(MeshIndex) IsNot Nothing Then
-                    Me.Sections.VertexFormats(MeshIndex).Elements = New VertexFormat.Element(Value.Count - 1) {}
+                If Me.Sections.VertexFormats IsNot Nothing AndAlso Me.Sections.VertexFormats(Index) IsNot Nothing Then
+                    Me.Sections.VertexFormats(Index).Elements = New VertexFormat.Element(Value.Count - 1) {}
                     For j = 0 To Value.Count - 1
-                        Me.Sections.VertexFormats(MeshIndex).Elements(j) = New VertexFormat.Element(Value(j))
+                        Me.Sections.VertexFormats(Index).Elements(j) = New VertexFormat.Element(Value(j))
                     Next j
                 End If
             End Set
@@ -459,6 +535,21 @@ Namespace Rx3
 
                 Return 0
             End Get
+        End Property
+
+        Public Property BoneMatrices(ByVal Index As UInteger) As List(Of BonePose)
+            Get
+                If Me.Sections.AnimationSkins IsNot Nothing AndAlso Me.Sections.AnimationSkins(Index) IsNot Nothing Then
+                    Return Me.Sections.AnimationSkins(Index).BoneMatrices
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.AnimationSkins IsNot Nothing AndAlso Me.Sections.AnimationSkins(Index) IsNot Nothing Then
+                    Me.Sections.AnimationSkins(Index).BoneMatrices = Value
+                End If
+            End Set
         End Property
 
         Public Property BoneMatrices As List(Of List(Of BonePose))

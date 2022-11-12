@@ -1046,7 +1046,7 @@ Public Class GraphicUtil
     End Sub
 
     Public Shared Function RemoveAlfaChannel(ByVal sourceBitmap As Bitmap) As Boolean
-        If (sourceBitmap Is Nothing) Then
+        If (sourceBitmap Is Nothing) OrElse (sourceBitmap.PixelFormat = PixelFormat.Format24bppRgb) Then
             Return False
         End If
         Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)

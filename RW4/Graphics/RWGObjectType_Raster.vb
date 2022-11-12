@@ -117,11 +117,13 @@ Namespace Rw.Graphics
                 m_RawImages(f) = l_RawImages(f).ToArray
             Next
             '--
-            Return KtxUtil.GetKtx(m_RawImages) ', Me.D3d.Format.Dimension, GraphicUtil.GetEFromRWTextureFormat(Me.D3d.Format.TextureFormat), Me.D3d.Format.Width, Me.D3d.Format.Height)
+            Dim m_KtxFile As New KtxFile
+            m_KtxFile.FromRawImages(m_RawImages)
+            Return m_KtxFile
         End Function
 
         Public Function SetBitmap(ByVal bitmap As Bitmap) As Boolean
-            Dim TextureFormat As ETextureFormat = Me.D3d.Format.TextureFormat.ToETextureFormat
+            Dim TextureFormat As Rw.SurfaceFormat = Me.D3d.Format.TextureFormat
             Dim NumLevels As UShort = Me.NumMipLevels
 
             Me.SetBitmap(bitmap, TextureFormat, NumLevels)
@@ -167,8 +169,7 @@ Namespace Rw.Graphics
         End Function
 
         Public Function SetKtx(ByVal KtxFile As KtxFile, Optional KeepRx3TextureFormat As Boolean = False) As Boolean
-            Dim m_RawImages As RawImage()() = KtxUtil.GetRawImages(KtxFile)
-            Return SetRawImages(m_RawImages, KeepRx3TextureFormat)
+            Return SetRawImages(KtxFile.ToRawImages, KeepRx3TextureFormat)
         End Function
 
         Private Function SetRawImages(m_RawImages As RawImage()(), KeepRx3TextureFormat As Boolean) As Boolean
@@ -273,11 +274,11 @@ Namespace Rw.Graphics
                 Dim Size As UInteger = GraphicUtil.GetTextureSize(width, height, ETextureFormat)
 
                 'ReDim Preserve Me.TextureFaces(f).TextureLevels(NumLevels - 1)
-                RawImages.RemoveRange(1, RawImages(f).Count - 1)
+                RawImages(f).RemoveRange(1, RawImages(f).Count - 1)
                 For i = 0 To NumLevels - 1
 
                     If i <> 0 Then
-                        RawImages(f)(i) = New RawImage(width, height, ETextureFormat, Size, SwapEndian_DxtBlock, Tiled360)
+                        RawImages(f).Add(New RawImage(width, height, ETextureFormat, Size, SwapEndian_DxtBlock, Tiled360))
                         'RawImages(f)(i).CalcPitchLinesSize()
 
                         srcBitmap = GraphicUtil.ReduceBitmap(srcBitmap)
@@ -297,7 +298,7 @@ Namespace Rw.Graphics
             Dim m As New MemoryStream(Me.PBuffer.Data)
             Dim r As New FileReader(m, Endian.Big)
 
-            Dim Fix_CreateMipmaps As Boolean = False     'fix: errors at function "ConvertToLinearTexture" with out of array
+            Dim Fix_CreateMipmaps As Boolean = True     'fix: errors at function "ConvertToLinearTexture" with out of array
 
             Me.RawImageData = New List(Of List(Of RawImage))
             For f = 0 To Me.D3d.Format.Depth - 1
@@ -323,11 +324,11 @@ Namespace Rw.Graphics
                     height = (height \ 2)
                 Next i
 
+                Me.RawImageData.Add(m_RawTextureLevels)
+
                 If Fix_CreateMipmaps Then
                     Me.GenerateMipmaps(Me.NumMipLevels, Me.D3d.Format.TextureFormat)
                 End If
-
-                Me.RawImageData.Add(m_RawTextureLevels)
             Next f
 
         End Sub

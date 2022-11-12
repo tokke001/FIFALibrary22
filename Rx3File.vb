@@ -37,9 +37,9 @@ Public Class Rx3File
     Public Overridable Overloads Function Load(ByVal r As FileReader) As Boolean
         Me.FileSize = r.BaseStream.Length
 
-        Dim str As New String(r.ReadChars(4))
+        Dim Str As Integer = r.ReadInt32
         r.BaseStream.Position = r.BaseStream.Position - 4
-        If (str.StartsWith("RX3")) Then
+        If (Str = &H6C335852) Or (Str = &H62335852) Or (Str = &H5258336C) Or (Str = &H52583362) Then
             MyBase.Load(r)  ' = New Rx3FileRx3Section(Me.RW4Section, r)
         Else
             Return False

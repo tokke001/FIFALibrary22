@@ -1157,7 +1157,9 @@ Public Class FifaUtil
             Value = Value >> Offset
         End If
 
-        Value = Value And CUInt(((2 ^ (Length)) - 1))    ' 6   65536
+        Dim test As UInteger = CUInt(Math.Pow(2, Length))
+        test -= 1   'do this in a new line: because -1 isnt done at model previewer tool when 'Math.Pow(2, Length) - 1'
+        Value = Value And test
 
         Return Value
     End Function

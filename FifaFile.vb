@@ -36,7 +36,7 @@ Public Class FifaFile
             Next i
             Dim str As New String(chArray)
             If str.StartsWith("EASF") Then
-                Me.m_CompressedSize = ((((CInt(buffer(4)) << 24) + (CInt(buffer(5)) << 16)) + (CInt(buffer(6)) << 8)) + CInt(buffer(7)))
+                'Me.m_CompressedSize = ((((CInt(buffer(4)) << 24) + (CInt(buffer(5)) << 16)) + (CInt(buffer(6)) << 8)) + CInt(buffer(7)))
                 r.ReadBytes(8)
                 Me.m_CurrentCompression = ECompressionMode.EASF
                 Me.m_RequiredCompression = Me.m_CurrentCompression
@@ -1207,6 +1207,10 @@ TR_004F:
         If Not File.Exists(path) Then
             Return False
         End If
+        Dim str2 As String = ((IO.Path.GetDirectoryName(path) & "\" & IO.Path.GetFileNameWithoutExtension(path)) & "_decrypted" & IO.Path.GetExtension(path))
+        If File.Exists(str2) Then
+            File.Delete(str2)
+        End If
         If (Not path Is Nothing) Then
             FifaFile.s_ProcessUnEASF.StartInfo.WorkingDirectory = FifaEnvironment.LaunchDir
             FifaFile.s_ProcessUnEASF.StartInfo.FileName = "fifa16_decryptor"
@@ -1217,13 +1221,13 @@ TR_004F:
             FifaFile.s_ProcessUnEASF.Start()
             FifaFile.s_ProcessUnEASF.WaitForExit()
         End If
-        Dim str2 As String = ((IO.Path.GetDirectoryName(path) & "\" & IO.Path.GetFileNameWithoutExtension(path)) & "_decrypted" & IO.Path.GetExtension(path))
         If Not File.Exists(str2) Then
             Return False
         End If
         File.Delete(path)
         File.Move(str2, path)
         Dim length As Integer = CInt(New FileInfo(path).Length)
+        Me.m_UncompressedSize = length
         Dim buffer As Byte() = New Byte(length - 1) {}
         Dim stream1 As New FileStream(path, FileMode.Open, FileAccess.Read)
         stream1.Read(buffer, 0, length)
@@ -1251,9 +1255,9 @@ TR_004F:
         If (Not path Is Nothing) Then
             FifaFile.s_ProcessUnBMS.StartInfo.WorkingDirectory = FifaEnvironment.LaunchDir & "\BMS"
             FifaFile.s_ProcessUnBMS.StartInfo.FileName = "quickbms"
-            FifaFile.s_ProcessUnBMS.StartInfo.CreateNoWindow = True
+            FifaFile.s_ProcessUnBMS.StartInfo.CreateNoWindow = False
             FifaFile.s_ProcessUnBMS.StartInfo.UseShellExecute = True
-            FifaFile.s_ProcessUnBMS.StartInfo.WindowStyle = ProcessWindowStyle.Hidden
+            FifaFile.s_ProcessUnBMS.StartInfo.WindowStyle = ProcessWindowStyle.Normal
             FifaFile.s_ProcessUnBMS.StartInfo.Arguments = CStr("""" & BmsScript & """ """ & path & """ """ & OutputFolder & """") '"""" & BmsScript & """ """ & path & """ """ & OutputFolder & """" 'path
             FifaFile.s_ProcessUnBMS.StartInfo.RedirectStandardOutput = False
             FifaFile.s_ProcessUnBMS.Start()

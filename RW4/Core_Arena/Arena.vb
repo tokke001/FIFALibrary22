@@ -52,8 +52,10 @@ Namespace Rw.Core.Arena
             r.BaseStream.Position = Me.ResourceDescriptor.BaseResourceDescriptors(0).Size
 
             If r.BaseStream.Position + 4 <= r.BaseStream.Length - 1 Then
-                Dim Str As New String(r.ReadChars(4))
-                Return Not Str.StartsWith("RX3")
+                Dim Str As Integer = r.ReadInt32 'New String(r.ReadChars(4))
+                If (Str = &H6C335852) Or (Str = &H62335852) Or (Str = &H5258336C) Or (Str = &H52583362) Then
+                    Return False
+                End If
             End If
 
             Return True
@@ -199,6 +201,21 @@ Namespace Rw.Core.Arena
 
         'End Function
 
+        Public Property Bitmaps(ByVal Index As UInteger) As Bitmap
+            Get
+                If Me.Sections.Rasters IsNot Nothing AndAlso Me.Sections.Rasters(Index) IsNot Nothing Then
+                    Return Me.Sections.Rasters(Index).GetBitmap
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.Rasters IsNot Nothing AndAlso Me.Sections.Rasters(Index) IsNot Nothing Then
+                    Me.Sections.Rasters(Index).SetBitmap(Value)
+                End If
+            End Set
+        End Property
+
         Public Property Bitmaps As List(Of Bitmap)
             Get
                 Dim BitmapArray As New List(Of Bitmap)
@@ -214,6 +231,21 @@ Namespace Rw.Core.Arena
                         Me.Sections.Rasters(i).SetBitmap(Value(i))
                     End If
                 Next i
+            End Set
+        End Property
+
+        Public Property DdsTextures(ByVal Index As UInteger) As DdsFile
+            Get
+                If Me.Sections.Rasters IsNot Nothing AndAlso Me.Sections.Rasters(Index) IsNot Nothing Then
+                    Return Me.Sections.Rasters(Index).GetDds
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.Rasters IsNot Nothing AndAlso Me.Sections.Rasters(Index) IsNot Nothing Then
+                    Me.Sections.Rasters(Index).SetDds(Value)
+                End If
             End Set
         End Property
 
@@ -235,6 +267,21 @@ Namespace Rw.Core.Arena
             End Set
         End Property
 
+        Public Property KtxTextures(ByVal Index As UInteger) As KtxFile
+            Get
+                If Me.Sections.Rasters IsNot Nothing AndAlso Me.Sections.Rasters(Index) IsNot Nothing Then
+                    Return Me.Sections.Rasters(Index).GetKtx
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.Rasters IsNot Nothing AndAlso Me.Sections.Rasters(Index) IsNot Nothing Then
+                    Me.Sections.Rasters(Index).SetKtx(Value)
+                End If
+            End Set
+        End Property
+
         Public Property KtxTextures As List(Of KtxFile)
             Get
                 Dim KtxArray As New List(Of KtxFile)
@@ -250,6 +297,21 @@ Namespace Rw.Core.Arena
                         Me.Sections.Rasters(i).SetKtx(Value(i))
                     End If
                 Next i
+            End Set
+        End Property
+
+        Public Property VertexStreams(ByVal Index As UInteger) As List(Of Vertex)
+            Get
+                If Me.Sections.VertexBuffers IsNot Nothing AndAlso Me.Sections.VertexBuffers(Index) IsNot Nothing Then
+                    Return Me.Sections.VertexBuffers(Index).GetVertexData
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.VertexBuffers IsNot Nothing AndAlso Me.Sections.VertexBuffers(Index) IsNot Nothing Then
+                    Me.Sections.VertexBuffers(Index).SetVertexData(Value)
+                End If
             End Set
         End Property
 
@@ -271,6 +333,21 @@ Namespace Rw.Core.Arena
             End Set
         End Property
 
+        Public Property IndexStreams(ByVal Index As UInteger) As List(Of UInteger)
+            Get
+                If Me.Sections.IndexBuffers IsNot Nothing AndAlso Me.Sections.IndexBuffers(Index) IsNot Nothing Then
+                    Return Me.Sections.IndexBuffers(Index).GetIndexData
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.IndexBuffers IsNot Nothing AndAlso Me.Sections.IndexBuffers(Index) IsNot Nothing Then
+                    Me.Sections.IndexBuffers(Index).SetIndexData(Value)
+                End If
+            End Set
+        End Property
+
         Public Property IndexStreams As List(Of List(Of UInteger))
             Get
                 Dim IndexArray As New List(Of List(Of UInteger))
@@ -289,54 +366,53 @@ Namespace Rw.Core.Arena
             End Set
         End Property
 
-        Public Property PrimitiveTypes(ByVal MeshIndex As UInteger) As Microsoft.DirectX.Direct3D.PrimitiveType
+        Public Property PrimitiveTypes(ByVal Index As UInteger) As Microsoft.DirectX.Direct3D.PrimitiveType
             Get
-                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(MeshIndex) IsNot Nothing Then
-                    Return Me.Sections.FxRenderableSimples(MeshIndex).PrimitiveType
+                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(Index) IsNot Nothing Then
+                    Return Me.Sections.FxRenderableSimples(Index).PrimitiveType
                 End If
 
                 Return Nothing
             End Get
             Set
-                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(MeshIndex) IsNot Nothing Then
-                    Me.Sections.FxRenderableSimples(MeshIndex).PrimitiveType = Value
+                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(Index) IsNot Nothing Then
+                    Me.Sections.FxRenderableSimples(Index).PrimitiveType = Value
                 End If
             End Set
         End Property
+
         Public Property PrimitiveTypes As List(Of Microsoft.DirectX.Direct3D.PrimitiveType)
             Get
-                If Me.Sections.FxRenderableSimples IsNot Nothing Then
-                    Dim Result As List(Of Microsoft.DirectX.Direct3D.PrimitiveType) = New List(Of Microsoft.DirectX.Direct3D.PrimitiveType)
-                    For i = 0 To Me.Sections.FxRenderableSimples.Count - 1
-                        Result.Add(Me.Sections.FxRenderableSimples(i).PrimitiveType)
-                    Next
+                Dim Result As New List(Of Microsoft.DirectX.Direct3D.PrimitiveType)
+                For i = 0 To Me.Sections.FxRenderableSimples.Count - 1
+                    Result.Add(Me.Sections.FxRenderableSimples(i).PrimitiveType)
+                Next
 
-                    Return Result
+                Return Result
+            End Get
+            Set
+                Dim num As Integer = If((Value.Count < Me.Sections.FxRenderableSimples.Count), Value.Count, Me.Sections.FxRenderableSimples.Count)
+                For i = 0 To num - 1
+                    If i <= Value.Count - 1 Then '(Value(i) IsNot Nothing) Then
+                        Me.Sections.FxRenderableSimples(i).PrimitiveType = Value(i)
+                    End If
+                Next i
+            End Set
+        End Property
+
+        Public Property VertexFormats(ByVal Index As UInteger) As VertexElement()
+            Get
+                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(Index) IsNot Nothing Then
+                    Return Me.Sections.FxRenderableSimples(Index).PVertexDescriptor.Elements 'Me.RW4Section.Sections.EmbeddedMeshes(MeshIndex).PVertexBuffers(0).PVertexDescriptor.Elements
                 End If
 
                 Return Nothing
             End Get
             Set
-                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples.Count = Value.Count Then
-                    For i = 0 To Me.Sections.FxRenderableSimples.Count - 1
-                        Me.Sections.FxRenderableSimples(i).PrimitiveType = Value(i)
-                    Next i
-                End If
-            End Set
-        End Property
-
-        Public Property VertexFormats(ByVal MeshIndex As UInteger) As VertexElement()
-            Get
-                'If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(MeshIndex) IsNot Nothing Then
-                Return Me.Sections.FxRenderableSimples(MeshIndex).PVertexDescriptor.Elements 'Me.RW4Section.Sections.EmbeddedMeshes(MeshIndex).PVertexBuffers(0).PVertexDescriptor.Elements
-                'End If
-
-            End Get
-            Set
-                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(MeshIndex) IsNot Nothing Then
-                    Me.Sections.FxRenderableSimples(MeshIndex).PVertexDescriptor.Elements = New Graphics.VertexDescriptor.Element(Value.Count - 1) {}
+                If Me.Sections.FxRenderableSimples IsNot Nothing AndAlso Me.Sections.FxRenderableSimples(Index) IsNot Nothing Then
+                    Me.Sections.FxRenderableSimples(Index).PVertexDescriptor.Elements = New Graphics.VertexDescriptor.Element(Value.Count - 1) {}
                     For j = 0 To Value.Count - 1
-                        Me.Sections.FxRenderableSimples(MeshIndex).PVertexDescriptor.Elements(j) = New Graphics.VertexDescriptor.Element(Value(j))
+                        Me.Sections.FxRenderableSimples(Index).PVertexDescriptor.Elements(j) = New Graphics.VertexDescriptor.Element(Value(j))
                     Next j
                 End If
             End Set
@@ -418,6 +494,21 @@ Namespace Rw.Core.Arena
 
                 Return 0
             End Get
+        End Property
+
+        Public Property BoneMatrices(ByVal Index As UInteger) As List(Of BonePose)
+            Get
+                If Me.Sections.AnimationSkins IsNot Nothing AndAlso Me.Sections.AnimationSkins(Index) IsNot Nothing Then
+                    Return Me.Sections.AnimationSkins(Index).BoneMatrices
+                End If
+
+                Return Nothing
+            End Get
+            Set
+                If Me.Sections.AnimationSkins IsNot Nothing AndAlso Me.Sections.AnimationSkins(Index) IsNot Nothing Then
+                    Me.Sections.AnimationSkins(Index).BoneMatrices = Value
+                End If
+            End Set
         End Property
 
         Public Property BoneMatrices As List(Of List(Of BonePose))
