@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Bxd
-    Public Class Instance
+    <Serializable> Public Class Instance
         'bxd::tInstance
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.MODELINSTANCE_ARENAID

@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class SimpleMesh
+<Serializable> Public Class SimpleMesh
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.SIMPLE_MESH
         Public Const ALIGNMENT As Integer = 16

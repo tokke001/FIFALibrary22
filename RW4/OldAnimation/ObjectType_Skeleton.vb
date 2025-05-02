@@ -1,5 +1,5 @@
 ﻿Namespace Rw.OldAnimation
-    Public Class Skeleton
+<Serializable> Public Class Skeleton
         'rw::oldanimation::Skeleton
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.OBJECTTYPE_SKELETON
@@ -117,7 +117,7 @@
         End Function
     End Class
 
-    Public Class SkeletonBone
+<Serializable> Public Class SkeletonBone
         ''' <summary>
         ''' Bone name (FNV132 hashed). </summary>
         Public Property Name As BoneNameHash    'hashed : FNV132 --> https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function

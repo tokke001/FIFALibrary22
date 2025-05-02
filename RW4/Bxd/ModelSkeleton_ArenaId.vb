@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Bxd
-    Public Class Skeleton
+    <Serializable> Public Class Skeleton
         'bxd::tSkeleton
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.MODELSKELETON_ARENAID
@@ -54,7 +54,7 @@
         End Function
     End Class
 
-    Public Class SkeletonBone
+    <Serializable> Public Class SkeletonBone
         'bxd::tSkeletonBone
         Public Sub New()
         End Sub

@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Core.Arena
-    Public Class Buffer
+    <Serializable> Public Class Buffer
         'rw::Core::Arena::?
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWOBJECTTYPE_BUFFER

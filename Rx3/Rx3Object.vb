@@ -1,6 +1,6 @@
 ﻿
 Namespace Rx3
-    Public MustInherit Class Rx3Object
+    <Serializable> Public MustInherit Class Rx3Object
 
         ''' The owner rx3file class. 
         'Protected Friend Rx3File As Rx3FileRx3Section

@@ -1,5 +1,5 @@
 ﻿Namespace AudioBin
-    Public Class XmlSorter
+<Serializable> Public Class XmlSorter
         Public Property Id As Long
         Public Property StrValue As String = ""
     End Class

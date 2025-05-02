@@ -1,6 +1,6 @@
 ﻿Imports Microsoft.DirectX
 
-Public Class BonePose
+<Serializable> Public Class BonePose
     Public Sub New()
     End Sub
     Public Sub New(ByVal r As FileReader)

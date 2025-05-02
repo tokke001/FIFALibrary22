@@ -1,5 +1,5 @@
 ﻿Namespace AudioBin.RepetitionPools
-    Public Class Pool
+<Serializable> Public Class Pool
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As BinaryReader)

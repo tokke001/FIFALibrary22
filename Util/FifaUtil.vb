@@ -540,9 +540,7 @@ Public Class FifaUtil
     End Function
 
     Public Shared Function ReadString(ByVal r As FileReader, ByVal offset As Long, ByVal length As Integer) As String
-        Dim position As Long = r.BaseStream.Position
         r.BaseStream.Position = offset
-        r.BaseStream.Position = position
         Return FifaUtil.ue.GetString(r.ReadBytes(length))
     End Function
 

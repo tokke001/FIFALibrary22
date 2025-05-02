@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Core.Arena
-    Public Class ArenaSectionManifest
+    <Serializable> Public Class ArenaSectionManifest
         'rw::core::arena::ArenaSectionManifest
         Inherits ArenaSection
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWOBJECTTYPE_SECTIONMANIFEST
@@ -107,7 +107,7 @@
 
         Private Function IndexOf(ByVal m_Type As Rw.SectionTypeCode) As Integer
 
-            For i As Integer = 0 To Sections.count - 1
+            For i As Integer = 0 To Sections.Count - 1
                 If Sections(i).TypeCode = m_Type Then
                     Return i
                 End If

@@ -1,5 +1,5 @@
 ﻿Namespace Rw
-    Public Class ResourceDescriptor
+<Serializable> Public Class ResourceDescriptor
         'rw::ResourceDescriptor
         'Inherits BaseResourceDescriptor
         'Public Sub New(r As FileReader)
@@ -37,7 +37,7 @@
         Public Property BaseResourceDescriptors As BaseResourceDescriptor() = New BaseResourceDescriptor(5 - 1) {}
     End Class
 
-    Public Class BaseResourceDescriptor
+<Serializable> Public Class BaseResourceDescriptor
         'rw::BaseResourceDescriptor
         Public Sub New()
 
@@ -60,7 +60,7 @@
         'For empty data, the descriptor is: data size = 0; data alignment = 1.
     End Class
 
-    Public Class TargetResource
+<Serializable> Public Class TargetResource
         'rw::TargetResource
         Public Sub New()
 

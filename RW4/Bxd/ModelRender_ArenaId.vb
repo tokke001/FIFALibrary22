@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Bxd
-    Public Class RenderModel
+    <Serializable> Public Class RenderModel
         'bxd::tRenderModel
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.MODELRENDER_ARENAID
@@ -55,7 +55,7 @@
         End Function
     End Class
 
-    Public Class RenderMesh
+    <Serializable> Public Class RenderMesh
         'bxd::tRenderMesh
         Public Sub New(ByVal RwArena As Rw.Core.Arena.Arena)
             Me.RwArena = RwArena
@@ -119,7 +119,7 @@
 
     End Class
 
-    Public Class RenderObject
+    <Serializable> Public Class RenderObject
         'bxd::tRenderObject
         Public Sub New(ByVal RwArena As Rw.Core.Arena.Arena)
             Me.RwArena = RwArena

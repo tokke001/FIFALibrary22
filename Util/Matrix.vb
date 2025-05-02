@@ -1,6 +1,5 @@
 ﻿Imports Microsoft.DirectX
-
-Public Class Matrix
+<Serializable> Public Class Matrix
     Public m()() As Single = {New Single(2) {}, New Single(2) {}, New Single(2) {}}
 
     ' user should use getIdentity instead;

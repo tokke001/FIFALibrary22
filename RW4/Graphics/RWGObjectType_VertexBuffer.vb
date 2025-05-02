@@ -1,7 +1,7 @@
 ﻿Imports FIFALibrary22.Rw.D3D
 
 Namespace Rw.Graphics
-    Public Class VertexBuffer
+<Serializable> Public Class VertexBuffer
         'rw::graphics::VertexBuffer
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_VERTEXBUFFER

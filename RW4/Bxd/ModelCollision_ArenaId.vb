@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Bxd
-    Public Class CollisionModel
+    <Serializable> Public Class CollisionModel
         'bxd::tCollisionModel
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.MODELCOLLISION_ARENAID
@@ -64,7 +64,7 @@
         End Function
     End Class
 
-    Public Class CollisionSpace
+    <Serializable> Public Class CollisionSpace
         'bxd::tCollisionSpace
         Public Sub New(ByVal RwArena As Rw.Core.Arena.Arena)
             Me.RwArena = RwArena
@@ -120,7 +120,7 @@
 
     End Class
 
-    Public Class CollisionShape
+    <Serializable> Public Class CollisionShape
         'bxd::tCollisionShape
         Public Sub New(ByVal RwArena As Rw.Core.Arena.Arena)
             Me.RwArena = RwArena

@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Graphics
-    Public Class EmbeddedMesh
+<Serializable> Public Class EmbeddedMesh
         'rw::graphics::EmbeddedMesh
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_MESH

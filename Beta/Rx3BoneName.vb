@@ -1,5 +1,4 @@
-﻿
-Public Class Rx3BoneName
+﻿<Serializable> Public Class Rx3BoneName
 
     Public Sub New()
 

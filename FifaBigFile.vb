@@ -1,5 +1,4 @@
-﻿
-Public Class FifaBigFile
+﻿<Serializable> Public Class FifaBigFile
     Inherits FifaFile
     ' Methods
     Public Sub New(ByVal fifaFile As FifaFile)
@@ -14,7 +13,7 @@ Public Class FifaBigFile
     End Sub
 
     Public Sub New(ByVal fileName As String)
-        MyBase.New(fileName, True)
+        MyBase.New(fileName)
         Me.m_Alignement = 16
         If MyBase.IsCompressed Then
             MyBase.Decompress()
@@ -128,7 +127,7 @@ Public Class FifaBigFile
         End If
         If (Me.m_Files(fileIndex) Is Nothing) Then
             Dim r As FileReader = MyBase.GetReader
-            Me.m_Files(fileIndex) = New FifaFile(Me.m_Headers(fileIndex), r)
+            Me.m_Files(fileIndex) = New FifaFile(Me.m_Headers(fileIndex))
             MyBase.ReleaseReader(r)
         End If
         Return Me.m_Files(fileIndex)
@@ -211,7 +210,7 @@ Public Class FifaBigFile
             For k = 0 To Me.m_NFiles - 1
                 If flagArray(k) Then
                     If (Me.m_Files(k) Is Nothing) Then
-                        Me.m_Files(k) = New FifaFile(Me.m_Headers(k), r)
+                        Me.m_Files(k) = New FifaFile(Me.m_Headers(k))
                     End If
                     fileArray(num) = Me.m_Files(k)
                     num += 1
@@ -274,7 +273,7 @@ Public Class FifaBigFile
         Dim buffer As Byte() = reader1.ReadBytes(CInt(reader1.BaseStream.Length))
         input.Close()
         reader1.Close()
-        Me.m_Files(Me.m_NFiles) = New FifaFile(Me, buffer, archivedName, compressionMode)
+        Me.m_Files(Me.m_NFiles) = New FifaFile(Me, archivedName, compressionMode)
         Me.m_NFiles += 1
         Return (Me.m_NFiles - 1)
     End Function
@@ -287,9 +286,9 @@ Public Class FifaBigFile
         reader1.Close()
         Dim archivedFile As FifaFile = Me.GetArchivedFile(fileIndex)
         If (archivedFile.CompressionMode = ECompressionMode.Chunkzip2) Then
-            Me.m_Files(fileIndex) = New FifaFile(Me, buffer, archivedFile.Name, ECompressionMode.None)
+            Me.m_Files(fileIndex) = New FifaFile(Me, archivedFile.Name, ECompressionMode.None)
         Else
-            Me.m_Files(fileIndex) = New FifaFile(Me, buffer, archivedFile.Name, archivedFile.CompressionMode)
+            Me.m_Files(fileIndex) = New FifaFile(Me, archivedFile.Name, archivedFile.CompressionMode)
         End If
     End Sub
 
@@ -326,7 +325,7 @@ Public Class FifaBigFile
             Return False
         End If
         Dim r As FileReader = MyBase.GetReader
-        Me.m_Files(fileIndex) = New FifaFile(Me.m_Headers(fileIndex), r)
+        Me.m_Files(fileIndex) = New FifaFile(Me.m_Headers(fileIndex))
         MyBase.ReleaseReader(r)
         Return True
     End Function
@@ -336,7 +335,7 @@ Public Class FifaBigFile
         Me.m_Files = New FifaFile(Me.m_NFiles - 1) {}
         Dim i As Integer
         For i = 0 To Me.m_NFiles - 1
-            Me.m_Files(i) = New FifaFile(Me.m_Headers(i), r)
+            Me.m_Files(i) = New FifaFile(Me.m_Headers(i))
         Next i
         MyBase.ReleaseReader(r)
         Return True
@@ -380,7 +379,7 @@ Public Class FifaBigFile
             Dim i As Integer
             For i = 0 To Me.m_NFiles - 1
                 If (Me.m_Files(i) Is Nothing) Then
-                    Me.m_Files(i) = New FifaFile(Me.m_Headers(i), r)
+                    Me.m_Files(i) = New FifaFile(Me.m_Headers(i))
                 End If
                 Me.m_Headers(i).StartPosition = CUInt(w.BaseStream.Position)   'DirectCast(w.BaseStream.Position, UInt32)
                 Me.m_Headers(i).Name = Me.m_Files(i).Name

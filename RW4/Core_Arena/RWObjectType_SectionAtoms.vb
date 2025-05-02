@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Core.Arena
-    Public Class ArenaSectionAtoms
+    <Serializable> Public Class ArenaSectionAtoms
         'rw::core::arena::ArenaSectionAtoms
         Inherits ArenaSection
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWOBJECTTYPE_SECTIONATOMS

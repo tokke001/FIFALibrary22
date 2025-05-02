@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class HotSpot
+<Serializable> Public Class HotSpot
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.HOTSPOT
         Public Const ALIGNMENT As Integer = 16
@@ -25,9 +25,9 @@
             Me.Unknown_3(0) = r.ReadUInt32
             Me.Unknown_3(1) = r.ReadUInt32
 
-            ReDim Me.AreaDatas(m_NumAreaDatas - 1)
+            ReDim Me.AreaData(m_NumAreaDatas - 1)
             For i = 0 To m_NumAreaDatas - 1
-                Me.AreaDatas(i) = New HotSpotAreaData(r)
+                Me.AreaData(i) = New HotSpotAreaData(r)
             Next i
 
         End Sub
@@ -36,15 +36,15 @@
             w.Write(Me.TotalSize)
 
             w.Write(Me.Unknown_1)
-            w.Write(Me.NumAreaDatas)
+            w.Write(Me.NumAreas)
             w.Write(Me.Unknown_2(0))
             w.Write(Me.Unknown_2(1))
 
             w.Write(Me.Unknown_3(0))
             w.Write(Me.Unknown_3(1))
 
-            For i = 0 To Me.NumAreaDatas - 1
-                Me.AreaDatas(i).Save(w)
+            For i = 0 To Me.NumAreas - 1
+                Me.AreaData(i).Save(w)
             Next i
 
             'Padding   
@@ -58,20 +58,34 @@
         Public Function ToRw4Hotspot(ByVal RwArena As Rw.Core.Arena.Arena) As Rw.EA.HotSpot
             Dim m_Rw4Hotspot As New Rw.EA.HotSpot(RwArena)
 
-            m_Rw4Hotspot.AreaData = New Rw.EA.HotSpotAreaData(Me.AreaDatas.Length - 1) {}
+            m_Rw4Hotspot.AreaData = New Rw.EA.HotSpotAreaData(Me.AreaData.Length - 1) {}
             For i = 0 To m_Rw4Hotspot.AreaData.Length - 1
                 m_Rw4Hotspot.AreaData(i) = New Rw.EA.HotSpotAreaData
-                m_Rw4Hotspot.AreaData(i).AreaName = Me.AreaDatas(i).AreaName
-                m_Rw4Hotspot.AreaData(i).HotSpots = New Rw.EA.HotSpotData(Me.AreaDatas(i).HotSpots.Length - 1) {}
+                m_Rw4Hotspot.AreaData(i).AreaName = Me.AreaData(i).AreaName
+                m_Rw4Hotspot.AreaData(i).HotSpots = New Rw.EA.HotSpotData(Me.AreaData(i).HotSpots.Length - 1) {}
 
                 For j = 0 To m_Rw4Hotspot.AreaData(i).HotSpots.Length - 1
                     m_Rw4Hotspot.AreaData(i).HotSpots(j) = New Rw.EA.HotSpotData With {
-                        .HotSpotName = Me.AreaDatas(i).HotSpots(j).HotSpotName,
-                        .HotspotRectangle = Me.AreaDatas(i).HotSpots(j).HotspotRectangle}
+                        .HotSpotName = Me.AreaData(i).HotSpots(j).HotSpotName,
+                        .HotspotRectangle = Me.AreaData(i).HotSpots(j).HotspotRectangle}
                 Next
             Next
 
             Return m_Rw4Hotspot
+        End Function
+
+        Public Function GetHotspotRectangle(FindAreaName As String, FindHotSpotName As String) As Single()
+            For i = 0 To Me.NumAreas - 1
+                If Me.AreaData(i).AreaName = FindAreaName Then
+                    For j = 0 To Me.AreaData(i).NumHotSpots - 1
+                        If Me.AreaData(i).HotSpots(j).HotSpotName = FindHotSpotName Then
+                            Return Me.AreaData(i).HotSpots(j).HotspotRectangle
+                        End If
+                    Next j
+                End If
+            Next i
+
+            Return New Single(4 - 1) {}
         End Function
 
         Private m_TotalSize As UInteger
@@ -89,16 +103,16 @@
         Public Property Unknown_1 As Byte = 1   'always 1 value
         ''' <summary>
         ''' Returns the number of AreaDatas (ReadOnly). </summary>
-        Public ReadOnly Property NumAreaDatas As Byte
+        Public ReadOnly Property NumAreas As Byte
             Get
-                Return If(AreaDatas?.Count, 0)
+                Return If(AreaData?.Count, 0)
             End Get
         End Property
         Public Property Unknown_2 As Byte() = New Byte(2 - 1) {}            'maybe padding (0)
         Public Property Unknown_3 As UInteger() = New UInteger(2 - 1) {}    'maybe padding (0)
         ''' <summary>
         ''' Gets/Sets the AreaDatas. </summary>
-        Public Property AreaDatas As HotSpotAreaData()
+        Public Property AreaData As HotSpotAreaData()
 
         Public Overrides Function GetTypeCode() As Rx3.SectionHash
             Return TYPE_CODE
@@ -108,7 +122,7 @@
             Return ALIGNMENT
         End Function
     End Class
-    Public Class HotSpotAreaData
+<Serializable> Public Class HotSpotAreaData
         Public Sub New()
             MyBase.New
         End Sub
@@ -155,7 +169,7 @@
 
     End Class
 
-    Public Class HotSpotData
+<Serializable> Public Class HotSpotData
         Public Sub New()
             MyBase.New
         End Sub

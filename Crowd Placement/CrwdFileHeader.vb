@@ -1,6 +1,6 @@
 ﻿
 Namespace CrowdDat
-    Public Class CrwdFileHeader
+<Serializable> Public Class CrwdFileHeader
 
         Public Sub New()
         End Sub

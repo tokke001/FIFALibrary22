@@ -7,7 +7,7 @@ Imports FIFALibrary22.Rw.Graphics
 Imports FIFALibrary22.Rw.OldAnimation
 
 Namespace Rw
-    Public Class RwSections
+    <Serializable> Public Class RwSections
         Public Sub New(ByVal RwArena As Rw.Core.Arena.Arena)
             Me.RwArena = RwArena
         End Sub
@@ -64,12 +64,16 @@ Namespace Rw
                     '    MsgBox("test")
                     'End If
                 Else
+#If DEBUG Then
                     Console.Error.WriteLine("Unrecognised RW section type: 0x" & Info.TypeId.ToString("x"))
+#End If
                 End If
 
                 Objects.Add(m_Object)
 
+#If DEBUG Then
                 Console.WriteLine("0x" & Info.TypeId.ToString("x") & vbTab & Info.Offset)
+#End If
             Next Info
 
             ' Now that all objects have been created, read the sub references
@@ -617,31 +621,33 @@ Namespace Rw
                 Exit Sub
             End If
 
-            Dim Index As UInteger = 0
+            Dim Index As Integer = -1
             Dim IndexSearched As UInteger = Me.Objects.Count - 1
+            Dim NumExistingObjects As Integer = Me.Objects.FindAll(Function(x) x.GetTypeCode = m_Objects(0).GetTypeCode).Count
+            Dim NumNewObjects As Integer = m_Objects.Count
 
             For i = 0 To Me.Objects.Count - 1
-                If Me.Objects(i).GetTypeCode = m_Objects(Index).GetTypeCode Then
+                If Me.Objects(i).GetTypeCode = m_Objects(Index + 1).GetTypeCode Then
                     'IndexSearched = i      '--> location of new objects unknpwn, so added at end
+                    Index += 1
                     Me.Objects(i) = m_Objects(Index)
 
-                    If Index >= m_Objects.Count - 1 Then    'if all objects are added -> exit for
+                    If (Index >= NumExistingObjects - 1) Or (Index >= NumNewObjects - 1) Then    'if all objects are added -> exit for
                         Exit For
-                    Else
-                        Index += 1
                     End If
                 End If
             Next i
 
-            If Index < m_Objects.Count - 1 Then    '- add objects
-                For j As UInteger = Index To m_Objects.Count - 1
+            If NumNewObjects > NumExistingObjects Then    '- add objects
+                For j As UInteger = Index + 1 To m_Objects.Count - 1
                     IndexSearched += 1
                     Me.Objects.Insert(IndexSearched, m_Objects(j))
                 Next
-            Else                                    '- delete objects
+
+            ElseIf NumNewObjects < NumExistingObjects Then    '- delete objects
                 Dim ListRemove As New List(Of UInteger)
                 For i = IndexSearched + 1 To Me.Objects.Count - 1
-                    If Me.Objects(i).GetTypeCode = m_Objects(Index).GetTypeCode Then
+                    If Me.Objects(i).GetTypeCode = m_Objects(0).GetTypeCode Then
                         ListRemove.Add(i)
                     End If
                 Next
@@ -650,6 +656,7 @@ Namespace Rw
                 Next
 
             End If
+
         End Sub
 
         Public Sub SetObject(Of T As RwObject)(ByVal m_Object As T, ByVal Index As Integer)

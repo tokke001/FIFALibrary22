@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class Material
+<Serializable> Public Class Material
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.MATERIAL
         Public Const ALIGNMENT As Integer = 16
@@ -86,7 +86,7 @@
             Return ALIGNMENT
         End Function
     End Class
-    Public Class MaterialTexMap  'texture maps descriptors
+<Serializable> Public Class MaterialTexMap  'texture maps descriptors
         ''' <summary>
         ''' Name of the Texture type. </summary>
         Public Property TexTypeName As String   '"diffuseTexture", "normalMap", ...

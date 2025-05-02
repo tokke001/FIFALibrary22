@@ -1,6 +1,6 @@
 ﻿
 Namespace Rw.Core.Arena
-    Public Class ArenaDictEntry     'RW4SectionInfo
+    <Serializable> Public Class ArenaDictEntry     'RW4SectionInfo
         'rw::core::arena::ArenaDictEntry
         Public Sub New()
 

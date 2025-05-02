@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class TextureHeader
+<Serializable> Public Class TextureHeader
         ' Methods
         Public Sub New()
 

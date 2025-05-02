@@ -1,7 +1,6 @@
 ﻿
 Imports Microsoft.DirectX
-
-Public Class Matrix3x3
+<Serializable> Public Class Matrix3x3
     ' Methods
     Public Sub New(ByVal c00 As Integer, ByVal c01 As Integer, ByVal c02 As Integer, ByVal c10 As Integer, ByVal c11 As Integer, ByVal c12 As Integer, ByVal c20 As Integer, ByVal c21 As Integer, ByVal c22 As Integer)
         Me.a = c00

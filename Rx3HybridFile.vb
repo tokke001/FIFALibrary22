@@ -3,7 +3,7 @@
 'http://www.soccergaming.com/index.php?threads/rx3-file-format-research-thread.6467750/
 'http://www.soccergaming.com/index.php?threads/fifa-11-pc-file-formats-resarch-renderware-4-5-assets.6468020/
 
-Public Class Rx3HybridFile
+<Serializable> Public Class Rx3HybridFile
     Inherits RxFile
     Public Sub New()
         MyBase.New

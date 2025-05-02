@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class EdgeMesh
+<Serializable> Public Class EdgeMesh
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.EDGE_MESH
         Public Const ALIGNMENT As Integer = 16

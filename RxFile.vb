@@ -1,4 +1,6 @@
 ﻿Imports System.Drawing
+Imports System.Runtime.Serialization
+Imports System.Runtime.Serialization.Formatters.Binary
 Imports BCnEncoder.Shared
 Imports FIFALibrary22.Rw.Collision
 Imports FIFALibrary22.Rw.Core.Arena
@@ -8,7 +10,7 @@ Imports Microsoft.DirectX.Direct3D
 'http://www.soccergaming.com/index.php?threads/rx3-file-format-research-thread.6467750/
 'http://www.soccergaming.com/index.php?threads/fifa-11-pc-file-formats-resarch-renderware-4-5-assets.6468020/
 
-Partial Public Class RxFile
+<Serializable> Partial Public Class RxFile : Implements IDisposable ', ICloneable
 
     Public Sub New()
     End Sub
@@ -17,6 +19,65 @@ Partial Public Class RxFile
         Me.Rw4Section = Rw4Section
         Me.Rx3Section = Rx3Section
     End Sub
+
+    Public Sub Dispose() Implements IDisposable.Dispose
+        Dispose(True)
+        GC.SuppressFinalize(Me)
+    End Sub
+
+    Protected Overridable Sub Dispose(IsDisposing As Boolean)
+
+        Static IsBusy As Boolean ' To detect redundant calls.
+
+        If Not IsBusy AndAlso IsDisposing Then
+
+            ' Dispose processes here...
+            ' myProcess.Dispose()
+            Me.Rw4Section = Nothing
+            Me.Rx3Section = Nothing
+
+        End If
+
+        IsBusy = True
+
+    End Sub
+
+    'Public Function Clone() As Object Implements ICloneable.Clone
+    '    Dim m_RxFile As New RxFile
+    '    m_RxFile.Rw4Section = Me.Rw4Section
+    '    m_RxFile.Rx3Section = Me.Rx3Section
+    '    m_RxFile.test_1 = Me.test_1
+    '    'Dim m_clone As RxFile = Me.MemberwiseClone
+    '    'Try
+    '    '    m_clone.Rw4Section = Me.Rw4Section.clone
+    '    '    m_clone.Rx3Section = Me.Rx3Section
+
+    '    'Catch ex As Exception
+
+    '    'End Try
+
+    '    Return m_RxFile
+    'End Function
+
+
+
+
+    ''<System.Runtime.CompilerServices.Extension>
+    'Public Function CloneJson(Of T)(ByVal source As T) As T
+    '    ' Don't serialize a null object, simply return the default for that object
+    '    If ReferenceEquals(source, Nothing) Then
+    '        Return Nothing
+    '    End If
+
+    '    ' initialize inner objects individually
+    '    ' for example in default constructor some list property initialized with some values,
+    '    ' but in 'source' these items are cleaned -
+    '    ' without ObjectCreationHandling.Replace default constructor values will be added to result
+    '    Dim deserializeSettings = New JsonSerializerSettings With {.ObjectCreationHandling = ObjectCreationHandling.Replace}
+
+    '    Return JsonConvert.DeserializeObject(Of T)(JsonConvert.SerializeObject(source), deserializeSettings)
+    'End Function
+
 
     Public Function Load(ByVal FifaFile As FifaFile) As Boolean
         If FifaFile.IsCompressed Then

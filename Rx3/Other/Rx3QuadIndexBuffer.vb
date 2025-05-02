@@ -1,6 +1,6 @@
 ﻿Imports Microsoft.DirectX.Direct3D
 Namespace Rx3
-    Public Class QuadIndexBuffer
+<Serializable> Public Class QuadIndexBuffer
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.QUAD_INDEX_BUFFER
         Public Const ALIGNMENT As Integer = 16

@@ -1,6 +1,6 @@
 ﻿Imports FIFALibrary22.FifaUtil
 Namespace Rw.D3D
-    Public Class D3DBaseTexture
+    <Serializable> Public Class D3DBaseTexture
         '0x1469 D3DBaseTexture
         Public Sub New()
 
@@ -50,7 +50,7 @@ Namespace Rw.D3D
 
     End Class
 
-    Public Class GPUTEXTURE_FETCH_CONSTANT
+    <Serializable> Public Class GPUTEXTURE_FETCH_CONSTANT
         'GPUTEXTURE_FETCH_CONSTANT  0x1c4c
         Public Sub New()
 

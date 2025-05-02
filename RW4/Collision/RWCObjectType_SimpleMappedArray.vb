@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Collision
-    Public Class SimpleMappedArray
+    <Serializable> Public Class SimpleMappedArray
         'rw::collision::SimpleMappedArray
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWCOBJECTTYPE_SIMPLEMAPPEDARRAY
@@ -59,7 +59,7 @@
         End Function
     End Class
 
-    Public Class Aggregate
+    <Serializable> Public Class Aggregate
         'rw::collision::Aggregate
         '= RWCOBJECTTYPE_MESHOPAGGREGATE ???
         Public Sub New()

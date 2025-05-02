@@ -4,7 +4,7 @@ Imports FIFALibrary22.AudioBin.RepetitionPools
 Imports FIFALibrary22.AudioBin.Sentences
 
 Namespace AudioBin
-    Public Class BinFile
+    <Serializable> Public Class BinFile
         Public Function Load(ByVal FileName As String) As Boolean
             Dim f As New FileStream(FileName, FileMode.Open, FileAccess.ReadWrite)
             Dim r As New BinaryReader(f)

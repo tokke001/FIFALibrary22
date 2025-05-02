@@ -1,5 +1,5 @@
 ﻿Namespace Rw.EA.FxShader
-    Public Class ParameterBlockDescriptor
+<Serializable> Public Class ParameterBlockDescriptor
         'EA::FxShader::ParameterBlockDescriptor
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_FxShader_ParameterBlockDescriptor
@@ -131,7 +131,7 @@
         End Function
     End Class
 
-    Public Class ParameterInfo
+<Serializable> Public Class ParameterInfo
         'EA::FxShader::ParameterBlockBuilder::ParameterInfo ????
         Public Property Id_1 As Byte                    'unknown Id????   'starts at 0, goes +1 but not always
         Public Property OffsetParameterValue As UShort  'Offset to ParameterValue (at &HEF0001 EA_FxShader_ParameterBlock, 0 is first ParameterValue)
@@ -152,6 +152,7 @@
         [string] = 4
         string2 = 12
         sampler2D = 13
+        float2 = 35
         string2_2 = 36  'might be 2 chars (length is 2) ?
         float4 = 99
         float4x4 = 123

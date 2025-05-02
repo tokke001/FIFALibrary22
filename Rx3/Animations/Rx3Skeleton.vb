@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class Skeleton
+<Serializable> Public Class Skeleton
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.SKELETON
         Public Const ALIGNMENT As Integer = 16
@@ -111,7 +111,7 @@
         End Function
     End Class
 
-    Public Class SkeletonBoneInfo
+<Serializable> Public Class SkeletonBoneInfo
         ''' <summary>
         ''' Parent bone, -1 for root bone. </summary>
         Public Property Parent As Short        '-1 for root bone   'shorts (not ushorts ! )

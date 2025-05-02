@@ -1,6 +1,6 @@
 ﻿Imports Microsoft.DirectX.Direct3D
 Namespace Rx3
-    Public Class IndexBuffer
+<Serializable> Public Class IndexBuffer
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.INDEX_BUFFER
         Public Const ALIGNMENT As Integer = 16

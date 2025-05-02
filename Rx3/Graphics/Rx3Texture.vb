@@ -4,7 +4,7 @@ Imports FIFALibrary22.Dds
 Imports FIFALibrary22.Ktx
 
 Namespace Rx3
-    Public Class Texture
+    <Serializable> Public Class Texture
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.TEXTURE
         Public Const ALIGNMENT As Integer = 16
@@ -16,6 +16,37 @@ Namespace Rx3
         Public Sub New(ByVal r As FileReader)
             MyBase.New
             Me.Load(r)
+        End Sub
+
+        Public Sub New(ByVal Bitmap As Bitmap, Header As Rx3.TextureHeader)
+            Me.Header = Header
+
+            Me.TextureFaces = New Rx3.TextureFace(Header.NumFaces - 1) {}
+            For f = 0 To Me.Header.NumFaces - 1
+                Me.TextureFaces(f) = New TextureFace()
+                Me.TextureFaces(f).TextureLevels = New Rx3.TextureLevel(Header.NumMipLevels - 1) {}
+                Me.SetBitmap(Bitmap)
+            Next
+        End Sub
+
+        Public Sub New(ByVal Bitmap As Bitmap, ByVal TextureFormat As TextureFormat, ByVal NumLevels As UShort, Optional NumFaces As UShort = 1, Optional TextureType As ETextureType = ETextureType.TEXTURE_2D, Optional DataFormat As Rx3.TextureHeader.EDataFormat = Rx3.TextureHeader.EDataFormat.eLinear)
+            Me.Header = New Rx3.TextureHeader With {
+                    .TextureType = TextureType,
+                    .TextureFormat = TextureFormat,
+                    .Height = Bitmap.Height,
+                    .Width = Bitmap.Width,
+                    .NumFaces = NumFaces,
+                    .NumMipLevels = NumLevels,
+                    .DataFormat = DataFormat,    ' little endian (image RAW data)
+                    .Pad = 0    'always 0,
+                    }
+
+            Me.TextureFaces = New Rx3.TextureFace(NumFaces - 1) {}
+            For f = 0 To Me.Header.NumFaces - 1
+                Me.TextureFaces(f) = New TextureFace()
+                Me.TextureFaces(f).TextureLevels = New Rx3.TextureLevel(NumLevels - 1) {}
+                Me.SetBitmap(Bitmap)
+            Next
         End Sub
 
         Public Function GetBitmap() As Bitmap
@@ -105,16 +136,16 @@ Namespace Rx3
 
         End Sub
 
-        Public Function SetBitmap(ByVal Bitmap As Bitmap) As Boolean
+        Public Function SetBitmap(ByVal Bitmap As Bitmap, Optional NoMipMapsCreate As Boolean = False) As Boolean
             Dim TextureFormat As TextureFormat = Me.Header.TextureFormat
             Dim NumLevels As UShort = Me.Header.NumMipLevels
 
-            Me.SetBitmap(Bitmap, TextureFormat, NumLevels)
+            Me.SetBitmap(Bitmap, TextureFormat, NumLevels, NoMipMapsCreate)
 
             Return True
         End Function
 
-        Public Function SetBitmap(ByVal Bitmap As Bitmap, ByVal TextureFormat As TextureFormat, ByVal NumLevels As UShort) As Boolean
+        Public Function SetBitmap(ByVal Bitmap As Bitmap, ByVal TextureFormat As TextureFormat, ByVal NumLevels As UShort, Optional NoMipMapsCreate As Boolean = False) As Boolean
             Dim FaceIndex As Integer = 0
             Dim SwapEndian_DxtBlock As Boolean = GetEndianDxtBlock(Me.Header.DataFormat)
 
@@ -133,11 +164,14 @@ Namespace Rx3
             Me.Header.NumMipLevels = NumLevels
 
             '2 - Set main Bitmap (level 0)
+            ReDim Me.TextureFaces(FaceIndex).TextureLevels(0)
             Me.TextureFaces(FaceIndex).TextureLevels(0) = New TextureLevel(Bitmap.Width, Bitmap.Height, TextureFormat, SwapEndian_DxtBlock)
             Me.TextureFaces(FaceIndex).TextureLevels(0).CalcPitchLinesSize()
             Me.TextureFaces(FaceIndex).TextureLevels(0).Bitmap = Bitmap
             '3 - Generate Mipmaps (from main)
-            Me.GenerateMipmaps(NumLevels)
+            If NoMipMapsCreate = False Then
+                Me.GenerateMipmaps(NumLevels)
+            End If
 
             Return True
         End Function
@@ -197,7 +231,6 @@ Namespace Rx3
         End Function
 
         Public Sub SetTextureEndian(IsBigEndian As Boolean)
-
             If Me.Header.DataFormat.HasFlag(TextureHeader.EDataFormat.eBigEndian) <> IsBigEndian Then
                 For f = 0 To Me.Header.NumFaces - 1
                     For i = 0 To Me.Header.NumMipLevels - 1
@@ -207,6 +240,18 @@ Namespace Rx3
                 Next
 
                 Me.Header.DataFormat &= TextureHeader.EDataFormat.eBigEndian
+            End If
+        End Sub
+
+        Public Sub SetTextureFormat(TextureFormat As Rx3.TextureFormat)
+            If Me.Header.TextureFormat <> TextureFormat Then
+                For f = 0 To Me.Header.NumFaces - 1
+                    For i = 0 To Me.Header.NumMipLevels - 1
+                        Me.TextureFaces(f).TextureLevels(i).TextureFormat = TextureFormat.ToETextureFormat
+                    Next
+                Next
+
+                Me.Header.TextureFormat = TextureFormat
             End If
         End Sub
 
@@ -231,8 +276,8 @@ Namespace Rx3
                         Me.TextureFaces(f).TextureLevels(i).Bitmap = srcBitmap
                     End If
 
-                    width = (width \ 2)
-                    height = (height \ 2)
+                    width \= 2
+                    height \= 2
                 Next i
             Next f
 
@@ -252,7 +297,7 @@ Namespace Rx3
         End Function
     End Class
 
-    Public Class TextureFace
+    <Serializable> Public Class TextureFace
         Public Property TextureLevels As TextureLevel()    'mipmaps
 
     End Class

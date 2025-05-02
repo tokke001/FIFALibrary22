@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Bxd
-    Public Class SceneLayer
+    <Serializable> Public Class SceneLayer
         'bxd::tSceneLayer
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.SCENELAYER_ARENAID

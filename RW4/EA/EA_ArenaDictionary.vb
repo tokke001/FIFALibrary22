@@ -1,5 +1,5 @@
 ﻿Namespace Rw.EA
-    Public Class ArenaDictionary 'old name : RW4NameSection
+<Serializable> Public Class ArenaDictionary 'old name : RW4NameSection
         'EA::ArenaDictionary
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_ArenaDictionary
@@ -125,7 +125,7 @@
         End Function
     End Class
 
-    Public Class ArenaDictionaryHeader
+<Serializable> Public Class ArenaDictionaryHeader
         'EA::ArenaDictionaryHeader
         Public Sub New()
 
@@ -156,7 +156,7 @@
 
     End Class
 
-    Public Class ArenaDictionaryEntry
+<Serializable> Public Class ArenaDictionaryEntry
         'EA::ArenaDictionaryEntry
         'Public Sub New()
         'End Sub
@@ -177,7 +177,7 @@
 
             Dim BaseOffset As Long = r.BaseStream.Position
             r.BaseStream.Position = Me.OffsetName
-            Me.m_Name = FifaUtil.ReadNullTerminatedString(r)
+            Me.m_Name = FifaUtil.ReadNullTerminatedString(r).Replace(vbNullChar, "")
 
             r.BaseStream.Position = BaseOffset
         End Sub

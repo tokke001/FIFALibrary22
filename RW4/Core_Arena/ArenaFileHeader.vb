@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Core.Arena
-    Public Class ArenaFileHeader
+    <Serializable> Public Class ArenaFileHeader
         'class name = rw::core::arena::ArenaFileHeader
         Public Sub New(ByVal Endianness As Endian)
             If Endianness = Endian.Big Then
@@ -69,18 +69,18 @@
 
         End Sub
 
-        Public Property MagicNumber As ArenaFileHeaderMagicNumber
+        Public Property MagicNumber As New ArenaFileHeaderMagicNumber
         Public Property IsBigEndian As Boolean = True 'RWEndianness
-        Public Property PointerSizeInBits As Byte
-        Public Property PointerAlignment As Byte
-        Public Property Unused As Byte
-        Public Property MajorVersion As Byte() = New Byte(4) {}
-        Public Property MinorVersion As Byte() = New Byte(4) {}
-        Public Property BuildNo As UInteger
+        Public Property PointerSizeInBits As Byte = 32
+        Public Property PointerAlignment As Byte = 4
+        Public Property Unused As Byte = 0
+        Public Property MajorVersion As Byte() = New Byte(4 - 1) {52, 53, 52, 0}
+        Public Property MinorVersion As Byte() = New Byte(4 - 1) {48, 48, 48, 0}
+        Public Property BuildNo As UInteger = 0
 
     End Class
 
-    Public Class ArenaFileHeaderMagicNumber
+    <Serializable> Public Class ArenaFileHeaderMagicNumber
         'rw::core::arena::ArenaFileHeaderMagicNumber
         Public Sub New()
 
@@ -104,9 +104,9 @@
 
         End Sub
 
-        Public Property Prefix As Byte() = New Byte(4) {}
-        Public Property Body As Byte() = New Byte(4) {}
-        Public Property Suffix As Byte() = New Byte(4) {}
+        Public Property Prefix As Byte() = New Byte(4 - 1) {137, 82, 87, 52}
+        Public Property Body As Byte() = New Byte(4 - 1) {120, 98, 50, 0}
+        Public Property Suffix As Byte() = New Byte(4 - 1) {13, 10, 26, 10}
 
     End Class
 

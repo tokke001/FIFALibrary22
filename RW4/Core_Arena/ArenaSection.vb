@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Core.Arena
-    Public Class ArenaSection
+    <Serializable> Public Class ArenaSection
         'rw::core::arena::ArenaSection
         Protected Friend RwArena As Rw.Core.Arena.Arena
 

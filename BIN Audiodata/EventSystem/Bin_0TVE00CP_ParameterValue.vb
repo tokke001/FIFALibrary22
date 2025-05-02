@@ -1,5 +1,5 @@
 ﻿Namespace AudioBin.EventSystem
-    Public Class ParameterValue
+<Serializable> Public Class ParameterValue
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As BinaryReader)

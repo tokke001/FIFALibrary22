@@ -1,7 +1,7 @@
 ﻿Imports Microsoft.DirectX.Direct3D
 Imports D3DDECLTYPE = FIFALibrary22.Rw.D3D.D3DDECLTYPE
 Namespace Rx3
-    Public Class VertexFormat
+<Serializable> Public Class VertexFormat
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.VERTEX_FORMAT
         Public Const ALIGNMENT As Integer = 16
@@ -102,7 +102,7 @@ Namespace Rx3
             Return ALIGNMENT
         End Function
 
-        Public Class Element
+    <Serializable> Public Class Element
             Inherits VertexElement
 
             Public Sub New()

@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class IndexBufferBatch
+<Serializable> Public Class IndexBufferBatch
         ' Methods
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.INDEX_BUFFER_BATCH

@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Graphics
-    Public Class VertexDescriptor
+<Serializable> Public Class VertexDescriptor
         'rw::graphics::VertexDescriptor     
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_VERTEXDESCRIPTOR
@@ -262,7 +262,7 @@
         ''' Gets/Sets the VertexFormat Elements. </summary>
         Public Property Elements As Element()
 
-        Public Class Element
+    <Serializable> Public Class Element
             Inherits VertexElement
 
             'rw::graphics::VertexDescriptor::Element

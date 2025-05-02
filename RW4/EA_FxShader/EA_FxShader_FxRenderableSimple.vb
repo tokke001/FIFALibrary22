@@ -1,5 +1,5 @@
 ﻿Namespace Rw.EA.FxShader
-    Public Class FxRenderableSimple
+<Serializable> Public Class FxRenderableSimple
         'EA::FxShader::FxRenderableSimple
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_FxShader_FxRenderableSimple
@@ -38,7 +38,7 @@
         Public Property PVertexDescriptor As Rw.Graphics.VertexDescriptor
         Public Property MaterialName As String
         Public Property EffectName As String
-        Public Property PrimitiveType As Microsoft.DirectX.Direct3D.PrimitiveType
+        Public Property PrimitiveType As Microsoft.DirectX.Direct3D.PrimitiveType   'rw::graphics::PrimitiveType
 
         Public Overrides Function GetTypeCode() As Rw.SectionTypeCode
             Return TYPE_CODE

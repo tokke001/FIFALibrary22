@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class SceneInstance
+<Serializable> Public Class SceneInstance
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.SCENE_INSTANCE
         Public Const ALIGNMENT As Integer = 16
@@ -110,7 +110,7 @@
         End Function
     End Class
 
-    Public Class SceneInstanceMeshDescriptor
+<Serializable> Public Class SceneInstanceMeshDescriptor
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As FileReader)

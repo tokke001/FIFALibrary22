@@ -1,5 +1,4 @@
-﻿
-Public Class BBox
+﻿<Serializable> Public Class BBox
     Public Sub New()
     End Sub
     Public Sub New(ByVal r As FileReader)
@@ -16,7 +15,7 @@ Public Class BBox
 
 End Class
 
-Public Class AABBoxTemplate
+<Serializable> Public Class AABBoxTemplate
     'AABBoxTemplate<rw::math::vpu::Matrix44Affine,rw::math::vpu::Vector3,rw::collision::AABBoxMemoryDumpPolicy>
     Public Sub New()
     End Sub

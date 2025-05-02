@@ -1,24 +1,24 @@
-﻿Imports zlib
-'Imports FifaLibrary
+﻿Imports System.IO
+Imports FIFALibrary22
+Imports zlib
 
-'Namespace FIFALibrary22
-Public Class FifaFile
+<Serializable> Public Class FifaFile
     ' Methods
-    Public Sub New(ByVal fifaFile As FifaFile)
-        Me.Load(fifaFile)
+    'Public Sub New(ByVal fifaFile As FifaFile)
+    '    Me.Load(fifaFile)
+    'End Sub
+
+    'Public Sub New(ByVal header As FifaFileHeader, ByVal r As FileReader)
+    '    Me.Load(header.BigFile, header.StartPosition, header.Size, header.Name, False, r)
+    'End Sub
+
+    Public Sub New(ByVal path As String)
+        Me.Load(path) ', isAnArchive)
     End Sub
 
-    Public Sub New(ByVal header As FifaFileHeader, ByVal r As FileReader)
-        Me.Load(header.BigFile, header.StartPosition, header.Size, header.Name, False, r)
-    End Sub
-
-    Public Sub New(ByVal path As String, ByVal isAnArchive As Boolean)
-        Me.Load(path, isAnArchive)
-    End Sub
-
-    Public Sub New(ByVal archive As FifaBigFile, ByVal buffer As Byte(), ByVal name As String, ByVal compressionMode As ECompressionMode)
-        Me.Load(archive, buffer, name, compressionMode)
-    End Sub
+    'Public Sub New(ByVal archive As FifaBigFile, ByVal buffer As Byte(), ByVal name As String, ByVal compressionMode As ECompressionMode)
+    '    Me.Load(archive, buffer, name, compressionMode)
+    'End Sub
     Private Function CheckCompressionMode(ByVal r As FileReader) As ECompressionMode
         If (r.BaseStream.Length < 8) Then
             Return ECompressionMode.None
@@ -86,22 +86,32 @@ Public Class FifaFile
                 End If
                 Me.m_RequiredCompression = Me.m_CurrentCompression
             ElseIf (str = "chunlzma") Then
+                r.ReadInt32()
+                Me.m_UncompressedSize = FifaUtil.SwapEndian(r.ReadInt32)
+                Me.m_MaxBlockUncompressedSize = FifaUtil.SwapEndian(r.ReadInt32)
+
                 Me.m_CurrentCompression = ECompressionMode.Chunklzma
                 Me.m_RequiredCompression = Me.m_CurrentCompression
             ElseIf (str = "chunklzx") Then
-                Me.m_CurrentCompression = ECompressionMode.chunklzx
+                Me.m_UncompressedSize = FifaUtil.SwapEndian(r.ReadInt32)
+                If (Me.m_UncompressedSize = 2) Then
+                    Me.m_UncompressedSize = FifaUtil.SwapEndian(r.ReadInt32)
+                    Me.m_CurrentCompression = ECompressionMode.Chunklzx2
+                Else
+                    Me.m_CurrentCompression = ECompressionMode.Chunklzx
+                End If
                 Me.m_RequiredCompression = Me.m_CurrentCompression
             ElseIf (str = "chunklz4") Then
                 Me.m_CurrentCompression = ECompressionMode.chunklz4
                 Me.m_RequiredCompression = Me.m_CurrentCompression
             ElseIf (str = "chunkunc") Then
-                Me.m_CurrentCompression = ECompressionMode.chunkunc
+                Me.m_CurrentCompression = ECompressionMode.Chunkunc
                 Me.m_RequiredCompression = Me.m_CurrentCompression
             ElseIf (str = "chunzstd") Then
-                Me.m_CurrentCompression = ECompressionMode.chunzstd
+                Me.m_CurrentCompression = ECompressionMode.Chunzstd
                 Me.m_RequiredCompression = Me.m_CurrentCompression
-            ElseIf (str = "chunoodl") Then
-                Me.m_CurrentCompression = ECompressionMode.chunoodl
+            ElseIf (str = "chunoodl") Then  'switch games
+                Me.m_CurrentCompression = ECompressionMode.Chunoodl
                 Me.m_RequiredCompression = Me.m_CurrentCompression
             Else
                 Me.m_CurrentCompression = ECompressionMode.None
@@ -158,8 +168,8 @@ Public Class FifaFile
         Loop
     End Sub
 
-    Private Sub Chunkref2(ByVal outputStream As Stream, ByVal uncompressedSize As Integer)
-    End Sub
+    'Private Sub Chunkref2(ByVal outputStream As Stream, ByVal uncompressedSize As Integer)
+    'End Sub
 
     Private Sub Chunkzip(ByVal outputStream As Stream)
         Me.Chunkzip(outputStream, Me.m_UncompressedSize)
@@ -215,15 +225,14 @@ Public Class FifaFile
         Select Case Me.m_RequiredCompression
             Case ECompressionMode.Compressed_10FB
                 Me.Compress_10FB(outputStream)
-                Exit Select
             Case ECompressionMode.Chunkzip
                 Me.Chunkzip(outputStream)
-                Exit Select
             Case ECompressionMode.Chunkref
-                Me.Chunkref(outputStream, Me.m_UncompressedSize)
-                Exit Select
+                Me.Chunkref(outputStream)
+            Case ECompressionMode.Chunkref2, ECompressionMode.Chunkzip2, ECompressionMode.Chunklzx2, ECompressionMode.Chunklzma, ECompressionMode.Chunklz4
+                Me.CompressChunkpack(outputStream, Me.m_RequiredCompression)
             Case Else
-                Exit Select
+                Return False
         End Select
         Return True
     End Function
@@ -507,7 +516,7 @@ TR_004F:
         Dim flag1 As Boolean = Me.Decompress(Me.m_ReadMemoryStream)
         If flag1 Then
             Me.m_CurrentCompression = ECompressionMode.None
-            Me.m_IsArchived = False
+            'Me.m_IsArchived = False
             Me.m_IsInMemory = True
             Me.m_StartPosition = 0
         End If
@@ -519,30 +528,27 @@ TR_004F:
             outputStream.Write(Me.Read, 0, Me.m_CompressedSize)
             Return False
         End If
-        If Me.m_IsArchived Then
-            Me.m_Archive.Decompress()
-        End If
+        'If Me.m_IsArchived Then
+        '    Me.m_Archive.Decompress() 
+        'End If
         Select Case Me.m_CurrentCompression
             Case ECompressionMode.Compressed_10FB
                 Me.Uncompress_10FB(outputStream)
             Case ECompressionMode.Chunkzip
                 Me.UnChunkzip(outputStream)
-            Case ECompressionMode.Chunkzip2
-                Me.UncompressBms(outputStream)
-                'Me.UnChunkZip2(outputStream)       'gives errors sometimes, but may be fixed ?
             Case ECompressionMode.Chunkref
                 Me.UnChunkref(outputStream)
-            Case ECompressionMode.Chunkref2
-                Me.UnChunkref2(outputStream)
             Case ECompressionMode.EASF
                 Me.UnEASF(outputStream)
-                'Case ECompressionMode.Chunklzma    'doing with BMS method
-                'Me.UnChunklzma(outputStream)
-            Case ECompressionMode.Chunklzma, ECompressionMode.chunklzx, ECompressionMode.chunklz4, ECompressionMode.chunkunc, ECompressionMode.chunzstd, ECompressionMode.chunoodl  'https://github.com/Crauzer/OodleSharp  '"oodle compression"
+            Case ECompressionMode.Chunkref2, ECompressionMode.Chunkzip2, ECompressionMode.Chunklzma, ECompressionMode.Chunklz4, ECompressionMode.Chunklzx2
+                Me.UncompressChunkpack(outputStream)
+            Case ECompressionMode.Chunzstd, ECompressionMode.Chunoodl, ECompressionMode.Chunklzx  'https://github.com/Crauzer/OodleSharp  '"oodle compression"
                 Me.UncompressBms(outputStream)
+                'Case ECompressionMode.chunkunc --> unsupported format by BMS !!!!
+                '    Me.UncompressBms(outputStream)
 
             Case Else
-                Exit Select
+                Return False
         End Select
         Return True
     End Function
@@ -586,34 +592,33 @@ TR_004F:
         Return True
     End Function
 
-
     Public Function GetReader() As FileReader
         Dim reader As FileReader = Nothing
         If Not Me.m_IsInMemory Then
             If File.Exists(Me.m_PhysicalName) Then
                 reader = New FileReader(New FileStream(Me.m_PhysicalName, FileMode.Open, FileAccess.Read))
                 reader.BaseStream.Position = Me.m_StartPosition
-                If (Not Me.m_Archive Is Nothing) Then
-                    Dim baseStream As Stream = reader.BaseStream
-                    baseStream.Position = (baseStream.Position + Me.m_Archive.StartPosition)
-                End If
+                'If (Me.m_Archive IsNot Nothing) Then
+                '    Dim baseStream As Stream = reader.BaseStream
+                '    baseStream.Position = (baseStream.Position + Me.m_Archive.StartPosition)
+                'End If
             End If
-        ElseIf (Not Me.m_ReadMemoryStream Is Nothing) Then
+        ElseIf (Me.m_ReadMemoryStream IsNot Nothing) Then
             reader = New FileReader(Me.m_ReadMemoryStream)
             reader.BaseStream.Position = Me.m_StartPosition
-        Else
-            If (Me.m_Archive Is Nothing) Then
-                Return Nothing
-            End If
-            reader = Me.m_Archive.GetReader
-            reader.BaseStream.Position = Me.m_StartPosition
+            'Else
+            '    If (Me.m_Archive Is Nothing) Then
+            '        Return Nothing
+            '    End If
+            '    reader = Me.m_Archive.GetReader
+            '    reader.BaseStream.Position = Me.m_StartPosition
         End If
         Return reader
     End Function
 
     Public Function GetStreamReader() As StreamReader
         If (Me.m_ReadMemoryStream Is Nothing) Then
-            Dim reader As StreamReader = If((Me.m_Archive Is Nothing), New StreamReader(Me.m_PhysicalName), Me.m_Archive.GetStreamReader)
+            Dim reader As StreamReader = New StreamReader(Me.m_PhysicalName) 'If((Me.m_Archive Is Nothing), New StreamReader(Me.m_PhysicalName), Me.m_Archive.GetStreamReader)
             Dim baseStream As Stream = reader.BaseStream
             baseStream.Position = (baseStream.Position + Me.m_StartPosition)
             If Not Me.IsCompressed Then
@@ -631,27 +636,27 @@ TR_004F:
     Protected Function GetStreamWriter(ByVal compressionMode As ECompressionMode) As StreamWriter
         Me.m_WriteMemoryStream = New MemoryStream
         Me.m_IsInMemory = True
-        Me.m_IsArchived = False
+        'Me.m_IsArchived = False
         Me.m_CurrentCompression = compressionMode
         Return New StreamWriter(Me.m_WriteMemoryStream)
     End Function
 
     Public Function GetWriter() As FileWriter
-        If ((Me.m_Archive Is Nothing) AndAlso (Not Me.m_PhysicalName Is Nothing)) Then
+        If ((Me.m_PhysicalName IsNot Nothing)) Then
             Me.m_IsInMemory = False
-            Me.m_IsArchived = False
+            'Me.m_IsArchived = False
             Return New FileWriter(New FileStream((Me.m_PhysicalName & ".temp"), FileMode.Create))
         End If
         Me.m_WriteMemoryStream = New MemoryStream
         Me.m_IsInMemory = True
-        Me.m_IsArchived = False
+        'Me.m_IsArchived = False
         Return New FileWriter(Me.m_WriteMemoryStream)
     End Function
 
     Protected Function GetWriter(ByVal size As Integer, ByVal compressionMode As ECompressionMode) As FileWriter
         Me.m_WriteMemoryStream = New MemoryStream(size)
         Me.m_IsInMemory = True
-        Me.m_IsArchived = False
+        'Me.m_IsArchived = False
         Me.m_CurrentCompression = compressionMode
         If (Me.m_CurrentCompression <> ECompressionMode.None) Then
             Me.m_CompressedSize = size
@@ -695,12 +700,12 @@ TR_004F:
 
     Private Sub Load(ByVal fifaFile As FifaFile)
         Me.m_Name = fifaFile.Name
-        Me.m_Archive = fifaFile.Archive
-        Me.m_IsArchived = fifaFile.IsArchived
+        'Me.m_Archive = fifaFile.Archive
+        'Me.m_IsArchived = fifaFile.IsArchived
         Me.m_IsInMemory = fifaFile.IsInMemory
         Me.m_PhysicalName = fifaFile.PhysicalName
         Me.m_StartPosition = fifaFile.StartPosition
-        Me.m_IsAnArchive = True
+        'Me.m_IsAnArchive = True
         Me.m_RequiredCompression = fifaFile.m_RequiredCompression
         Me.m_CurrentCompression = fifaFile.m_CurrentCompression
         Me.m_CompressedSize = fifaFile.CompressedSize
@@ -709,14 +714,14 @@ TR_004F:
         Me.m_WriteMemoryStream = fifaFile.m_WriteMemoryStream
     End Sub
 
-    Private Sub Load(ByVal path As String, ByVal isAnArchive As Boolean)
-        Me.m_Archive = Nothing
-        Me.m_IsArchived = False
+    Private Sub Load(ByVal path As String) ', ByVal isAnArchive As Boolean)
+        'Me.m_Archive = Nothing
+        'Me.m_IsArchived = False
         Me.m_IsInMemory = False
         Me.m_PhysicalName = path
         Me.m_StartPosition = 0
         Me.m_Name = IO.Path.GetFileName(path)
-        Me.m_IsAnArchive = isAnArchive
+        'Me.m_IsAnArchive = isAnArchive
         Dim r As FileReader = Me.GetReader
         If (Not r Is Nothing) Then
             Dim length As Integer = CInt(r.BaseStream.Length)
@@ -729,63 +734,63 @@ TR_004F:
         End If
     End Sub
 
-    Private Sub Load(ByVal archive As FifaBigFile, ByVal buffer As Byte(), ByVal name As String, ByVal compressionMode As ECompressionMode)
-        Me.m_Archive = archive
-        Me.m_IsArchived = False
-        Me.m_IsInMemory = True
-        Me.m_ReadMemoryStream = New MemoryStream(buffer)
-        Me.m_PhysicalName = Nothing
-        Me.m_StartPosition = 0
-        Me.m_Name = name
-        Dim extension As String = Path.GetExtension(name)
-        extension.ToLower()
+    'Private Sub Load(ByVal archive As FifaBigFile, ByVal buffer As Byte(), ByVal name As String, ByVal compressionMode As ECompressionMode)
+    '    Me.m_Archive = archive
+    '    Me.m_IsArchived = False
+    '    Me.m_IsInMemory = True
+    '    Me.m_ReadMemoryStream = New MemoryStream(buffer)
+    '    Me.m_PhysicalName = Nothing
+    '    Me.m_StartPosition = 0
+    '    Me.m_Name = name
+    '    Dim extension As String = Path.GetExtension(name)
+    '    extension.ToLower()
 
-        If (extension = ".big") Then
-            Me.m_IsAnArchive = True
-        Else
-            Me.m_IsAnArchive = False
-        End If
-        Me.m_RequiredCompression = compressionMode
-        Me.m_CurrentCompression = ECompressionMode.None
-        Me.m_UncompressedSize = buffer.Length
-        If Me.IsToCompress Then
-            Me.m_CompressedSize = -1
-        Else
-            Me.m_CompressedSize = Me.m_UncompressedSize
-        End If
-    End Sub
+    '    If (extension = ".big") Then
+    '        Me.m_IsAnArchive = True
+    '    Else
+    '        Me.m_IsAnArchive = False
+    '    End If
+    '    Me.m_RequiredCompression = compressionMode
+    '    Me.m_CurrentCompression = ECompressionMode.None
+    '    Me.m_UncompressedSize = buffer.Length
+    '    If Me.IsToCompress Then
+    '        Me.m_CompressedSize = -1
+    '    Else
+    '        Me.m_CompressedSize = Me.m_UncompressedSize
+    '    End If
+    'End Sub
 
 
-    Private Sub Load(ByVal archive As FifaBigFile, ByVal startPosition As UInt32, ByVal size As Integer, ByVal name As String, ByVal isAnArchive As Boolean, ByVal r As FileReader)
-        Me.m_Name = name
-        Me.m_Archive = archive
-        Me.m_IsArchived = True
-        Me.m_IsInMemory = archive.IsInMemory
-        Me.m_PhysicalName = Me.m_Archive.PhysicalName
-        Me.m_StartPosition = startPosition
-        Me.m_IsAnArchive = isAnArchive
-        Me.m_CompressedSize = size
-        Me.m_UncompressedSize = size
-        Me.m_CurrentCompression = ECompressionMode.Unknown
-        Me.m_RequiredCompression = ECompressionMode.Unknown
-        If (size = 0) Then
-            Me.m_CurrentCompression = ECompressionMode.None
-            Me.m_RequiredCompression = ECompressionMode.None
-        ElseIf (r Is Nothing) Then
-            r = Me.m_Archive.GetReader
-            Dim baseStream As Stream = r.BaseStream
-            baseStream.Position = (baseStream.Position + startPosition)
-            Me.CheckCompressionMode(r)
-            Me.ReleaseReader(r)
-        Else
-            If (Not Me.m_Archive Is Nothing) Then
-                r.BaseStream.Position = (Me.m_Archive.StartPosition + startPosition)
-            Else
-                r.BaseStream.Position = startPosition
-            End If
-            Me.CheckCompressionMode(r)
-        End If
-    End Sub
+    'Private Sub Load(ByVal archive As FifaBigFile, ByVal startPosition As UInt32, ByVal size As Integer, ByVal name As String, ByVal isAnArchive As Boolean, ByVal r As FileReader)
+    '    Me.m_Name = name
+    '    Me.m_Archive = archive
+    '    Me.m_IsArchived = True
+    '    Me.m_IsInMemory = archive.IsInMemory
+    '    Me.m_PhysicalName = Me.m_Archive.PhysicalName
+    '    Me.m_StartPosition = startPosition
+    '    Me.m_IsAnArchive = isAnArchive
+    '    Me.m_CompressedSize = size
+    '    Me.m_UncompressedSize = size
+    '    Me.m_CurrentCompression = ECompressionMode.Unknown
+    '    Me.m_RequiredCompression = ECompressionMode.Unknown
+    '    If (size = 0) Then
+    '        Me.m_CurrentCompression = ECompressionMode.None
+    '        Me.m_RequiredCompression = ECompressionMode.None
+    '    ElseIf (r Is Nothing) Then
+    '        r = Me.m_Archive.GetReader
+    '        Dim baseStream As Stream = r.BaseStream
+    '        baseStream.Position = (baseStream.Position + startPosition)
+    '        Me.CheckCompressionMode(r)
+    '        Me.ReleaseReader(r)
+    '    Else
+    '        If (Not Me.m_Archive Is Nothing) Then
+    '            r.BaseStream.Position = (Me.m_Archive.StartPosition + startPosition)
+    '        Else
+    '            r.BaseStream.Position = startPosition
+    '        End If
+    '        Me.CheckCompressionMode(r)
+    '    End If
+    'End Sub
 
 
     Private Function Read() As Byte()
@@ -876,11 +881,11 @@ TR_004F:
 
     Public Sub Rename(ByVal name As String)
         Me.m_Name = name
-        If (Me.Archive Is Nothing) Then
-            Dim destFileName As String = (Path.GetDirectoryName(Me.m_PhysicalName) & "\" & name)
-            File.Move(Me.m_PhysicalName, destFileName)
-            Me.m_PhysicalName = destFileName
-        End If
+        'If (Me.Archive Is Nothing) Then
+        Dim destFileName As String = (Path.GetDirectoryName(Me.m_PhysicalName) & "\" & name)
+        File.Move(Me.m_PhysicalName, destFileName)
+        Me.m_PhysicalName = destFileName
+        ' End If
     End Sub
 
     Public Sub Save(ByVal w As FileWriter)
@@ -908,10 +913,10 @@ TR_004F:
                 count = (count - num3)
             Loop
         End If
-        If (Not Me.m_Archive Is Nothing) Then
-            Me.m_PhysicalName = Me.m_Archive.PhysicalName
-            Me.m_IsArchived = True
-        End If
+        'If (Me.m_Archive IsNot Nothing) Then
+        '    Me.m_PhysicalName = Me.m_Archive.PhysicalName
+        '    Me.m_IsArchived = True
+        'End If
         Me.m_StartPosition = Convert.ToUInt32(position)
         Me.m_ReadMemoryStream = Nothing
         Me.m_WriteMemoryStream = Nothing
@@ -1239,7 +1244,7 @@ TR_004F:
     Private Function UncompressBms(ByVal outputStream As Stream) As Boolean     ''Chunkzip2, Chunkref2, chunklzx, chunlzma, chunklz4, chunkunc, chunzstd, chunoodl
         Me.Export(FifaEnvironment.ExportFolder, False)
         Dim path As String = (FifaEnvironment.ExportFolder & "\" & Me.Name)
-        Dim BmsScript As String = FifaEnvironment.LaunchDir & "\BMS\scripts\chunklzx.bms"
+        Dim BmsScript As String = FifaEnvironment.LaunchDir & "\Tools\BMS\scripts\chunklzx.bms"
         Dim OutputFolder As String = IO.Path.GetDirectoryName(path)
 
         If (Not Directory.Exists(OutputFolder)) Then
@@ -1248,16 +1253,16 @@ TR_004F:
         If Not File.Exists(path) Then
             Return False
         End If
-        Dim str2 As String = ((IO.Path.GetDirectoryName(path) & "\" & IO.Path.GetFileNameWithoutExtension(path)) & "_decrypted" & IO.Path.GetExtension(path))
+        Dim str2 As String = ((OutputFolder & "\" & IO.Path.GetFileNameWithoutExtension(path)) & "_unpacked" & IO.Path.GetExtension(path))
         If File.Exists(str2) Then
             File.Delete(str2)
         End If
-        If (Not path Is Nothing) Then
-            FifaFile.s_ProcessUnBMS.StartInfo.WorkingDirectory = FifaEnvironment.LaunchDir & "\BMS"
+        If (path IsNot Nothing) Then
+            FifaFile.s_ProcessUnBMS.StartInfo.WorkingDirectory = FifaEnvironment.LaunchDir & "\Tools\BMS"
             FifaFile.s_ProcessUnBMS.StartInfo.FileName = "quickbms"
-            FifaFile.s_ProcessUnBMS.StartInfo.CreateNoWindow = False
+            FifaFile.s_ProcessUnBMS.StartInfo.CreateNoWindow = True
             FifaFile.s_ProcessUnBMS.StartInfo.UseShellExecute = True
-            FifaFile.s_ProcessUnBMS.StartInfo.WindowStyle = ProcessWindowStyle.Normal
+            FifaFile.s_ProcessUnBMS.StartInfo.WindowStyle = ProcessWindowStyle.Hidden
             FifaFile.s_ProcessUnBMS.StartInfo.Arguments = CStr("""" & BmsScript & """ """ & path & """ """ & OutputFolder & """") '"""" & BmsScript & """ """ & path & """ """ & OutputFolder & """" 'path
             FifaFile.s_ProcessUnBMS.StartInfo.RedirectStandardOutput = False
             FifaFile.s_ProcessUnBMS.Start()
@@ -1275,8 +1280,131 @@ TR_004F:
         stream1.Read(buffer, 0, length)
         outputStream.Write(buffer, 0, length)
         stream1.Close()
+        File.Delete(str2)
 
         Return True
+    End Function
+
+    Private Function UncompressChunkpack(ByVal outputStream As Stream) As Boolean     ''Chunkzip2, Chunkref2, chunklzx, chunlzma, chunklz4
+        Me.Export(FifaEnvironment.ExportFolder, False)
+        Dim path As String = (FifaEnvironment.ExportFolder & "\" & Me.Name)
+        Dim OutputFolder As String = IO.Path.GetDirectoryName(path)
+
+        If (Not Directory.Exists(OutputFolder)) Then
+            Directory.CreateDirectory(OutputFolder)
+        End If
+        If Not File.Exists(path) Then
+            Return False
+        End If
+        Dim str2 As String = ((OutputFolder & "\" & IO.Path.GetFileNameWithoutExtension(path)) & "_unpacked" & IO.Path.GetExtension(path))
+        If File.Exists(str2) Then
+            File.Delete(str2)
+        End If
+        If (path IsNot Nothing) Then
+            FifaFile.s_ProcessChunkpack.StartInfo.WorkingDirectory = FifaEnvironment.LaunchDir & "\Tools\chunkpack"
+            FifaFile.s_ProcessChunkpack.StartInfo.FileName = "chunkpack"
+            FifaFile.s_ProcessChunkpack.StartInfo.CreateNoWindow = True
+            FifaFile.s_ProcessChunkpack.StartInfo.UseShellExecute = True
+            FifaFile.s_ProcessChunkpack.StartInfo.WindowStyle = ProcessWindowStyle.Hidden
+            FifaFile.s_ProcessChunkpack.StartInfo.Arguments = CStr("-u """ & path & """ """ & str2 & """")
+            FifaFile.s_ProcessChunkpack.StartInfo.RedirectStandardOutput = False
+            FifaFile.s_ProcessChunkpack.Start()
+            FifaFile.s_ProcessChunkpack.WaitForExit()
+        End If
+        If Not File.Exists(str2) Then
+            Return False
+        End If
+        File.Delete(path)
+        'File.Move(str2, path)
+        Dim length As Integer = CInt(New FileInfo(str2).Length)
+        Me.m_UncompressedSize = length
+        Dim buffer As Byte() = New Byte(length - 1) {}
+        Dim stream1 As New FileStream(str2, FileMode.Open, FileAccess.Read)
+        stream1.Read(buffer, 0, length)
+        outputStream.Write(buffer, 0, length)
+        stream1.Close()
+        File.Delete(str2)
+
+        Return True
+    End Function
+
+    Private Function CompressChunkpack(ByVal outputStream As Stream, CompressionMode As ECompressionMode) As Boolean     ''Chunkzip2, Chunkref2, chunklzx, chunlzma, chunklz4
+        Return CompressChunkpack(outputStream, CompressionMode, Me.m_UncompressedSize)
+    End Function
+
+    Private Function CompressChunkpack(ByVal outputStream As Stream, CompressionMode As ECompressionMode, ByVal uncompressedSize As Integer) As Boolean     ''Chunkzip2, Chunkref2, chunklzx, chunlzma, chunklz4
+        Me.Export(FifaEnvironment.ExportFolder, False)
+        Dim path As String = (FifaEnvironment.ExportFolder & "\" & Me.Name)
+        Dim OutputFolder As String = IO.Path.GetDirectoryName(path)
+        Dim StrCompression As String = GetCompressionChunkpack(CompressionMode)
+        Me.m_UncompressedSize = uncompressedSize
+
+        If (Not Directory.Exists(OutputFolder)) Then
+            Directory.CreateDirectory(OutputFolder)
+        End If
+        If Not File.Exists(path) Or StrCompression Is Nothing Then
+            Return False
+        End If
+        Dim str2 As String = ((OutputFolder & "\" & IO.Path.GetFileNameWithoutExtension(path)) & "_packed" & IO.Path.GetExtension(path))
+        If File.Exists(str2) Then
+            File.Delete(str2)
+        End If
+        If (path IsNot Nothing) Then
+            FifaFile.s_ProcessChunkpack.StartInfo.WorkingDirectory = FifaEnvironment.LaunchDir & "\Tools\chunkpack"
+            FifaFile.s_ProcessChunkpack.StartInfo.FileName = "chunkpack"
+            FifaFile.s_ProcessChunkpack.StartInfo.CreateNoWindow = True
+            FifaFile.s_ProcessChunkpack.StartInfo.UseShellExecute = True
+            FifaFile.s_ProcessChunkpack.StartInfo.WindowStyle = ProcessWindowStyle.Hidden
+            FifaFile.s_ProcessChunkpack.StartInfo.Arguments = CStr(StrCompression & " """ & path & """ """ & str2 & """")
+            FifaFile.s_ProcessChunkpack.StartInfo.RedirectStandardOutput = False
+            FifaFile.s_ProcessChunkpack.Start()
+            FifaFile.s_ProcessChunkpack.WaitForExit()
+        End If
+        If Not File.Exists(str2) Then
+            Return False
+        End If
+        File.Delete(path)
+        Dim length As Integer = CInt(New FileInfo(str2).Length)
+        Me.m_CompressedSize = length
+        Dim buffer As Byte() = New Byte(length - 1) {}
+        Dim stream1 As New FileStream(str2, FileMode.Open, FileAccess.Read)
+        stream1.Read(buffer, 0, length)
+        outputStream.Write(buffer, 0, length)
+        stream1.Close()
+        File.Delete(str2)
+
+        Return True
+    End Function
+
+    Private Function GetCompressionChunkpack(CompressionMode As ECompressionMode) As String
+        Select Case CompressionMode
+            Case ECompressionMode.Chunkref2
+                Return "-refpack"
+            Case ECompressionMode.Chunkzip2
+                Return "-zlib"
+            Case ECompressionMode.Chunklzx2
+                Return "-lzx"
+            Case ECompressionMode.Chunklzma
+                Return "-lzma"
+            Case ECompressionMode.Chunklz4
+                Return "-lz4"
+        End Select
+
+        Return Nothing
+    End Function
+
+    Public Shared Function GetSupportedCompressions() As List(Of ECompressionMode)
+        Return New List(Of ECompressionMode) From {
+            ECompressionMode.Compressed_10FB, ECompressionMode.Chunkzip, ECompressionMode.Chunkref,
+            ECompressionMode.Chunkzip2, ECompressionMode.Chunkref2, ECompressionMode.Chunklzx2, ECompressionMode.Chunklzma, ECompressionMode.Chunklz4}
+    End Function
+
+    Public Shared Function GetSupportedDecompressions() As List(Of ECompressionMode)
+        Return New List(Of ECompressionMode) From {
+            ECompressionMode.Compressed_10FB, ECompressionMode.Chunkzip, ECompressionMode.Chunkref, ECompressionMode.Chunklzx,
+            ECompressionMode.EASF,
+            ECompressionMode.Chunkzip2, ECompressionMode.Chunkref2, ECompressionMode.Chunklzx2, ECompressionMode.Chunklzma, ECompressionMode.Chunklz4,
+            ECompressionMode.Chunzstd, ECompressionMode.Chunoodl}
     End Function
 
     ' Properties
@@ -1346,17 +1474,17 @@ TR_004F:
         End Get
     End Property
 
-    Public ReadOnly Property IsArchived As Boolean
-        Get
-            Return Me.m_IsArchived
-        End Get
-    End Property
+    'Public ReadOnly Property IsArchived As Boolean
+    '    Get
+    '        Return Me.m_IsArchived
+    '    End Get
+    'End Property
 
-    Public ReadOnly Property Archive As FifaBigFile
-        Get
-            Return Me.m_Archive
-        End Get
-    End Property
+    'Public ReadOnly Property Archive As FifaBigFile
+    '    Get
+    '        Return Me.m_Archive
+    '    End Get
+    'End Property
 
     Public ReadOnly Property IsInMemory As Boolean
         Get
@@ -1364,17 +1492,18 @@ TR_004F:
         End Get
     End Property
 
-    Public ReadOnly Property IsAnArchive As Boolean
-        Get
-            Return Me.m_IsAnArchive
-        End Get
-    End Property
+    'Public ReadOnly Property IsAnArchive As Boolean
+    '    Get
+    '        Return Me.m_IsAnArchive
+    '    End Get
+    'End Property
 
 
     ' Fields
     Private Shared s_ProcessUnchunklzma As Process = New Process
     Private Shared s_ProcessUnEASF As Process = New Process
     Private Shared s_ProcessUnBMS As Process = New Process
+    Private Shared s_ProcessChunkpack As Process = New Process
     Private m_Name As String
     Private m_PhysicalName As String
     Private m_StartPosition As UInt32
@@ -1385,9 +1514,9 @@ TR_004F:
     Private m_MaxBlockUncompressedSize As Integer
     Private m_RequiredCompression As ECompressionMode
     Private m_CurrentCompression As ECompressionMode
-    Private m_IsArchived As Boolean
-    Private m_Archive As FifaBigFile
+    'Private m_IsArchived As Boolean
+    'Private m_Archive As FifaBigFile
     Private m_IsInMemory As Boolean
-    Private m_IsAnArchive As Boolean
+    'Private m_IsAnArchive As Boolean
 End Class
 'End Namespace

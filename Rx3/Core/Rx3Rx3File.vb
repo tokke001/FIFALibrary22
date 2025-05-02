@@ -7,7 +7,7 @@ Imports FIFALibrary22.Rw.Core.Arena
 'http://www.soccergaming.com/index.php?threads/fifa-11-pc-file-formats-resarch-renderware-4-5-assets.6468020/
 
 Namespace Rx3
-    Public Class Rx3File
+    <Serializable> Public Class Rx3File
 
         Public Sub New()
             Me.Rw4Section = Nothing

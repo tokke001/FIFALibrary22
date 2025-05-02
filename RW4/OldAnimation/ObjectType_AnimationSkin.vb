@@ -1,5 +1,5 @@
 ﻿Namespace Rw.OldAnimation
-    Public Class AnimationSkin
+<Serializable> Public Class AnimationSkin
         'rw::oldanimation:: ?? (not found)
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.OBJECTTYPE_ANIMATIONSKIN

@@ -1,6 +1,8 @@
-﻿Namespace Rw.OldAnimation
-    Public Class SkinMatrixBuffer
-        'rw::oldanimation:: ?? (not found)
+﻿Imports FIFALibrary22.Rw.Graphics.Shader
+
+Namespace Rw.OldAnimation
+<Serializable> Public Class SkinMatrixBuffer
+        'rw::oldanimation:: ?? (not found)  --> rw::platform::skin::SkinMatrixBuffer ??
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.OBJECTTYPE_SKINMATRIXBUFFER
         Public Const ALIGNMENT As Integer = 128
@@ -22,7 +24,7 @@
 
             r.BaseStream.Position = Me.Offset
             For i = 0 To Me.NumBones - 1
-                Dim m_matrix As New Matrix4x3Affine(r)
+                Dim m_matrix As New Xbox2SkinMatrix(r)
                 Me.BoneMatrices.Add(m_matrix)
             Next i
 
@@ -57,7 +59,7 @@
         Public Property NumBones As UInteger
         Public Property Unknown_1 As UInteger
         Public Property Unknown_2 As UInteger
-        Public Property BoneMatrices As List(Of Matrix4x3Affine) = New List(Of Matrix4x3Affine)()
+        Public Property BoneMatrices As List(Of Xbox2SkinMatrix) = New List(Of Xbox2SkinMatrix)()
 
         Public Overrides Function GetTypeCode() As Rw.SectionTypeCode
             Return TYPE_CODE
@@ -67,4 +69,5 @@
             Return ALIGNMENT
         End Function
     End Class
+
 End Namespace

@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class AnimationSkin
+<Serializable> Public Class AnimationSkin
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.ANIMATION_SKIN
         Public Const ALIGNMENT As Integer = 16

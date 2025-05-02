@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Collision
-    Public Class Volume
+    <Serializable> Public Class Volume
         'rw::collision::Volume
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWCOBJECTTYPE_VOLUME
@@ -140,7 +140,7 @@
         End Function
     End Class
 
-    Public Class AggregateSpecificData
+    <Serializable> Public Class AggregateSpecificData
         'rw::collision::AggregateSpecificData   0x00044f1c
         Public Sub New(ByVal RwArena As Rw.Core.Arena.Arena)
             Me.RwArena = RwArena
@@ -163,7 +163,7 @@
         Public Property PAgg As RwObject     'pointer to "rw::collision::Aggregate", wich can be found at section RWCObjectType_SimpleMappedArray --> index of RWCObjectType_SimpleMappedArray !!
     End Class
 
-    Public Class SphereSpecificData
+    <Serializable> Public Class SphereSpecificData
         'rw::collision::SphereSpecificData  0x000450bc
         Public Sub New()
 
@@ -183,7 +183,7 @@
 
         'Public Property m_Nothing As UInteger
     End Class
-    Public Class CapsuleSpecificData
+    <Serializable> Public Class CapsuleSpecificData
         'rw::collision::CapsuleSpecificData   0x00044f74
         Public Sub New()
 
@@ -203,7 +203,7 @@
 
         Public Property Hh As Single
     End Class
-    Public Class TriangleSpecificData
+    <Serializable> Public Class TriangleSpecificData
         'rw::collision::TriangleSpecificData    0x00044f72
         Public Sub New()
 
@@ -230,7 +230,7 @@
         Public Property EdgeCos2 As Single
 
     End Class
-    Public Class BoxSpecificData
+    <Serializable> Public Class BoxSpecificData
         'rw::collision::BoxSpecificData 0x000450be
         Public Sub New()
 
@@ -256,7 +256,7 @@
         Public Property Hy As Single
         Public Property Hz As Single
     End Class
-    Public Class CylinderSpecificData
+    <Serializable> Public Class CylinderSpecificData
         'rw::collision::CylinderSpecificData    0x00044fa3
         Public Sub New()
 

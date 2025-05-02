@@ -1,7 +1,7 @@
 ﻿Imports Microsoft.DirectX
 
 Namespace Rw.EA.FxShader
-    Public Class ParameterBlock
+    <Serializable> Public Class ParameterBlock
         'EA::FxShader::ParameterBlock
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_FxShader_ParameterBlock
@@ -30,7 +30,6 @@ Namespace Rw.EA.FxShader
                 r.BaseStream.Position = r.ReadUInt32
                 Me.DataBuffer(i) = LoadData(PDescriptor.ParameterInfos(i), r)
             Next
-
 
 
 
@@ -102,6 +101,9 @@ Namespace Rw.EA.FxShader
                         m_Float4(i) = r.ReadVector4
                     Next
                     Return m_Float4
+
+                Case EParameterType.float2
+                    Return New Single(2 - 1) {r.ReadSingle, r.ReadSingle}
 
                 Case Else
                     MsgBox("EA_FxShader_ParameterBlock - EF0001: Unknown Parameter-value found at loading """ & ParameterDescriptors.ParameterTypeName & """")
@@ -193,6 +195,11 @@ Namespace Rw.EA.FxShader
                         w.Write(CType(Value(i), Vector4))
                     Next
 
+                Case EParameterType.float2
+                    For i = 0 To CType(Value, Single()).Length - 1
+                        w.Write(CType(Value(i), Single))
+                    Next
+
                 Case Else
                     MsgBox("EA_FxShader_ParameterBlock - EF0001: Unknown Parameter-value found at saving """ & ParameterDescriptors.ParameterTypeName & """")
             End Select
@@ -218,7 +225,7 @@ Namespace Rw.EA.FxShader
     End Class
 End Namespace
 
-Public Class Sampler2D
+<Serializable> Public Class Sampler2D
     Public Property PRaster As Rw.Graphics.Raster   'contains section index of the texture (RWGOBJECTTYPE_RASTER = &H20003), can be "00 40 00 00" : INDEX_NO_OBJECT
     Public Property Value_2 As UInteger
     Public Property Value_3 As UInteger

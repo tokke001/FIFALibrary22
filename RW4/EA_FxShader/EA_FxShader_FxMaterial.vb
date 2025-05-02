@@ -1,5 +1,5 @@
 ﻿Namespace Rw.EA.FxShader
-    Public Class FxMaterial
+<Serializable> Public Class FxMaterial
         'EA::FxShader::FxMaterial
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_FxShader_FxMaterial
@@ -94,7 +94,7 @@
             Return ALIGNMENT
         End Function
     End Class
-    Public Class FxMaterialBlock
+<Serializable> Public Class FxMaterialBlock
         Public Property OffsetName As UInteger
         Public Property Name As String
     End Class
