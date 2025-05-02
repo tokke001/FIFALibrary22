@@ -1,6 +1,6 @@
 ﻿'used at begin of: RW- raster, vertexbuffer, indexbuffer
 Namespace Rw.D3D
-    Public Class D3DResource
+    <Serializable> Public Class D3DResource
         'D3DResource    0xc0d0
         Public Sub New()
 

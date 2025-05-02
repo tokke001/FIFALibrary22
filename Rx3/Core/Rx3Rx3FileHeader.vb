@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class Rx3FileHeader
+<Serializable> Public Class Rx3FileHeader
         ' Methods
 
         Public Sub New(byval Endianness As Endian)

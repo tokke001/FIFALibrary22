@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class Adjacency
+<Serializable> Public Class Adjacency
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.ADJACENCY
         Public Const ALIGNMENT As Integer = 16
@@ -81,7 +81,7 @@
 
     End Class
 
-    Public Class AdjacencyInfo
+<Serializable> Public Class AdjacencyInfo
         Public Property NumUsed As UInteger
         Public Property Data As UInteger() = New UInteger(15 - 1) {}
     End Class

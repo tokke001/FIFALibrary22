@@ -1,5 +1,5 @@
 ﻿Namespace Rw.D3D
-    Public Class D3DIndexBuffer
+    <Serializable> Public Class D3DIndexBuffer
         'D3DIndexBuffer
         Public Sub New()
 

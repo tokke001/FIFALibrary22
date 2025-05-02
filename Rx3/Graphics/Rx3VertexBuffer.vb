@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Partial Public Class VertexBuffer
+    <Serializable> Partial Public Class VertexBuffer
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.VERTEX_BUFFER
         Public Const ALIGNMENT As Integer = 16

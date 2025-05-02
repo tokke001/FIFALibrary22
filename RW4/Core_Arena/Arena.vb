@@ -5,7 +5,7 @@ Imports System.Drawing
 Imports BCnEncoder.Shared
 
 Namespace Rw.Core.Arena
-    Public Class Arena
+    <Serializable> Public Class Arena
         'rw::core::arena::Arena
         Public Sub New()
         End Sub

@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class TextureLevel
+    <Serializable> Public Class TextureLevel
         Inherits RawImage
         ' Methods
         'Public Sub New()

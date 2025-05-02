@@ -5,7 +5,7 @@ Imports FIFALibrary22.Ktx
 Imports FIFALibrary22.Rw.D3D
 
 Namespace Rw.Graphics
-    Public Class Raster
+    <Serializable> Public Class Raster
         'rw::graphics::Raster
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_RASTER
@@ -122,16 +122,16 @@ Namespace Rw.Graphics
             Return m_KtxFile
         End Function
 
-        Public Function SetBitmap(ByVal bitmap As Bitmap) As Boolean
+        Public Function SetBitmap(ByVal bitmap As Bitmap, Optional NoMipMapsCreate As Boolean = False) As Boolean
             Dim TextureFormat As Rw.SurfaceFormat = Me.D3d.Format.TextureFormat
             Dim NumLevels As UShort = Me.NumMipLevels
 
-            Me.SetBitmap(bitmap, TextureFormat, NumLevels)
+            Me.SetBitmap(bitmap, TextureFormat, NumLevels, NoMipMapsCreate)
 
             Return True
         End Function
 
-        Public Function SetBitmap(ByVal bitmap As Bitmap, ByVal TextureFormat As Rw.SurfaceFormat, ByVal NumLevels As UShort) As Boolean
+        Public Function SetBitmap(ByVal bitmap As Bitmap, ByVal TextureFormat As Rw.SurfaceFormat, ByVal NumLevels As UShort, Optional NoMipMapsCreate As Boolean = False) As Boolean
 
             If Me.D3d.Format.Dimension <> GPUDimension.DIMENSION_2D Then
                 Return False
@@ -158,7 +158,9 @@ Namespace Rw.Graphics
             m_RawImages(FaceIndex)(0) = New RawImage(bitmap.Width, bitmap.Height, ETextureFormat, Size, SwapEndian_DxtBlock, Tiled360) 'RawImage(bitmap.Width, bitmap.Height, TextureFormat, SwapEndian_DxtBlock)
             m_RawImages(FaceIndex)(0).Bitmap = bitmap
             '3 - Generate Mipmaps (from main)
-            m_RawImages = Me.GenerateMipmaps(m_RawImages, NumLevels, TextureFormat)
+            If NoMipMapsCreate = False Then
+                m_RawImages = Me.GenerateMipmaps(m_RawImages, NumLevels, TextureFormat)
+            End If
 
             Me.SetRawImageData(m_RawImages)
             Return True
@@ -253,6 +255,19 @@ Namespace Rw.Graphics
 
             Me.SetRawImageData(l_RawImages)
         End Sub
+
+        Public Sub SetTextureFormat(TextureFormat As SurfaceFormat)
+            If Me.D3d.Format.TextureFormat <> TextureFormat Then
+                For f = 0 To Me.D3d.Format.Depth - 1
+                    For i = 0 To Me.NumMipLevels - 1
+                        RawImageData(f)(i).TextureFormat = TextureFormat.ToETextureFormat
+                    Next
+                Next
+
+                Me.D3d.Format.TextureFormat = TextureFormat
+            End If
+        End Sub
+
         'Public Function GenerateMipmaps(ByVal NumLevels As UShort) As Boolean  'generate mipmaps
 
         'End Function

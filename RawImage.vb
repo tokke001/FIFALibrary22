@@ -1,8 +1,9 @@
 ﻿Imports System.Drawing
 Imports System.Drawing.Imaging
 Imports System.Runtime.InteropServices
+Imports ImageMagick
 
-Public Class RawImage
+<Serializable> Public Class RawImage
     ' Methods
     'Public Sub New()
 
@@ -38,43 +39,33 @@ Public Class RawImage
         End If
         Select Case Me.m_TextureFormat
             Case ETextureFormat.BC1, ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC5, ETextureFormat.BC4, ETextureFormat.BC6H_UF16, ETextureFormat.BC7
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadDxtToBitmap(RawDataFixed)
 
             Case ETextureFormat.B8G8R8A8
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadB8G8R8A8ToBitmap(RawDataFixed)
 
             Case ETextureFormat.B8G8R8
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
-                Me.ReadB8G8R8ToBitmap(RawDataFixed)
+                Me.ReadB8G8R8ToBitmap(RawDataFixed)     '-> Format24bppRgb
 
             Case ETextureFormat.B4G4R4A4
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadB4G4R4A4ToBitmap(RawDataFixed)
 
             Case ETextureFormat.B5G6R5
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
-                Me.ReadB5G6R5ToBitmap(RawDataFixed)
+                Me.ReadB5G6R5ToBitmap(RawDataFixed)     '-> Format24bppRgb
 
             Case ETextureFormat.B5G5R5A1
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadB5G5R5A1ToBitmap(RawDataFixed)
 
             Case ETextureFormat.L8
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadL8ToBitmap(RawDataFixed)
 
             Case ETextureFormat.L8A8
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadL8A8ToBitmap(RawDataFixed)
 
             Case ETextureFormat.R32G32B32A32Float
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadR32G32B32A32FToBitmap(RawDataFixed)
 
             Case ETextureFormat.R8G8B8A8
-                Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
                 Me.ReadR8G8B8A8ToBitmap(RawDataFixed)
 
                 'Case ETextureFormat.BIT8
@@ -86,6 +77,7 @@ Public Class RawImage
     End Sub
 
     Private Sub ReadR8G8B8A8ToBitmap(RawDataFixed() As Byte)
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
         Dim Index As Integer = 0
         For i = 0 To Me.m_Bitmap.Height - 1
             For j = 0 To Me.m_Bitmap.Width - 1
@@ -104,6 +96,7 @@ Public Class RawImage
     End Sub
 
     Private Sub ReadR32G32B32A32FToBitmap(RawDataFixed() As Byte)
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
         Dim f As New MemoryStream(RawDataFixed)
         Dim r As New FileReader(f, Endian.Little)
 
@@ -120,6 +113,7 @@ Public Class RawImage
     End Sub
 
     Private Sub ReadL8A8ToBitmap(RawDataFixed() As Byte)
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
         Dim Index As Integer = 0
         For i = 0 To Me.m_Bitmap.Height - 1
             For j = 0 To Me.m_Bitmap.Width - 1
@@ -134,6 +128,7 @@ Public Class RawImage
     End Sub
 
     Private Sub ReadL8ToBitmap(RawDataFixed() As Byte)
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
         Dim Index As Integer = 0
         For i = 0 To Me.m_Bitmap.Height - 1
             For j = 0 To Me.m_Bitmap.Width - 1
@@ -147,6 +142,7 @@ Public Class RawImage
     End Sub
 
     Private Sub ReadB5G5R5A1ToBitmap(RawDataFixed() As Byte)
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
         Dim f As New MemoryStream(RawDataFixed)
         Dim r As New FileReader(f, Endian.Little)
 
@@ -165,6 +161,7 @@ Public Class RawImage
     End Sub
 
     Private Sub ReadB5G6R5ToBitmap(RawDataFixed() As Byte)
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format24bppRgb)
         Dim f As New MemoryStream(RawDataFixed)
         Dim r As New FileReader(f, Endian.Little)
 
@@ -183,6 +180,7 @@ Public Class RawImage
     End Sub
 
     Private Sub ReadB4G4R4A4ToBitmap(RawDataFixed() As Byte)
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
         Dim f As New MemoryStream(RawDataFixed)
         Dim r As New FileReader(f, Endian.Little)
 
@@ -201,23 +199,18 @@ Public Class RawImage
     End Sub
 
     Private Sub ReadB8G8R8ToBitmap(RawDataFixed() As Byte)
-        Dim Index As Integer = 0
-        For i = 0 To Me.m_Bitmap.Height - 1
-            For j = 0 To Me.m_Bitmap.Width - 1
-                Dim blue As Integer = RawDataFixed(Index)
-                Index += 1
-                Dim green As Integer = RawDataFixed(Index)
-                Index += 1
-                Dim red As Integer = RawDataFixed(Index)
-                Index += 1
-                Dim alpha As Integer = 255
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format24bppRgb)
+        Dim rect As New Rectangle(0, 0, Me.m_Bitmap.Width, Me.m_Bitmap.Height)
+        Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb)
+        Dim destination As IntPtr = bitmapdata.Scan0
+        Dim num As Integer = (Me.m_Bitmap.Width * Me.m_Bitmap.Height)
+        Marshal.Copy(RawDataFixed, 0, destination, (num * 3))
+        Me.m_Bitmap.UnlockBits(bitmapdata)
 
-                Me.m_Bitmap.SetPixel(j, i, Color.FromArgb(alpha, red, green, blue))
-            Next j
-        Next i
     End Sub
 
     Private Sub ReadB8G8R8A8ToBitmap(RawDataFixed() As Byte)
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
         Dim rect As New Rectangle(0, 0, Me.m_Bitmap.Width, Me.m_Bitmap.Height)
         Dim bitmapdata As BitmapData = Me.m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, Me.m_Bitmap.PixelFormat)
         Dim destination As IntPtr = bitmapdata.Scan0
@@ -236,9 +229,9 @@ Public Class RawImage
         If GraphicUtil.GetTextureSize(Me.m_Bitmap.Width, Me.m_Bitmap.Height, Me.m_TextureFormat) > Me.m_RawData.Length Then
             Exit Sub
         End If
-        If (Me.m_Bitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
-            Me.m_Bitmap = GraphicUtil.Get32bitBitmap(Me.m_Bitmap)
-        End If
+        'If (Me.m_Bitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
+        '    Me.m_Bitmap = GraphicUtil.Get32bitBitmap(Me.m_Bitmap)
+        'End If
         Select Case Me.m_TextureFormat
             Case ETextureFormat.BC1, ETextureFormat.BC2, ETextureFormat.BC3, ETextureFormat.BC5, ETextureFormat.BC4, ETextureFormat.BC6H_UF16, ETextureFormat.BC7
                 Me.WriteBitmapToDxt()
@@ -294,11 +287,12 @@ Public Class RawImage
     End Function
 
     Private Sub ReadDxtToBitmap(ByVal RawDataFixed As Byte())
+        Me.m_Bitmap = New Bitmap(Me.m_Width, Me.m_Height, PixelFormat.Format32bppArgb)
         Dim decoder As New BCnEncoder.Decoder.BcDecoder()
         Dim Format As BCnEncoder.Shared.CompressionFormat = GetBCnEncoderFormat(Me.m_TextureFormat)
         'decoder.InputOptions.ddsBc1ExpectAlpha = False
         'decoder.OutputOptions.redAsLuminance = False
-        decoder.OutputOptions.blueRecalculate = True
+        decoder.OutputOptions.blueRecalculate = False
 
         Me.m_Bitmap = decoder.DecodeRawData(RawDataFixed, Me.m_Width, Me.m_Height, Format)
     End Sub
@@ -380,6 +374,21 @@ Public Class RawImage
         End Select
 
         Return Nothing
+    End Function
+
+    Private Function GetImageMagickCompressionMethod(ByVal TextureFormat As ETextureFormat) As CompressionMethod
+        Select Case TextureFormat
+            Case ETextureFormat.BC1
+                Return CompressionMethod.DXT1
+            Case ETextureFormat.BC2
+                Return CompressionMethod.DXT3
+            Case ETextureFormat.BC3
+                Return CompressionMethod.DXT5
+                'Case ETextureFormat.ATI2
+                '    Image.Settings.Compression = CompressionMethod.BC5
+                'Case Rx3.TextureFormat.BC6H_UF16
+                'Case Rx3.TextureFormat.ATI1
+        End Select
     End Function
 
     Public Function Save(ByVal SwapEndian_DxtBlock As Boolean, ByVal w As FileWriter) As Boolean
@@ -543,12 +552,46 @@ Public Class RawImage
     End Sub
 
     Private Sub WriteBitmapToDxt()
+        Select Case Me.m_TextureFormat
+            Case ETextureFormat.BC1, ETextureFormat.BC2, ETextureFormat.BC3
+                EncodeDxtImageMagick()
+            Case ETextureFormat.BC4, ETextureFormat.BC5, ETextureFormat.BC6H_UF16, ETextureFormat.BC7
+                EncodeDxtBcnEncoder()
+        End Select
+    End Sub
+
+    Private Sub EncodeDxtBcnEncoder()
         Dim Encoder As New BCnEncoder.Encoder.BcEncoder()
         Encoder.OutputOptions.quality = BCnEncoder.Encoder.CompressionQuality.BestQuality
         Encoder.OutputOptions.format = GetBCnEncoderFormat(Me.m_TextureFormat)
         'Encoder.InputOptions.luminanceAsRed = True
         Me.m_RawData = Encoder.EncodeToRawBytes(Me.m_Bitmap, Me.m_Width, Me.m_Height, Me.m_Width, Me.m_Height)
+    End Sub
 
+    Private Sub EncodeDxtImageMagick()
+        'If (Me.m_Bitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
+        '    Me.m_Bitmap = GraphicUtil.Get32bitBitmap(Me.m_Bitmap)
+        'End If
+
+        Dim Stream_in As New MemoryStream
+        Me.m_Bitmap.Save(Stream_in, ImageFormat.Png)
+        Stream_in.Position = 0
+
+        Dim Image As New MagickImage(Stream_in) ', settings)
+        Image.Format = MagickFormat.Dds '(Defines mipmaps = 5)
+        Image.Settings.Compression = GetImageMagickCompressionMethod(Me.m_TextureFormat)
+        Image.Settings.SetDefine(MagickFormat.Dds, "raw", 1)
+        Image.Settings.SetDefine(MagickFormat.Dds, "mipmaps", 0)
+
+        'Dim Stream_out As New MemoryStream
+        'Image.Write(Stream_out)
+        'Stream_out.Position = 0
+
+        'Me.m_RawData = Stream_out.ToArray
+        Me.m_RawData = Image.ToByteArray
+
+        Stream_in.Close()
+        'Stream_out.Close()
     End Sub
 
     Private Sub WriteBitmapToL8()
@@ -777,6 +820,7 @@ Public Class RawImage
         End If
 
     End Sub
+
     Friend Sub SetTiling360Format(ByVal Tiled360 As Boolean)
         If Me.m_Tiled360 <> Tiled360 Then
 
@@ -911,7 +955,13 @@ Public Class RawImage
         Get
             Return m_TextureFormat
         End Get
-        Private Set
+        Friend Set
+            If m_TextureFormat <> Value Then
+                If (Me.m_Bitmap Is Nothing) Then
+                    Me.CreateBitmap()
+                End If
+                NeedToSaveRawData = True
+            End If
             m_TextureFormat = Value
         End Set
     End Property

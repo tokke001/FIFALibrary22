@@ -2,7 +2,7 @@
 Imports FIFALibrary22.AudioBin.RepetitionPools
 
 Namespace AudioBin.Sentences
-    Public Class SentencesFile
+<Serializable> Public Class SentencesFile
         Public Sub New()
 
         End Sub

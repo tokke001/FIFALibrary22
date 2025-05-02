@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class MorphIndexed   '-- checked by me tokke001
+<Serializable> Public Class MorphIndexed   '-- checked by me tokke001
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.MORPH_INDEXED
         Public Const ALIGNMENT As Integer = 16
@@ -85,7 +85,7 @@
 
     End Class
 
-    Public Class MorphIndexedEntry
+<Serializable> Public Class MorphIndexedEntry
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As FileReader)
@@ -129,7 +129,7 @@
         Public Property UnkValues As MorphIndexedEntryUnk()
     End Class
 
-    Public Class MorphIndexedEntryUnk
+<Serializable> Public Class MorphIndexedEntryUnk
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As FileReader)

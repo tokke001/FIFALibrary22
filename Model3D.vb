@@ -4,26 +4,26 @@ Imports System.Drawing
 Imports System.Drawing.Imaging
 Imports Microsoft.DirectX.Direct3D.CustomVertex
 
-Public Class Model3D
+<Serializable> Public Class Model3D
     ' Methods
     Public Sub New()
     End Sub
 
-    Public Sub New(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType)
-        Me.Initialize(IndexStream, VertexStream, PrimitiveType)
+    Public Sub New(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType, Optional UVIndex As Integer = 0)
+        Me.Initialize(IndexStream, VertexStream, PrimitiveType, UVIndex)
     End Sub
 
-    Public Sub New(ByVal indexArray As Rx3.IndexBuffer, ByVal vertexArray As Rx3.VertexBuffer, ByVal PrimitiveType As PrimitiveType)
-        Me.Initialize(indexArray.IndexData, vertexArray.VertexData, PrimitiveType)
+    Public Sub New(ByVal indexArray As Rx3.IndexBuffer, ByVal vertexArray As Rx3.VertexBuffer, ByVal PrimitiveType As PrimitiveType, Optional UVIndex As Integer = 0)
+        Me.Initialize(indexArray.IndexData, vertexArray.VertexData, PrimitiveType, UVIndex)
     End Sub
 
-    Public Sub New(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType, ByVal textureBitmap As Bitmap)
-        Me.Initialize(IndexStream, VertexStream, PrimitiveType)
+    Public Sub New(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType, ByVal textureBitmap As Bitmap, Optional UVIndex As Integer = 0)
+        Me.Initialize(IndexStream, VertexStream, PrimitiveType, UVIndex)
         Me.m_TextureBitmap = textureBitmap
     End Sub
 
-    Public Sub New(ByVal indexArray As Rx3.IndexBuffer, ByVal vertexArray As Rx3.VertexBuffer, ByVal PrimitiveType As PrimitiveType, ByVal textureBitmap As Bitmap)
-        Me.Initialize(indexArray.IndexData, vertexArray.VertexData, PrimitiveType)
+    Public Sub New(ByVal indexArray As Rx3.IndexBuffer, ByVal vertexArray As Rx3.VertexBuffer, ByVal PrimitiveType As PrimitiveType, ByVal textureBitmap As Bitmap, Optional UVIndex As Integer = 0)
+        Me.Initialize(indexArray.IndexData, vertexArray.VertexData, PrimitiveType, UVIndex)
         Me.m_TextureBitmap = textureBitmap
     End Sub
 
@@ -89,8 +89,8 @@ Public Class Model3D
         Next j
     End Sub
 
-    Public Sub Initialize(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType)
-        Me.SetVertexStreams(VertexStream)
+    Public Sub Initialize(ByVal IndexStream As List(Of UInteger), ByVal VertexStream As List(Of Vertex), ByVal PrimitiveType As PrimitiveType, Optional UVIndex As Integer = 0)
+        Me.SetVertexStreams(VertexStream, UVIndex)
         Me.SetIndexArray(IndexStream, PrimitiveType)
         'Me.ComputeNormals()
     End Sub
@@ -528,19 +528,19 @@ Public Class Model3D
         End If
     End Sub
 
-    Private Sub SetVertexStreams(ByVal VertexStream As List(Of Vertex))
+    Private Sub SetVertexStreams(ByVal VertexStream As List(Of Vertex), Optional UVIndex As Integer = 0)
         Me.m_NVertex = VertexStream.Count
         Me.m_NOriginalVertex = Me.m_NVertex
         Me.m_Vertex = New PositionNormalTextured(Me.m_NVertex - 1) {}
         Dim i As Integer
         For i = 0 To Me.m_NVertex - 1
-            Me.m_Vertex(i).X = VertexStream(i).Position.X
+            Me.m_Vertex(i).X = -VertexStream(i).Position.X
             Me.m_Vertex(i).Y = VertexStream(i).Position.Y
             Me.m_Vertex(i).Z = VertexStream(i).Position.Z
-            Me.m_Vertex(i).Tu = VertexStream(i).TextureCoordinates(0).U
-            Me.m_Vertex(i).Tv = VertexStream(i).TextureCoordinates(0).V
+            Me.m_Vertex(i).Tu = VertexStream(i).TextureCoordinates(UVIndex).U
+            Me.m_Vertex(i).Tv = VertexStream(i).TextureCoordinates(UVIndex).V
             If VertexStream(i).Normal IsNot Nothing Then
-                Me.m_Vertex(i).Nx = VertexStream(i).Normal.Normal_x
+                Me.m_Vertex(i).Nx = -VertexStream(i).Normal.Normal_x
                 Me.m_Vertex(i).Ny = VertexStream(i).Normal.Normal_y
                 Me.m_Vertex(i).Nz = VertexStream(i).Normal.Normal_z
             End If

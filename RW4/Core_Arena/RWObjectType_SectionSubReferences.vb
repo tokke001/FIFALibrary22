@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Core.Arena
-    Public Class ArenaSectionSubreferences
+    <Serializable> Public Class ArenaSectionSubreferences
         'rw::core::arena::ArenaSectionSubreferences
         '-- this section contains values if u want get a sub-part of a section, 
         '-- used for stadiums: RenderModel.Meshes(i).RenderObjects(j).PMeshCullInfo 
@@ -93,7 +93,7 @@
         End Function
     End Class
 
-    Public Class ArenaSectionSubreferencesRecord
+    <Serializable> Public Class ArenaSectionSubreferencesRecord
         'rw::core::arena::ArenaSectionSubreferencesRecord
         Public Sub New()
 

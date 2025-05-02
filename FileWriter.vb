@@ -1,7 +1,7 @@
 ﻿
 Imports BCnEncoder.Shared
 
-Public Class FileWriter
+<Serializable> Public Class FileWriter
     Inherits BinaryWriter
     ' Methods
     Public Sub New(ByVal stream As Stream)

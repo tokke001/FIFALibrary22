@@ -1,7 +1,7 @@
 ﻿
 Namespace CrowdDat
     'CrowdPlacement *.dat files
-    Public Class CrwdFile
+<Serializable> Public Class CrwdFile
         Public Function Load(ByVal FileName As String) As Boolean
             Dim f As New FileStream(FileName, FileMode.Open, FileAccess.ReadWrite)
             Dim r As New FileReader(f, Endian.Little)
@@ -45,6 +45,8 @@ Namespace CrowdDat
             Me.Header.Version = FileType
             Me.Header.NumSeats = Me.CrowdData.Count
 
+            Me.Header.Save(w)
+
             For i = 0 To Me.Header.NumSeats - 1
                 Select Case Me.Header.Version
                     Case CrwdFileHeader.EVersion.TYPE_0103
@@ -79,7 +81,7 @@ Namespace CrowdDat
         'End Function
 
         Public Property Header As New CrwdFileHeader
-        Public Property CrowdData As List(Of Object)
+        Public Property CrowdData As New List(Of Object)
 
     End Class
 End Namespace

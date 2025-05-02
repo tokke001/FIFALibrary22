@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class SectionHeader
+<Serializable> Public Class SectionHeader
         ' Methods
         Public Sub New()
 

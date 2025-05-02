@@ -1,5 +1,5 @@
 ﻿Namespace AudioBin.GraffitiRuntime
-    Public Class TagTable
+<Serializable> Public Class TagTable
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As BinaryReader, ByVal Flag_HasTagName As GraffitiRuntimeFile.EHasTagName)

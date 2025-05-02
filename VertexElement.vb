@@ -1,5 +1,5 @@
 ﻿
-Public Class VertexElement
+<Serializable> Public Class VertexElement
     ''' <summary>
     ''' Retrieves or sets the offset (if any) from the beginning of the stream to the beginning of the vertex data. </summary>
     Public Property Offset As UShort? = Nothing

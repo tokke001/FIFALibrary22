@@ -1,5 +1,5 @@
 ﻿Namespace AudioBin.RepetitionPools
-    Public Class RepetitionPoolsFile
+<Serializable> Public Class RepetitionPoolsFile
         Public Sub New()
 
         End Sub

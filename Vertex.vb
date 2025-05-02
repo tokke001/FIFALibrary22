@@ -2,7 +2,7 @@
 Imports FIFALibrary22.Rw.D3D
 Imports Microsoft.DirectX.Direct3D
 
-Public Class Vertex
+<Serializable> Public Class Vertex
     ' Methods
 
     Public Sub New()
@@ -755,7 +755,7 @@ Public Class Vertex
 
 End Class
 
-Public Class BlendIndices
+<Serializable> Public Class BlendIndices
     Public Property Index_1 As UShort
     Public Property Index_2 As UShort
     Public Property Index_3 As UShort
@@ -763,7 +763,7 @@ Public Class BlendIndices
 
 End Class
 
-Public Class BlendWeights
+<Serializable> Public Class BlendWeights
     Public Property Weight_1 As Single
     Public Property Weight_2 As Single
     Public Property Weight_3 As Single
@@ -771,42 +771,42 @@ Public Class BlendWeights
 
 End Class
 
-Public Class TextureCoordinate
+<Serializable> Public Class TextureCoordinate
     Public Property U As Single
     Public Property V As Single
     Public Property Xtra_Value As Single = 0    'rarely found: Found at game "UEFA Champions League 2006-2007" > file "stadium_159_6_container_0.rx2"
 
 End Class
 
-Public Class Position
+<Serializable> Public Class Position
     Public Property X As Single
     Public Property Y As Single
     Public Property Z As Single
     Public Property W As Single = 1
 End Class
 
-Public Class Normal
+<Serializable> Public Class Normal
     Public Property Normal_x As Single
     Public Property Normal_y As Single
     Public Property Normal_z As Single
 
 End Class
 
-Public Class Tangent
+<Serializable> Public Class Tangent
     Public Property Tangent_x As Single
     Public Property Tangent_y As Single
     Public Property Tangent_z As Single
 
 End Class
 
-Public Class Binormal
+<Serializable> Public Class Binormal
     Public Property Binormal_x As Single
     Public Property Binormal_y As Single
     Public Property Binormal_z As Single
 
 End Class
 
-Public Class VertexColor    'RGBA 
+<Serializable> Public Class VertexColor    'RGBA 
     Public Property Value_R As Single
     Public Property Value_G As Single
     Public Property Value_B As Single

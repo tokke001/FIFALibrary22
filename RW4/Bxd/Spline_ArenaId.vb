@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Bxd
-    Public Class Spline
+    <Serializable> Public Class Spline
         'bxd::tSpline
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.SPLINE_ARENAID
@@ -80,7 +80,7 @@
         End Function
     End Class
 
-    Public Class SplineSegment
+    <Serializable> Public Class SplineSegment
         'bxd::tSplineSegment
         Public Sub New()
 

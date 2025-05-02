@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Core.Arena
-    Public Class ArenaSectionExternalArenas
+    <Serializable> Public Class ArenaSectionExternalArenas
         'rw::core::arena::ArenaSectionExternalArenas
         Inherits ArenaSection
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWOBJECTTYPE_SECTIONEXTERNALARENAS

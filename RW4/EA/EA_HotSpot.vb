@@ -1,5 +1,5 @@
 ﻿Namespace Rw.EA
-    Public Class HotSpot
+<Serializable> Public Class HotSpot
         'EA::?? --> not found at dump
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.EA_HOTSPOT
@@ -165,20 +165,34 @@
         Public Function ToRx3Hotspot() As Rx3.HotSpot
             Dim m_Rx3Hotspot As New Rx3.HotSpot
 
-            m_Rx3Hotspot.AreaDatas = New Rx3.HotSpotAreaData(Me.AreaData.Length - 1) {}
-            For i = 0 To m_Rx3Hotspot.AreaDatas.Length - 1
-                m_Rx3Hotspot.AreaDatas(i) = New Rx3.HotSpotAreaData
-                m_Rx3Hotspot.AreaDatas(i).AreaName = Me.AreaData(i).AreaName
-                m_Rx3Hotspot.AreaDatas(i).HotSpots = New Rx3.HotSpotData(Me.AreaData(i).HotSpots.Length - 1) {}
+            m_Rx3Hotspot.AreaData = New Rx3.HotSpotAreaData(Me.AreaData.Length - 1) {}
+            For i = 0 To m_Rx3Hotspot.AreaData.Length - 1
+                m_Rx3Hotspot.AreaData(i) = New Rx3.HotSpotAreaData
+                m_Rx3Hotspot.AreaData(i).AreaName = Me.AreaData(i).AreaName
+                m_Rx3Hotspot.AreaData(i).HotSpots = New Rx3.HotSpotData(Me.AreaData(i).HotSpots.Length - 1) {}
 
-                For j = 0 To m_Rx3Hotspot.AreaDatas(i).HotSpots.Length - 1
-                    m_Rx3Hotspot.AreaDatas(i).HotSpots(j) = New Rx3.HotSpotData With {
+                For j = 0 To m_Rx3Hotspot.AreaData(i).HotSpots.Length - 1
+                    m_Rx3Hotspot.AreaData(i).HotSpots(j) = New Rx3.HotSpotData With {
                         .HotSpotName = Me.AreaData(i).HotSpots(j).HotSpotName,
                         .HotspotRectangle = Me.AreaData(i).HotSpots(j).HotspotRectangle}
                 Next
             Next
 
             Return m_Rx3Hotspot
+        End Function
+
+        Public Function GetHotspotRectangle(FindAreaName As String, FindHotSpotName As String) As Single()
+            For i = 0 To Me.NumAreas - 1
+                If Me.AreaData(i).AreaName = FindAreaName Then
+                    For j = 0 To Me.AreaData(i).NumHotSpots - 1
+                        If Me.AreaData(i).HotSpots(j).HotSpotName = FindHotSpotName Then
+                            Return Me.AreaData(i).HotSpots(j).HotspotRectangle
+                        End If
+                    Next j
+                End If
+            Next i
+
+            Return New Single(4 - 1) {}
         End Function
 
         Public Property Unknown_1 As Byte
@@ -195,7 +209,7 @@
         End Function
     End Class
 
-    Public Class HotSpotAreaData
+<Serializable> Public Class HotSpotAreaData
 
         Public Property PointerOffsetAreaName As UInteger
         Public Property OffsetAreaName As UInteger
@@ -218,7 +232,7 @@
 
     End Class
 
-    Public Class HotSpotData
+<Serializable> Public Class HotSpotData
         'Inherits Rx3.HotSpotData
         ''' <summary>
         ''' Name of the HotSpot. </summary>

@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class SceneAnimation
+<Serializable> Public Class SceneAnimation      'FIFA 16: stadium_137.rx3
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.SCENE_ANIMATION
         Public Const ALIGNMENT As Integer = 16
@@ -21,6 +21,10 @@
             Me.Unknown_2 = r.ReadUInt32
             Me.String_1 = FifaUtil.ReadNullTerminatedString(r)
             Me.Data = r.ReadBytes(Me.TotalSize - 16 - (String_1.Length - 1))    'size - values - (string.size - nullterminator)
+
+            'If NumLocations <> 5 Or Unknown_1 <> 1 Or Unknown_2 <> 0 Then
+            '    MsgBox("")
+            'End If
 
         End Sub
 

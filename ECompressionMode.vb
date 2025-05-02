@@ -11,14 +11,14 @@ Public Enum ECompressionMode
     EASF = 6 'EASF_FIFA16
     Chunklzma = 7   'chunlzma
 
-    'Chunkzip2, Chunkref2,
-    chunklzx
-    chunklz4
-    chunkunc
-    chunzstd
-    chunoodl
+    Chunklzx    'FIFA10 console
+    Chunklzx2   'unknown newer, found at chunkpack tool
+    Chunklz4
+    Chunkunc
+    Chunzstd
+    Chunoodl    'switch
 
-    Unknown '= 8
+    Unknown
 
 
 End Enum

@@ -1,5 +1,5 @@
 ﻿Namespace AudioBin.GraffitiRuntime
-    Public Class GraffitiRuntimeFile
+<Serializable> Public Class GraffitiRuntimeFile
         Public Sub New()
 
         End Sub

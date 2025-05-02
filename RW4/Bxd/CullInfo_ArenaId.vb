@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Bxd
-    Public Class CullInfo
+    <Serializable> Public Class CullInfo
         'bxd::tCullInfo
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.CULLINFO_ARENAID
@@ -115,7 +115,7 @@
         End Function
     End Class
 
-    Public Class MeshCullInfo
+    <Serializable> Public Class MeshCullInfo
         'bxd::tMeshCullInfo
         Public Sub New()
 
@@ -148,7 +148,7 @@
 
     End Class
 
-    Public Class CullingBin
+    <Serializable> Public Class CullingBin
         'bxd::tCullingBin
         Public Sub New()
 

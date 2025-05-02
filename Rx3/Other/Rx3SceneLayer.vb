@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class SceneLayer
+<Serializable> Public Class SceneLayer
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.SCENE_LAYER
         Public Const ALIGNMENT As Integer = 16

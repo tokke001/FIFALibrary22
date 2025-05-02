@@ -2,7 +2,7 @@
 Imports Microsoft.DirectX.Direct3D
 
 Namespace Rw.Graphics
-    Public Class IndexBuffer
+<Serializable> Public Class IndexBuffer
         'rw::graphics::IndexBuffer
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.RWGOBJECTTYPE_INDEXBUFFER

@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class BoneRemap
+<Serializable> Public Class BoneRemap
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.BONE_REMAP
         Public Const ALIGNMENT As Integer = 16
@@ -19,7 +19,7 @@
             Me.NumUsedBones = r.ReadByte
             Me.Pad = r.ReadBytes(11)    '0 : padding
 
-            Me.ReservedSize = (Me.TotalSize - 16) \ 2
+            Me.ReservedSize = Math.Max(0, (Me.TotalSize - 16) \ 2)
             Me.UsedBones = r.ReadBytes(Me.ReservedSize)
             Me.UsedBonesPositions = FixShortBoneIndices(r.ReadBytes(Me.ReservedSize))
 
@@ -28,7 +28,7 @@
         ''' <summary>
         ''' Converts bytes to short values (if first byte value is "1") </summary>
         Private Function FixShortBoneIndices(ByVal UsedBonesPositions As Byte()) As UShort()
-            If UsedBonesPositions(0) = 1 Then
+            If UsedBonesPositions.Count >= 1 AndAlso UsedBonesPositions(0) = 1 Then
                 Dim ReturnList As UShort() = New UShort(Me.NumUsedBones - 1 - 1) {}
                 For i = 0 To Me.NumUsedBones - 1 - 1
                     'If i + 1 <= Me.NumUsedBones - 1 Then

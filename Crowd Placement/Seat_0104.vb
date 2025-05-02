@@ -2,7 +2,7 @@
 
 Namespace CrowdDat
 
-    Public Class Seat0104
+<Serializable> Public Class Seat0104
         Public Sub New()
         End Sub
 

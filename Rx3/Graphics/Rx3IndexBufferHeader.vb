@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class IndexBufferHeader
+<Serializable> Public Class IndexBufferHeader
         ' Methods
         Public Sub New()
 

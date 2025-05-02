@@ -1,7 +1,7 @@
 ﻿Imports Microsoft.DirectX
 
 Namespace Rx3
-    Public Class CollisionTriMesh
+<Serializable> Public Class CollisionTriMesh
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.COLLISION_TRI_MESH
         Public Const ALIGNMENT As Integer = 16
@@ -85,7 +85,7 @@ Namespace Rx3
         End Function
     End Class
 
-    Public Class CollisionTriMeshSpace
+<Serializable> Public Class CollisionTriMeshSpace
 
         Public Sub New()
         End Sub
@@ -126,7 +126,7 @@ Namespace Rx3
 
     End Class
 
-    Public Class CollisionTriMeshShape
+<Serializable> Public Class CollisionTriMeshShape
 
         Public Sub New()
         End Sub

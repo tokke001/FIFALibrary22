@@ -3,7 +3,7 @@
 Namespace GlareBin
     'GlareData (dump nhl)
     'nhl, old FIFA08, ... - glare.bin files
-    Public Class BinFile
+    <Serializable> Public Class BinFile
         Public Function Load(ByVal FileName As String) As Boolean
             Dim f As New FileStream(FileName, FileMode.Open, FileAccess.ReadWrite)
             Dim r As New FileReader(f, Endian.Big)

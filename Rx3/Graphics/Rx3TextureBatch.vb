@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class TextureBatch
+<Serializable> Public Class TextureBatch
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.TEXTURE_BATCH
         Public Const ALIGNMENT As Integer = 16

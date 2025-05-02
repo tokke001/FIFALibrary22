@@ -3,7 +3,7 @@
 '-- section &HEB000C contains a list of ids to sections &HEB000D (animation sequence ??)
 
 Namespace Rw.Bxd
-    Public Class AnimSeq
+    <Serializable> Public Class AnimSeq
         'bxd::tAnimSeq
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.ANIMSEQ_ARENAID

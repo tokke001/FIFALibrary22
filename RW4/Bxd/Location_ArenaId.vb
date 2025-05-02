@@ -1,5 +1,5 @@
 ﻿Namespace Rw.Bxd
-    Public Class Location
+    <Serializable> Public Class Location
         'bxd::tLocation
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.LOCATION_ARENAID

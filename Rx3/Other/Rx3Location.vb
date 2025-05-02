@@ -1,7 +1,7 @@
 ﻿Imports Microsoft.DirectX
 
 Namespace Rx3
-    Public Class Location
+<Serializable> Public Class Location
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.LOCATION
         Public Const ALIGNMENT As Integer = 16

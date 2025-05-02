@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class NameTable
+    <Serializable> Public Class NameTable
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.NAME_TABLE
         Public Const ALIGNMENT As Integer = 16
@@ -16,22 +16,22 @@
         Public Sub Load(ByVal r As FileReader)
 
             Me.TotalSize = r.ReadUInt32
-            Me.NumNames = r.ReadUInt32
+            Dim m_NumNames = r.ReadUInt32
             Me.Pad = r.ReadBytes(8)
 
-            ReDim Me.Names(Me.NumNames - 1)
-            For i = 0 To Me.NumNames - 1
+            ReDim Me.Names(m_NumNames - 1)
+            For i = 0 To m_NumNames - 1
                 Me.Names(i) = New NameTableEntry
                 Me.Names(i).m_Type = r.ReadUInt32
                 Dim m_NameSize As UInteger = r.ReadUInt32()  'Me.Names(i).NameSize = 
-                Me.Names(i).Name = FifaUtil.ReadString(r, r.BaseStream.Position, m_NameSize - 1) 'FifaUtil.ReadNullTerminatedString(r)    'fix: null-terminator can be other character (ex. 2E)
+                Me.Names(i).Name = FifaUtil.ReadString(r, r.BaseStream.Position, m_NameSize - 1).Replace(vbNullChar, "") 'FifaUtil.ReadNullTerminatedString(r)    'fix: null-terminator can be other character (ex. 2E)
                 r.ReadByte()  'null terminator
             Next i
 
         End Sub
 
         Public Sub Save(ByVal w As FileWriter)
-            Me.NumNames = Me.Names.Length
+            'Me.NumNames = Me.Names.Length
 
             w.Write(Me.TotalSize)
             w.Write(Me.NumNames)
@@ -123,7 +123,14 @@
                 m_TotalSize = Value
             End Set
         End Property
-        Public Property NumNames As UInteger
+
+        ''' <summary>
+        ''' Returns the number of Names (ReadOnly). </summary>
+        Public ReadOnly Property NumNames As UInteger
+            Get
+                Return If(Names?.Count, 0)
+            End Get
+        End Property
         Public Property Pad As Byte() = New Byte(8 - 1) {}
         Public Property Names As NameTableEntry()
 
@@ -136,7 +143,7 @@
         End Function
     End Class
 
-    Public Class NameTableEntry
+    <Serializable> Public Class NameTableEntry
         ''' <summary>
         ''' Section type (SectionHash) the name is referring to. </summary>
         Public Property m_Type As SectionHash

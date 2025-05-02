@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class Collision
+<Serializable> Public Class Collision
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.COLLISION
         Public Const ALIGNMENT As Integer = 16
@@ -83,7 +83,7 @@
         End Function
     End Class
 
-    Public Class CollisionSpace
+<Serializable> Public Class CollisionSpace
 
         Public Sub New()
         End Sub
@@ -124,7 +124,7 @@
 
     End Class
 
-    Public Class CollisionShape
+<Serializable> Public Class CollisionShape
 
         Public Sub New()
         End Sub

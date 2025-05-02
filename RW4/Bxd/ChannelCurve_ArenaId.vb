@@ -1,7 +1,7 @@
 ﻿'-- Present at: WC2010 "stadium_213_1_container_0.rx3"  'FIFA09 "festadium_188_4_container_0.rx2" "stadium_29_1_container_0.rx2" "stadium_29_4_container_0.rx2"
 '-- section &HEB000C contains a list of ids to sections &HEB000D (animation sequence ??)
 Namespace Rw.Bxd
-    Public Class ChannelCurve
+    <Serializable> Public Class ChannelCurve
         'bxd::tChannelCurve
         Inherits RwObject
         Public Const TYPE_CODE As Rw.SectionTypeCode = SectionTypeCode.CHANNELCURVE_ARENAID

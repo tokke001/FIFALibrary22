@@ -1,5 +1,5 @@
 ﻿Namespace AudioBin.Sentences
-    Public Class Section
+<Serializable> Public Class Section
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As BinaryReader)

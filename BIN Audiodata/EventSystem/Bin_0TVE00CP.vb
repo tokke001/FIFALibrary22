@@ -1,5 +1,5 @@
 ﻿Namespace AudioBin.EventSystem
-    Public Class EventSystemFile
+<Serializable> Public Class EventSystemFile
         Public Sub New()
 
         End Sub

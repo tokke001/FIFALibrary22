@@ -1,5 +1,5 @@
 ﻿Namespace Rx3
-    Public Class QuadIndexBufferHeader
+<Serializable> Public Class QuadIndexBufferHeader
         ' Methods
         Public Sub New()
 

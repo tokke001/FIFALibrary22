@@ -1,6 +1,5 @@
 ﻿Imports Microsoft.DirectX
-
-Public Class Matrix3x4
+<Serializable> Public Class Matrix3x4
 
     Public ReadOnly NUM_ROWS As Integer = 3
     Public ReadOnly NUM_COLS As Integer = 4

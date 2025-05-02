@@ -1,6 +1,6 @@
 ﻿Imports FIFALibrary22.Rw.Core.Arena
 Namespace Rw
-    Public MustInherit Class RwObject
+    <Serializable> Public MustInherit Class RwObject
         'rw::graphics::RwgObjectType
 
         ''' <summary>

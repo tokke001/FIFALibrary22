@@ -1,6 +1,6 @@
 ﻿Imports FIFALibrary22.FifaUtil
 Namespace Rw.D3D
-    Public Class D3DVertexBuffer
+    <Serializable> Public Class D3DVertexBuffer
         'D3DVertexBuffer
         Public Sub New()
 
@@ -40,7 +40,7 @@ Namespace Rw.D3D
 
     End Class
 
-    Public Class GPUVERTEX_FETCH_CONSTANT
+    <Serializable> Public Class GPUVERTEX_FETCH_CONSTANT
         'GPUVERTEX_FETCH_CONSTANT    0x1bfc
         Public Sub New()
 

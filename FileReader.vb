@@ -1,7 +1,7 @@
 ﻿
 Imports BCnEncoder.Shared
 
-Public Class FileReader
+<Serializable> Public Class FileReader
     Inherits BinaryReader
     ' Methods
     Public Sub New(ByVal stream As Stream)

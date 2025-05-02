@@ -185,7 +185,7 @@ Public Class GraphicUtil
         Return bitmap
     End Function
 
-    Public Shared Function ColorizeRGB(ByVal sourceBitmap As Bitmap, ByVal color1 As Color, ByVal color2 As Color, ByVal color3 As Color, ByVal preserveArmBand As Boolean) As Boolean
+    Public Shared Function ColorizeRGBKit(ByVal sourceBitmap As Bitmap, ByVal color1 As Color, ByVal color2 As Color, ByVal color3 As Color, ByVal preserveArmBand As Boolean) As Boolean
         If (sourceBitmap Is Nothing) Then
             Return False
         End If
@@ -227,176 +227,68 @@ Public Class GraphicUtil
         Return flag
     End Function
 
-    Public Shared Function ColorizeRGB(ByVal sourceBitmap As Bitmap, ByVal color1 As Color, ByVal color2 As Color, ByVal color3 As Color, ByVal preserveArmBand As Boolean, ByVal CoeffBitmap As Bitmap) As Boolean
-        If (sourceBitmap Is Nothing) Then
-            Return False
+    Public Shared Function ColorizeRGB(ByRef SourceBitmap As Bitmap, ByVal color1 As Color, ByVal color2 As Color, ByVal color3 As Color, Optional CoeffBitmap As Bitmap = Nothing, Optional ChannelIdCoeffForTransparancy As Integer = 1) As Boolean
+        If SourceBitmap.PixelFormat <> PixelFormat.Format32bppArgb Then '--> should always be with alpha
+            SourceBitmap = GraphicUtil.Get32bitBitmap(SourceBitmap)
         End If
-        Dim colorArray As Color(,) = New Color(&H30 - 1, &H100 - 1) {}
-        preserveArmBand = ((preserveArmBand AndAlso (sourceBitmap.Width = &H400)) AndAlso (sourceBitmap.Height = &H400))
-        If preserveArmBand Then
-            Dim num As Integer = 0
-            Dim num2 As Integer = 0
-            Dim i As Integer = &H3CF
-            Do While (i <= &H3FE)
-                num2 = 0
-                Dim j As Integer = &H180
-                Do While (j <= &H27F)
-                    colorArray(num, num2) = sourceBitmap.GetPixel(j, i)
-                    num2 += 1
-                    j += 1
-                Loop
-                num += 1
-                i += 1
-            Loop
-        End If
-        Dim flag As Boolean = GraphicUtil.ColorizeRGB(sourceBitmap, color1, color2, color3, 0, sourceBitmap.Height, CoeffBitmap)
-        If (flag And preserveArmBand) Then
-            Dim num5 As Integer = 0
-            Dim num6 As Integer = 0
-            Dim i As Integer = &H3CF
-            Do While (i <= &H3FE)
-                num6 = 0
-                Dim j As Integer = &H180
-                Do While (j <= &H27F)
-                    sourceBitmap.SetPixel(j, i, colorArray(num5, num6))
-                    num6 += 1
-                    j += 1
-                Loop
-                num5 += 1
-                i += 1
-            Loop
-        End If
-        Return flag
+
+        Return GraphicUtil.ColorizeRGB(SourceBitmap, color1, color2, color3, 0, SourceBitmap.Height, CoeffBitmap, ChannelIdCoeffForTransparancy)
     End Function
 
-    Public Shared Function ColorizeRGB(ByVal sourceBitmap As Bitmap, ByVal color1 As Color, ByVal color2 As Color, ByVal color3 As Color, ByVal firstRow As Integer, ByVal lastRow As Integer) As Boolean
-        If (sourceBitmap Is Nothing) Then
+    Private Shared Function ColorizeRGB(SourceBitmap As Bitmap, ByVal color1 As Color, ByVal color2 As Color, ByVal color3 As Color, ByVal firstRow As Integer, ByVal lastRow As Integer, Optional CoeffBitmap As Bitmap = Nothing, Optional ChannelIdCoeffForTransparancy As Integer = 1) As Boolean
+        If (SourceBitmap Is Nothing) Then
             Return False
         End If
-        Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
-        Dim bitmapdata As BitmapData = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
-        Dim source As IntPtr = bitmapdata.Scan0
-        Dim num As Integer = (sourceBitmap.Width * sourceBitmap.Height)
-        Dim destination As Byte() = New Byte((num * 4) - 1) {}
-        Marshal.Copy(source, destination, 0, (num * 4))
-        Dim i As Integer
-        For i = (firstRow * sourceBitmap.Width) To (lastRow * sourceBitmap.Width) - 1
-            Dim num4 As Integer = destination((i * 4))
-            Dim num3 As Integer = destination(((i * 4) + 1))
-            Dim num2 As Integer = destination(((i * 4) + 2))
-            Dim Alpha As Integer = destination(((i * 4) + 3))
-            Dim num5 As Integer = ((((color1.R * num2) + (color2.R * num3)) + (color3.R * num4)) \ 255) '- (255 - Alpha)
-            Dim num6 As Integer = ((((color1.G * num2) + (color2.G * num3)) + (color3.G * num4)) \ 255) '- (255 - Alpha)
-            Dim num7 As Integer = ((((color1.B * num2) + (color2.B * num3)) + (color3.B * num4)) \ 255) '- (255 - Alpha)
-            If (num5 > &HFF) Then
-                num5 = &HFF
-            ElseIf (num5 < 0) Then
-                num5 = 0
-            End If
-            If (num6 > &HFF) Then
-                num6 = &HFF
-            ElseIf (num6 < 0) Then
-                num6 = 0
-            End If
-            If (num7 > &HFF) Then
-                num7 = &HFF
-            ElseIf (num7 < 0) Then
-                num7 = 0
-            End If
-            destination((i * 4)) = CByte(num7)
-            destination(((i * 4) + 1)) = CByte(num6)
-            destination(((i * 4) + 2)) = CByte(num5)
-        Next i
-        Marshal.Copy(destination, 0, source, (num * 4))
-        sourceBitmap.UnlockBits(bitmapdata)
-        Return True
-    End Function
+        If SourceBitmap.PixelFormat <> PixelFormat.Format32bppArgb Then '--> should always be with alpha
+            Return False
+        End If
+        'If SourceBitmap.Size <> CoeffBitmap.Size Then
+        '    CoeffBitmap = New Bitmap(CoeffBitmap, SourceBitmap.Width, SourceBitmap.Height)
+        'End If
+        Dim UseCoeff As Boolean = CoeffBitmap IsNot Nothing AndAlso SourceBitmap.Size = CoeffBitmap.Size
 
-    Public Shared Function ColorizeRGB(ByVal sourceBitmap As Bitmap, ByVal color1 As Color, ByVal color2 As Color, ByVal color3 As Color, ByVal firstRow As Integer, ByVal lastRow As Integer, ByVal CoeffBitmap As Bitmap) As Boolean
-        Dim bitmap1 As Bitmap = DirectCast(sourceBitmap.Clone, Bitmap)
-        If (sourceBitmap Is Nothing) Then
-            Return False
-        End If
-        Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
-        Dim bitmapdata As BitmapData = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
+        Dim rect As New Rectangle(0, 0, SourceBitmap.Width, SourceBitmap.Height)
+        Dim bitmapdata As BitmapData = SourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, SourceBitmap.PixelFormat)
         Dim source As IntPtr = bitmapdata.Scan0
-        Dim num As Integer = (sourceBitmap.Width * sourceBitmap.Height)
+        Dim num As Integer = (SourceBitmap.Width * SourceBitmap.Height)
         Dim destination As Byte() = New Byte((num * 4) - 1) {}
         Marshal.Copy(source, destination, 0, (num * 4))
 
-        If sourceBitmap.Size <> CoeffBitmap.Size Then
-            CoeffBitmap = New Bitmap(CoeffBitmap, sourceBitmap.Width, sourceBitmap.Height)
-        End If
 
-        Dim id As Integer = firstRow * sourceBitmap.Width
+        Dim id As Integer = firstRow * SourceBitmap.Width
         For j = firstRow To lastRow - 1
-            For i = 0 To sourceBitmap.Width - 1
-                'For i As Integer = (firstRow * sourceBitmap.Width) To (lastRow * sourceBitmap.Width) - 1
+            For i = 0 To SourceBitmap.Width - 1
+                'BGRA
+                Dim s_B As Integer = destination((id * 4))
+                Dim s_G As Integer = destination(((id * 4) + 1))
+                Dim s_R As Integer = destination(((id * 4) + 2))
 
+                destination((id * 4)) = Math.Min(Math.Max(((((color1.B * s_R) + (color2.B * s_G)) + (color3.B * s_B)) \ 255), 0), 255)         'B
+                destination(((id * 4) + 1)) = Math.Min(Math.Max(((((color1.G * s_R) + (color2.G * s_G)) + (color3.G * s_B)) \ 255), 0), 255)   'G
+                destination(((id * 4) + 2)) = Math.Min(Math.Max(((((color1.R * s_R) + (color2.R * s_G)) + (color3.R * s_B)) \ 255), 0), 255)   'R
 
-                'If width = sourceBitmap.Width And height < sourceBitmap.Height Then
-                'height += 1
-                'ElseIf height = sourceBitmap.Height Then
-                'Else
-                ' width += 1
-                'End If
-
-                Dim CoeffColor As Color = CoeffBitmap.GetPixel(i, j)
-                Dim color_transparancy As Byte = CoeffColor.G
-                'If color_transparancy = 0 Then color_transparancy = 1
-                'If CoeffColor.ToArgb = 0 Then
-
-                'End If
-
-
-                Dim num4 As Integer = destination((id * 4))
-                Dim num3 As Integer = destination(((id * 4) + 1))
-                Dim num2 As Integer = destination(((id * 4) + 2))
-                'If color_transparancy < 250 Then
-                Dim num5 As Integer = ((((color1.R * num2) + (color2.R * num3)) + (color3.R * num4)) \ 255)
-                Dim num6 As Integer = ((((color1.G * num2) + (color2.G * num3)) + (color3.G * num4)) \ 255)
-                Dim num7 As Integer = ((((color1.B * num2) + (color2.B * num3)) + (color3.B * num4)) \ 255)
-                'Dim num5 As Integer = ((((Math.Max(1, color1.R - color_transparancy) * num2) + (Math.Max(1, color2.R - color_transparancy) * num3)) + (Math.Max(1, color3.R - color_transparancy) * num4)) \ &HE2)
-                'Dim num6 As Integer = ((((Math.Max(1, color1.G - color_transparancy) * num2) + (Math.Max(1, color2.G - color_transparancy) * num3)) + (Math.Max(1, color3.G - color_transparancy) * num4)) \ &HE2)
-                'Dim num7 As Integer = ((((Math.Max(1, color1.B - color_transparancy) * num2) + (Math.Max(1, color2.B - color_transparancy) * num3)) + (Math.Max(1, color3.B - color_transparancy) * num4)) \ &HE2)
-                If (num5 > &HFF) Then
-                    num5 = &HFF
-                ElseIf (num5 < 0) Then
-                    num5 = 0
+                If UseCoeff Then
+                    Dim CoeffColor As Color = CoeffBitmap.GetPixel(i, j)
+                    Dim color_transparancy As Byte
+                    Select Case ChannelIdCoeffForTransparancy
+                        Case 0
+                            color_transparancy = CoeffColor.B
+                        Case 2
+                            color_transparancy = CoeffColor.R
+                        Case 3
+                            color_transparancy = CoeffColor.A
+                        Case Else
+                            color_transparancy = CoeffColor.G
+                    End Select
+                    destination(((id * 4) + 3)) = 255 - color_transparancy  'A
                 End If
-                If (num6 > &HFF) Then
-                    num6 = &HFF
-                ElseIf (num6 < 0) Then
-                    num6 = 0
-                End If
-                If (num7 > &HFF) Then
-                    num7 = &HFF
-                ElseIf (num7 < 0) Then
-                    num7 = 0
-                End If
-                destination((id * 4)) = CByte(num7)
-                destination(((id * 4) + 1)) = CByte(num6)
-                destination(((id * 4) + 2)) = CByte(num5)
-                destination(((id * 4) + 3)) = 255 - color_transparancy
-
-
-
-                'End If
 
                 id += 1
             Next i
         Next j
+
         Marshal.Copy(destination, 0, source, (num * 4))
-        sourceBitmap.UnlockBits(bitmapdata)
-        'sourceBitmap = DrawOver(bitmap1, bitmap1)
-        'Dim image As Bitmap = GraphicUtil.ResizeBitmap(upperBitmap, destRectangle.Width, destRectangle.Height, InterpolationMode.Bicubic)
-        'If (Not image Is Nothing) Then
-        'Dim bitmap1 As Bitmap = DirectCast(lowerBitmap.Clone, Bitmap)
-        'Dim graphics1 As Graphics = Graphics.FromImage(sourceBitmap)
-        'graphics1.DrawImage(bitmap1, 0, 0)
-        'graphics1.Dispose()
-        'Return bitmap1
-        'End If
+        SourceBitmap.UnlockBits(bitmapdata)
 
         Return True
     End Function
@@ -613,7 +505,7 @@ Public Class GraphicUtil
 
     Public Shared Function FixAlphaChannel(ByVal sourceBitmap As Bitmap, ByVal AlphaBitmap As Bitmap) As Boolean
         Dim bitmap1 As Bitmap = DirectCast(sourceBitmap.Clone, Bitmap)
-        If (sourceBitmap Is Nothing) Then
+        If (sourceBitmap Is Nothing) OrElse (sourceBitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
             Return False
         End If
         Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
@@ -641,10 +533,7 @@ Public Class GraphicUtil
 
                 Dim MyColor As Color = AlphaBitmap.GetPixel(i, j)
                 Dim Alpha As Byte = MyColor.A
-                'If color_transparancy = 0 Then color_transparancy = 1
-                'If CoeffColor.ToArgb = 0 Then
-
-                'End If
+                'If Alpha = 0 Then Alpha = 1    '--> fix for hair-color textures !!!!
 
 
                 'Dim num4 As Integer = destination((id * 4))
@@ -765,10 +654,25 @@ Public Class GraphicUtil
         Return image
     End Function
 
+    Public Shared Function Get24bitBitmap(ByRef sourceBitmap As Bitmap) As Bitmap
+        RemoveAlfaChannel(sourceBitmap)
+
+        If sourceBitmap.PixelFormat <> PixelFormat.Format24bppRgb Then
+            Dim image As New Bitmap(sourceBitmap.Width, sourceBitmap.Height, PixelFormat.Format24bppRgb)
+            Dim graphics1 As Graphics = Graphics.FromImage(image)
+            graphics1.DrawImage(sourceBitmap, 0, 0, sourceBitmap.Width, sourceBitmap.Height)
+            graphics1.Dispose()
+            Return image
+        Else
+            Return sourceBitmap
+        End If
+    End Function
+
     Public Shared Function GetAlfaFromChannel(ByVal sourceBitmap As Bitmap, ByVal alfaBitmap As Bitmap, ByVal channel As Integer) As Boolean
         If ((sourceBitmap.Width <> alfaBitmap.Width) OrElse (sourceBitmap.Height <> alfaBitmap.Height)) Then
             Return False
         End If
+
         Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
         Dim bitmapdata As BitmapData = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
         rect = New Rectangle(0, 0, alfaBitmap.Width, alfaBitmap.Height)
@@ -1045,47 +949,249 @@ Public Class GraphicUtil
         graphics1.Dispose()
     End Sub
 
-    Public Shared Function RemoveAlfaChannel(ByVal sourceBitmap As Bitmap) As Boolean
-        If (sourceBitmap Is Nothing) OrElse (sourceBitmap.PixelFormat = PixelFormat.Format24bppRgb) Then
-            Return False
-        End If
-        Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
-        Dim bitmapdata As BitmapData = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
-        Dim source As IntPtr = bitmapdata.Scan0
-        Dim num As Integer = (sourceBitmap.Width * sourceBitmap.Height)
-        Dim destination As Byte() = New Byte((num * 4) - 1) {}
-        Marshal.Copy(source, destination, 0, (num * 4))
-        Dim i As Integer = 3
-        Do While (i < (num * 4))
-            destination(i) = &HFF
-            i = (i + 4)
-        Loop
-        Marshal.Copy(destination, 0, source, (num * 4))
-        sourceBitmap.UnlockBits(bitmapdata)
-        Return True
+    Public Shared Function RemoveChannel(ByVal sourceBitmap As Bitmap, RemoveChannelId As Integer) As Boolean '-- BGRA
+        Return SetChannel(sourceBitmap, RemoveChannelId, 0)
     End Function
 
     Public Shared Function SetAlfaChannel(ByVal sourceBitmap As Bitmap, ByVal AlphaValue As Byte) As Boolean
-        If (sourceBitmap Is Nothing) Then
+        Return SetChannel(sourceBitmap, 3, AlphaValue)
+    End Function
+
+    Public Shared Function SetChannel(ByVal sourceBitmap As Bitmap, ChannelId As Integer, Value As Byte) As Boolean '-- BGRA
+        If (sourceBitmap.PixelFormat <> Imaging.PixelFormat.Format32bppArgb) Then
+            sourceBitmap = GraphicUtil.Get32bitBitmap(sourceBitmap)
+        End If
+
+        Return SetChannel_int(sourceBitmap, ChannelId, Value)
+    End Function
+
+    Private Shared Function SetChannel_int(ByVal sourceBitmap As Bitmap, ChannelId As Integer, Value As Byte) As Boolean '-- BGRA
+        If (sourceBitmap Is Nothing) OrElse (sourceBitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
             Return False
         End If
+
+        Dim NumBits As Integer = If(sourceBitmap.PixelFormat = PixelFormat.Format24bppRgb, 3, 4)
+
         Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
         Dim bitmapdata As BitmapData = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
         Dim source As IntPtr = bitmapdata.Scan0
         Dim num As Integer = (sourceBitmap.Width * sourceBitmap.Height)
-        Dim destination As Byte() = New Byte((num * 4) - 1) {}
-        Marshal.Copy(source, destination, 0, (num * 4))
-        Dim i As Integer = 3
-        Do While (i < (num * 4))
-            destination(i) = AlphaValue
-            i = (i + 4)
+        Dim destination As Byte() = New Byte((num * NumBits) - 1) {}
+        Marshal.Copy(source, destination, 0, (num * NumBits))
+
+        'Bgra
+        Dim i As Integer = 0
+        Do While (i < (num * NumBits))
+            destination(i + ChannelId) = Value
+
+            i += NumBits
         Loop
-        Marshal.Copy(destination, 0, source, (num * 4))
+
+        Marshal.Copy(destination, 0, source, (num * NumBits))
         sourceBitmap.UnlockBits(bitmapdata)
         Return True
     End Function
 
-    Public Shared Function ResizeBitmap(ByVal sourceBitmap As Bitmap, ByVal width As Integer, ByVal height As Integer, ByVal interpolationMode As InterpolationMode) As Bitmap
+    Public Shared Function RemoveAlfaChannel(ByRef sourceBitmap As Bitmap) As Boolean   '--> dont use function "SetChannel" , because we return a 24bit image here
+        If (sourceBitmap Is Nothing) Then
+            Return False
+        End If
+        If (sourceBitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
+            If sourceBitmap.PixelFormat = PixelFormat.Format24bppRgb Then
+                Return True
+            Else
+                Return False
+            End If
+        End If
+
+        Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
+        Dim bitmapdataSource As BitmapData = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
+        Dim source As IntPtr = bitmapdataSource.Scan0
+        Dim num As Integer = (sourceBitmap.Width * sourceBitmap.Height)
+        Dim SourceBytes As Byte() = New Byte((num * 4) - 1) {}
+        Dim DestBytes As Byte() = New Byte((num * 3) - 1) {}
+        Marshal.Copy(source, SourceBytes, 0, (num * 4))
+
+        Dim i_s As Integer = 3
+        Dim j_d As Integer = 2
+        Do While (i_s < (num * 4))
+            'BGRA
+            DestBytes(j_d - 2) = SourceBytes(i_s - 3)
+            DestBytes(j_d - 1) = SourceBytes(i_s - 2)
+            DestBytes(j_d) = SourceBytes(i_s - 1)
+            i_s += 4
+            j_d += 3
+        Loop
+
+        sourceBitmap.UnlockBits(bitmapdataSource)
+        sourceBitmap = New Bitmap(sourceBitmap.Width, sourceBitmap.Height, PixelFormat.Format24bppRgb) 'Get24bitBitmap(sourceBitmap)
+        rect = New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
+        bitmapdataSource = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
+        source = bitmapdataSource.Scan0
+
+        Marshal.Copy(DestBytes, 0, source, (num * 3))
+        sourceBitmap.UnlockBits(bitmapdataSource)
+
+        Return True
+    End Function
+
+    'Public Shared Function RemoveAlfaChannel_BETA(ByRef sourceBitmap As Bitmap) As Boolean
+    '    If (sourceBitmap Is Nothing) Then
+    '        Return False
+    '    End If
+    '    If (sourceBitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
+    '        If sourceBitmap.PixelFormat = PixelFormat.Format24bppRgb Then
+    '            Return True
+    '        Else
+    '            Return False
+    '        End If
+    '    End If
+
+    '    Dim DestBitmap As New Bitmap(sourceBitmap.Width, sourceBitmap.Height, PixelFormat.Format24bppRgb)
+
+    '    Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
+    '    Dim bitmapdataSource As BitmapData = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
+    '    rect = New Rectangle(0, 0, DestBitmap.Width, DestBitmap.Height)
+    '    Dim bitmapdataDest As BitmapData = DestBitmap.LockBits(rect, ImageLockMode.ReadOnly, DestBitmap.PixelFormat)
+
+    '    Dim source As IntPtr = bitmapdataSource.Scan0
+    '    Dim dest As IntPtr = bitmapdataDest.Scan0
+    '    Dim num As Integer = (sourceBitmap.Width * sourceBitmap.Height)
+    '    Dim SourceBytes As Byte() = New Byte((num * 4) - 1) {}
+    '    Dim DestBytes As Byte() = New Byte((num * 3) - 1) {}
+    '    Marshal.Copy(source, SourceBytes, 0, (num * 4))
+    '    Marshal.Copy(dest, DestBytes, 0, (num * 3))
+
+    '    Dim i_s As Integer = 3
+    '    Dim j_d As Integer = 2
+    '    Do While (i_s < (num * 4))
+    '        'BGRA
+    '        DestBytes(j_d - 2) = SourceBytes(i_s - 3)
+    '        DestBytes(j_d - 1) = SourceBytes(i_s - 2)
+    '        DestBytes(j_d) = SourceBytes(i_s - 1)
+    '        i_s += 4
+    '        j_d += 3
+    '    Loop
+
+    '    Marshal.Copy(DestBytes, 0, dest, (num * 3))
+    '    DestBitmap.UnlockBits(bitmapdataDest)
+    '    sourceBitmap = DestBitmap
+
+    '    Return True
+    'End Function
+
+    'Public Shared Function RemoveAlfaChannel_OLD(ByVal sourceBitmap As Bitmap) As Boolean
+    '    If (sourceBitmap Is Nothing) Then
+    '        Return False
+    '    End If
+    '    If (sourceBitmap.PixelFormat <> PixelFormat.Format32bppArgb) Then
+    '        If sourceBitmap.PixelFormat = PixelFormat.Format24bppRgb Then
+    '            Return True
+    '        Else
+    '            Return False
+    '        End If
+    '    End If
+
+    '    Dim rect As New Rectangle(0, 0, sourceBitmap.Width, sourceBitmap.Height)
+    '    Dim bitmapdata As BitmapData = sourceBitmap.LockBits(rect, ImageLockMode.ReadWrite, sourceBitmap.PixelFormat)
+    '    Dim source As IntPtr = bitmapdata.Scan0
+    '    Dim num As Integer = (sourceBitmap.Width * sourceBitmap.Height)
+    '    Dim destination As Byte() = New Byte((num * 4) - 1) {}
+    '    Marshal.Copy(source, destination, 0, (num * 4))
+    '    Dim i As Integer = 3
+    '    Do While (i < (num * 4))
+    '        destination(i) = &HFF
+    '        i = (i + 4)
+    '    Loop
+    '    Marshal.Copy(destination, 0, source, (num * 4))
+    '    sourceBitmap.UnlockBits(bitmapdata)
+    '    Return True
+    'End Function
+
+
+
+    '''<summary>
+    '''Separates the specified channels from the image And returns it as grayscale images.
+    '''</summary>
+    Public Shared Function Separate(ByVal sourceBitmap As Bitmap) As Bitmap()
+        Dim Count As Integer = 0
+
+
+        Dim BytesAlpha As Byte() = New Byte(sourceBitmap.Height * sourceBitmap.Width - 1) {}
+        Dim BytesRed As Byte() = New Byte(sourceBitmap.Height * sourceBitmap.Width - 1) {}
+        Dim BytesGreen As Byte() = New Byte(sourceBitmap.Height * sourceBitmap.Width - 1) {}
+        Dim BytesBlue As Byte() = New Byte(sourceBitmap.Height * sourceBitmap.Width - 1) {}
+
+        For i = 0 To sourceBitmap.Height - 1
+            For j = 0 To sourceBitmap.Width - 1
+                BytesBlue(Count) = sourceBitmap.GetPixel(j, i).B
+                BytesGreen(Count) = sourceBitmap.GetPixel(j, i).G
+                BytesRed(Count) = sourceBitmap.GetPixel(j, i).R
+                BytesAlpha(Count) = sourceBitmap.GetPixel(j, i).A
+
+                Count += 1
+            Next j
+        Next i
+
+        Dim ReturnBitmap As Bitmap() = New Bitmap(4 - 1) {} '{New Bitmap(New MemoryStream(BytesBlue)), New Bitmap(New MemoryStream(BytesGreen)), New Bitmap(New MemoryStream(BytesRed)), New Bitmap(New MemoryStream(BytesAlpha))}
+        ReturnBitmap(0) = ReadGreyToBitmap(BytesBlue, sourceBitmap.Width, sourceBitmap.Height)
+        ReturnBitmap(1) = ReadGreyToBitmap(BytesGreen, sourceBitmap.Width, sourceBitmap.Height)
+        ReturnBitmap(2) = ReadGreyToBitmap(BytesRed, sourceBitmap.Width, sourceBitmap.Height)
+        ReturnBitmap(3) = ReadGreyToBitmap(BytesAlpha, sourceBitmap.Width, sourceBitmap.Height)
+
+        Return ReturnBitmap
+    End Function
+
+    Private Shared Function ReadGreyToBitmap(RawDataFixed() As Byte, ByVal width As Integer, ByVal height As Integer) As Bitmap
+        Dim m_Bitmap As New Bitmap(width, height)
+        Dim rect As New Rectangle(0, 0, width, height)
+        Dim bitmapdata As BitmapData = m_Bitmap.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed)
+        Dim destination As IntPtr = bitmapdata.Scan0
+        Dim num As Integer = (width * height)
+        Marshal.Copy(RawDataFixed, 0, destination, (num * 4))
+        m_Bitmap.UnlockBits(bitmapdata)
+
+        Return m_Bitmap
+    End Function
+
+    Public Shared Function ResizeBitmap(ByVal sourceBitmap As Bitmap, ByVal newSize As Size) As Bitmap
+        Return ResizeBitmap(sourceBitmap, If(DirectCast(newSize, Object) IsNot Nothing, newSize.Width, 0), If(DirectCast(newSize, Object) IsNot Nothing, newSize.Height, 0))
+    End Function
+
+    Public Shared Function ResizeBitmap(ByVal sourceBitmap As Bitmap, ByVal width As Integer, ByVal height As Integer, Optional interpolationMode As InterpolationMode = InterpolationMode.HighQualityBicubic) As Bitmap
+        If (sourceBitmap Is Nothing) Then
+            Return Nothing
+        End If
+        If (width < 0) Then
+            width = -width
+        End If
+        If (height < 0) Then
+            height = -height
+        End If
+        If ((width = 0) OrElse (height = 0)) Then
+            Return Nothing
+        End If
+        If ((sourceBitmap.Width = width) AndAlso (sourceBitmap.Height = height)) Then
+            Return sourceBitmap
+        End If
+
+        If sourceBitmap.PixelFormat = PixelFormat.Format24bppRgb Then
+            Return New Bitmap(sourceBitmap, width, height)
+        End If
+
+        '- resize RGB part
+        Dim imageRGB As Bitmap = sourceBitmap.Clone
+        RemoveAlfaChannel(imageRGB)
+        imageRGB = ResizeBitmapInternal(imageRGB, width, height, interpolationMode)
+        '- resize alpha part
+        Dim imageAlpha As Bitmap = ResizeBitmapInternal(sourceBitmap.Clone, width, height, interpolationMode)
+        '- merge RGB & alpha
+        FixAlphaChannel(imageRGB, imageAlpha)
+
+        Return imageRGB
+    End Function
+
+    Private Shared Function ResizeBitmapInternal(ByVal sourceBitmap As Bitmap, ByVal width As Integer, ByVal height As Integer, ByVal interpolationMode As InterpolationMode) As Bitmap
         If (sourceBitmap Is Nothing) Then
             Return Nothing
         End If
@@ -1104,6 +1210,7 @@ Public Class GraphicUtil
         Dim image As New Bitmap(width, height, PixelFormat.Format32bppArgb)
         Dim graphics1 As Graphics = Graphics.FromImage(image)
         graphics1.InterpolationMode = interpolationMode
+        ' graphics1.Clear(Color.Transparent)
         graphics1.DrawImage(sourceBitmap, New Rectangle(0, 0, width, height), 0, 0, sourceBitmap.Width, sourceBitmap.Height, GraphicsUnit.Pixel)
         graphics1.Dispose()
         Return image
@@ -1298,6 +1405,62 @@ Public Class GraphicUtil
         Return ((w1 >= 0) AndAlso (w2 >= 0))
     End Function
 
+    Public Shared Function MergeBitmaps(ByVal BitmapLeft As Bitmap, ByVal BitmapRight As Bitmap) As Bitmap  '--> BitmapLeft on the left side, BitmapRight on the right side: supports alpha, sizes should be same!
+        If BitmapLeft.PixelFormat <> PixelFormat.Format32bppArgb Then '--> should always be with alpha
+            BitmapLeft = GraphicUtil.Get32bitBitmap(BitmapLeft)
+        End If
+        If BitmapRight.PixelFormat <> PixelFormat.Format32bppArgb Then '--> should always be with alpha
+            BitmapRight = GraphicUtil.Get32bitBitmap(BitmapRight)
+        End If
+
+        Return MergeBitmaps_int(BitmapLeft, BitmapRight)
+    End Function
+
+    Private Shared Function MergeBitmaps_int(ByVal BitmapLeft As Bitmap, ByVal BitmapRight As Bitmap) As Bitmap  '--> BitmapLeft on the left side, BitmapRight on the right side: supports alpha, sizes should be same!
+        If ((BitmapLeft.Width <> BitmapRight.Width) OrElse (BitmapLeft.Height <> BitmapRight.Height)) Then
+            Return Nothing
+        End If
+
+        Dim BitmapOut As New Bitmap(BitmapLeft.Width * 2, BitmapLeft.Height, Imaging.PixelFormat.Format32bppArgb)
+
+        Dim rect As New Rectangle(0, 0, BitmapLeft.Width, BitmapLeft.Height)
+        Dim bitmapdataLeft As BitmapData = BitmapLeft.LockBits(rect, ImageLockMode.ReadWrite, BitmapLeft.PixelFormat)
+        rect = New Rectangle(0, 0, BitmapRight.Width, BitmapRight.Height)
+        Dim bitmapdataRight As BitmapData = BitmapRight.LockBits(rect, ImageLockMode.ReadOnly, BitmapRight.PixelFormat)
+        rect = New Rectangle(0, 0, BitmapOut.Width, BitmapOut.Height)
+        Dim bitmapdataOut As BitmapData = BitmapOut.LockBits(rect, ImageLockMode.ReadOnly, BitmapOut.PixelFormat)
+
+        Dim PtrLeft As IntPtr = bitmapdataLeft.Scan0
+        Dim PtrRight As IntPtr = bitmapdataRight.Scan0
+        Dim PtrOut As IntPtr = bitmapdataOut.Scan0
+        Dim num As Integer = (BitmapLeft.Width * BitmapLeft.Height)
+        Dim BytesLeft As Byte() = New Byte((num * 4) - 1) {}
+        Dim BytesRight As Byte() = New Byte((num * 4) - 1) {}
+        Dim BytesOut As Byte() = New Byte(((BitmapOut.Width * BitmapOut.Height) * 4) - 1) {}
+        Marshal.Copy(PtrLeft, BytesLeft, 0, (num * 4))
+        Marshal.Copy(PtrRight, BytesRight, 0, (num * 4))
+        Marshal.Copy(PtrOut, BytesOut, 0, ((BitmapOut.Width * BitmapOut.Height) * 4))
+
+
+        Dim OffsetLeft As Integer = 0
+        Dim OffsetRight As Integer = 0
+        For i = 0 To ((BitmapOut.Width * BitmapOut.Height) * 4) - 1 Step (BitmapLeft.Width * 4 * 2)
+            Buffer.BlockCopy(BytesLeft, OffsetLeft, BytesOut, i, BitmapLeft.Width * 4)
+            Buffer.BlockCopy(BytesRight, OffsetRight, BytesOut, i + (BitmapLeft.Width * 4), BitmapRight.Width * 4)
+            OffsetLeft += BitmapLeft.Width * 4
+            OffsetRight += BitmapRight.Width * 4
+        Next
+
+        'Marshal.Copy(BytesLeft, 0, PtrLeft, (num * 4))
+        BitmapLeft.UnlockBits(bitmapdataLeft)
+        'Marshal.Copy(BytesRight, 0, PtrRight, (num * 4))
+        BitmapRight.UnlockBits(bitmapdataRight)
+        Marshal.Copy(BytesOut, 0, PtrOut, ((BitmapOut.Width * BitmapOut.Height) * 4))
+        BitmapOut.UnlockBits(bitmapdataOut)
+
+        Return BitmapOut
+    End Function
+
     Public Shared Function GetTextureSize(ByVal m_width As Integer, ByVal m_height As Integer, ByVal m_TextureFormat As ETextureFormat) As Integer
         Dim m_Size As Integer
 
@@ -1318,7 +1481,7 @@ Public Class GraphicUtil
                     m_height = 4
                 End If
                 m_Size = m_width * m_height
-            Case ETextureFormat.B8G8R8A8
+            Case ETextureFormat.B8G8R8A8, ETextureFormat.R8G8B8A8
                 If m_width < 1 Then
                     m_width = 1
                 End If
@@ -1423,7 +1586,7 @@ Public Class GraphicUtil
                     m_width = 4
                 End If
                 m_Pitch = Math.Max(1UI, ((m_width + 3) \ 4)) * 16
-            Case ETextureFormat.B8G8R8A8
+            Case ETextureFormat.B8G8R8A8, ETextureFormat.R8G8B8A8
                 If m_width < 1 Then
                     m_width = 1
                 End If
@@ -1482,6 +1645,10 @@ Public Class GraphicUtil
         End Select
 
         Return m_Pitch
+    End Function
+
+    Public Shared Function CalcNumMips(ByVal Width As Integer, ByVal Height As Integer) As Integer
+        Return (1 + Math.Floor(Math.Log(Math.Max(Width, Height), 2)))
     End Function
 
 End Class

@@ -2,7 +2,7 @@
 Imports Microsoft.DirectX
 
 Namespace Rx3
-    Public Class ClothDef
+<Serializable> Public Class ClothDef
         Inherits Rx3Object
         Public Const TYPE_CODE As Rx3.SectionHash = Rx3.SectionHash.CLOTH_DEF
         Public Const ALIGNMENT As Integer = 16
@@ -373,7 +373,7 @@ Namespace Rx3
             Return ALIGNMENT
         End Function
     End Class
-    Public Class ClothDefUnk8
+<Serializable> Public Class ClothDefUnk8
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As FileReader)
@@ -392,7 +392,7 @@ Namespace Rx3
         Public Property Value_3 As Single
     End Class
 
-    Public Class ClothDefTri
+<Serializable> Public Class ClothDefTri
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As FileReader)
@@ -413,7 +413,7 @@ Namespace Rx3
         Public Property Value_4 As UShort
     End Class
 
-    Public Class ClothDefCollider
+<Serializable> Public Class ClothDefCollider
         Public Sub New()
         End Sub
         Public Sub New(ByVal r As FileReader)

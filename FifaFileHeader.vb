@@ -1,16 +1,15 @@
-﻿
-Public Class FifaFileHeader
+﻿<Serializable> Public Class FifaFileHeader
     ' Methods
     Public Sub New()
-        Me.m_BigFile = Nothing
+        'Me.m_BigFile = Nothing
         Me.m_StartPosition = 0
         Me.m_Name = Nothing
         Me.m_Size = 0
     End Sub
 
-    Public Sub New(ByVal bigFile As FifaBigFile)
-        Me.m_BigFile = bigFile
-    End Sub
+    'Public Sub New(ByVal bigFile As FifaBigFile)
+    '    Me.m_BigFile = bigFile
+    'End Sub
 
     Public Function Load(ByVal r As FileReader) As Boolean
         Me.m_StartPosition = FifaUtil.SwapEndian(r.ReadUInt32)
@@ -28,11 +27,11 @@ Public Class FifaFileHeader
 
 
     ' Properties
-    Public ReadOnly Property BigFile As FifaBigFile
-        Get
-            Return Me.m_BigFile
-        End Get
-    End Property
+    'Public ReadOnly Property BigFile As FifaBigFile
+    '    Get
+    '        Return Me.m_BigFile
+    '    End Get
+    'End Property
 
     Public Property StartPosition As UInt32
         Get
@@ -63,7 +62,7 @@ Public Class FifaFileHeader
 
 
     ' Fields
-    Private m_BigFile As FifaBigFile
+    'Private m_BigFile As FifaBigFile
     Private m_StartPosition As UInt32
     Private m_Size As Integer
     Private m_Name As String
